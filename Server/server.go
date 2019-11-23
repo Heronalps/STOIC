@@ -6,11 +6,36 @@ package server
 
 import (
 	"fmt"
+	"os/exec"
+	"os/user"
 )
 
 /*
-Cronjob runs background cron job.
+TailHTTP runs background cron job.
 */
-func Cronjob() {
-	fmt.Println("This is cron job!")
+func TailHTTP() {
+	url := "http://169.231.235.221/sedgtomayhem.txt"
+	htailPath := HomeDir() + "/Downloads/Github/htail/htail.py"
+	command := "python2"
+	fmt.Printf("Tailing http endpoint : %s\n", url)
+
+	cmd := exec.Command(command, htailPath, url)
+	out, err := cmd.Output()
+	if err != nil {
+		println(err.Error())
+		return
+	}
+	fmt.Println(string(out))
+}
+
+/*
+HomeDir gets home directory of current user
+*/
+func HomeDir() string {
+	usr, err := user.Current()
+	if err != nil {
+		println(err.Error())
+		return ""
+	}
+	return usr.HomeDir
 }

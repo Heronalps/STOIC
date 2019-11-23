@@ -8,5 +8,5 @@ import (
 
 func main() {
 	fmt.Println("This is main function!")
-	server.Cronjob()
+	server.TailHTTP()
 }
