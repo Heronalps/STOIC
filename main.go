@@ -9,4 +9,5 @@ import (
 func main() {
 	fmt.Println("This is main function!")
 	fmt.Println(server.GetBandWidth())
+	fmt.Println(server.Extrapolate("cpu", 1.234))
 }

@@ -1,3 +1,5 @@
 test.go
 STOIC
 /build
+**/.ipynb_checkpoints
+*.csv
