@@ -19,7 +19,7 @@ GetBandWidth solicits bandwidth of Pi Zero at Sedgwick Reserve.
 func GetBandWidth() float64 {
 	url := "http://169.231.235.221/sedgtomayhem.txt"
 	lines := "1"
-	fmt.Printf("Tailing http endpoint : %s\n", url)
+	//fmt.Printf("Tailing http endpoint : %s\n", url)
 
 	cmd := "curl " + url + " | tail -" + lines
 	out, err := exec.Command("bash", "-c", cmd).Output()
@@ -31,11 +31,11 @@ func GetBandWidth() float64 {
 	scanner := bufio.NewScanner(strings.NewReader(string(out)))
 	var lastLine string
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
 		lastLine = scanner.Text()
 	}
 	fields := strings.Fields(lastLine)
 	bandWidth, err := strconv.ParseFloat(fields[0], 64)
+	fmt.Printf("The bandwidth is %f megabits \n", bandWidth)
 	return bandWidth
 }
 
@@ -73,4 +73,19 @@ func Extrapolate(mode string, x float64) float64 {
 	}
 
 	return x*coef + intercept
+}
+
+/*
+GetTransferTime calculates the transfer time from Sedgwick reserve to Mayhem cloud to Nautilus
+*/
+func GetTransferTime() float64 {
+	imageNum := ImageCache()
+	// Convert megabits to megabytes
+	bandwidth := GetBandWidth() / 8.0
+	// Average JPG image size of 1920 * 1080 = 0.212 MB
+	JPGSize := 212 * 1e-3
+
+	transferTime := float64(imageNum) * JPGSize / bandwidth
+	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, transferTime)
+	return transferTime
 }
