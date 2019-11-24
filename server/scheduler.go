@@ -51,27 +51,18 @@ func RunOnEuca(imageNum int64) {
 	var cmd *exec.Cmd
 	repoPATH := HomeDir() + "/GPU_Serverless"
 
-	//Activate the venv in python project repo
-	cmdVenv := "source " + "venv_avx/bin/activate"
-	cmd = exec.Command("bash", "-c", cmdVenv)
-	cmd.Dir = repoPATH
-	output, err = cmd.Output()
-	if err != nil {
-		fmt.Printf("Error activating venv. msg: %s \n", err.Error())
-		return
-	}
-	fmt.Printf("Activated AVX support... %s\n", output)
-
 	// Run WTB image classification task
-	FILE := "image_clf_inf.py "
-	cmdRun := "python " + FILE + strconv.Itoa(int(imageNum))
+	FILE := "./kubeless/image_clf/inference/local_version/image_clf_inf.py "
+	cmdRun := "source " + "venv_avx/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
 	cmd = exec.Command("bash", "-c", cmdRun)
-	cmd.Dir = repoPATH + "/kubeless/image_clf/inference/local_version"
+	cmd.Dir = repoPATH
+	fmt.Printf("Start running WTB task on %d images \n", imageNum)
 	output, err = cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
 		return
 	}
+
 	fmt.Printf("Output of task %s\n", output)
 }
 
