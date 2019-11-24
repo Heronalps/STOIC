@@ -54,7 +54,7 @@ func HomeDir() string {
 /*
 Extrapolate function inferences runtime by coefficient and intercept.
 */
-func Extrapolate(mode string, x float64) float64 {
+func Extrapolate(mode string, x int64) float64 {
 	var coef float64
 	var intercept float64
 	switch mode {
@@ -72,14 +72,13 @@ func Extrapolate(mode string, x float64) float64 {
 		intercept = 143.26647033799347
 	}
 
-	return x*coef + intercept
+	return float64(x)*coef + intercept
 }
 
 /*
 GetTransferTime calculates the transfer time from Sedgwick reserve to Mayhem cloud to Nautilus
 */
-func GetTransferTime() float64 {
-	imageNum := ImageCache()
+func GetTransferTime(imageNum int64) float64 {
 	// Convert megabits to megabytes
 	bandwidth := GetBandWidth() / 8.0
 	// Average JPG image size of 1920 * 1080 = 0.212 MB
@@ -88,4 +87,29 @@ func GetTransferTime() float64 {
 	transferTime := float64(imageNum) * JPGSize / bandwidth
 	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, transferTime)
 	return transferTime
+}
+
+/*
+GetRunTime calculates the runtime of four scenarios: euca, cpu, gpu1, gpu2
+*/
+func GetRunTime(imageNum int64) []float64 {
+	eucaRuntime := Extrapolate("euca", imageNum)
+	cpuRuntime := Extrapolate("cpu", imageNum)
+	gpu1Runtime := Extrapolate("gpu1", imageNum)
+	gpu2Runtime := Extrapolate("gpu2", imageNum)
+	runtimes := []float64{eucaRuntime, cpuRuntime, gpu1Runtime, gpu2Runtime}
+	return runtimes
+}
+
+/*
+GetTotalTime calculate total time of four scenarios
+*/
+func GetTotalTime(imageNum int64) []float64 {
+	runtimes := GetRunTime(imageNum)
+	transferTimes := GetTransferTime(imageNum)
+	totalTimes := []float64{runtimes[0] + transferTimes,
+		runtimes[1] + transferTimes,
+		runtimes[2] + transferTimes,
+		runtimes[3] + transferTimes}
+	return totalTimes
 }

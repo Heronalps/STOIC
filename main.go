@@ -11,5 +11,5 @@ func main() {
 	// for i := 0; i < 10; i++ {
 	// 	fmt.Println(server.ImageCache())
 	// }
-	server.GetTransferTime()
+	server.GetTime()
 }
