@@ -20,6 +20,7 @@ func RandNum(mean float64, stdev float64) float64 {
 
 /*
 ImageCache outputs a random number of images in a certain period.
+For WTB photo repository, the average amount of photo per hour is 42.75, and stdev is 26.5
 */
 func ImageCache() int64 {
 	mean := 42.75
