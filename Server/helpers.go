@@ -102,14 +102,15 @@ func GetRunTime(imageNum int64) []float64 {
 }
 
 /*
-GetTotalTime calculate total time of four scenarios
+GetTotalTime calculate total time (Addition of transfer and run time) of four scenarios
 */
-func GetTotalTime(imageNum int64) []float64 {
+func GetTotalTime(imageNum int64) map[float64]string {
 	runtimes := GetRunTime(imageNum)
 	transferTimes := GetTransferTime(imageNum)
-	totalTimes := []float64{runtimes[0] + transferTimes,
-		runtimes[1] + transferTimes,
-		runtimes[2] + transferTimes,
-		runtimes[3] + transferTimes}
+	totalTimes := make(map[float64]string)
+	totalTimes[runtimes[0]+transferTimes] = "euca"
+	totalTimes[runtimes[1]+transferTimes] = "cpu"
+	totalTimes[runtimes[2]+transferTimes] = "gpu1"
+	totalTimes[runtimes[3]+transferTimes] = "gpu2"
 	return totalTimes
 }
