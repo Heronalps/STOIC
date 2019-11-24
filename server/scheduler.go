@@ -21,7 +21,7 @@ func SelectRunTime(imageNum int64) string {
 	for k := range totalTimes {
 		keys = append(keys, k)
 	}
-	keys = sort.Float64Slice(keys)
+	sort.Float64s(keys)
 	fmt.Printf("The task is scheduled at %s for %f seconds\n", totalTimes[keys[0]], keys[0])
 	return totalTimes[keys[0]]
 }
@@ -33,9 +33,9 @@ func Schedule() {
 	imageNum := ImageCache()
 	switch runtime := SelectRunTime(imageNum); runtime {
 	case "euca":
-		RunOnEuca(imageNum)
+		//RunOnEuca(imageNum)
 	default:
-		RunOnNautilus(runtime, imageNum)
+		//RunOnNautilus(runtime, imageNum)
 	}
 }
 
