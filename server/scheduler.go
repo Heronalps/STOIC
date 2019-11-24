@@ -6,8 +6,9 @@ package server
 
 import (
 	"fmt"
-	"os/exec"
+	exec "os/exec"
 	"sort"
+	"strconv"
 )
 
 /*
@@ -33,9 +34,11 @@ func Schedule() {
 	imageNum := ImageCache()
 	switch runtime := SelectRunTime(imageNum); runtime {
 	case "euca":
-		//RunOnEuca(imageNum)
+		fmt.Println("Running on euca...")
+		RunOnEuca(imageNum)
 	default:
-		//RunOnNautilus(runtime, imageNum)
+		fmt.Println("Running on Nautilus...")
+		RunOnNautilus(runtime, imageNum)
 	}
 }
 
@@ -43,11 +46,33 @@ func Schedule() {
 RunOnEuca runs the task on mini euca edge cloud with AVX support
 */
 func RunOnEuca(imageNum int64) {
-	PATH := HomeDir() + "/GPU_Serverless/kubeless/image_clf/inference/local_version/image_clf_inf.py "
-	cmdVenv := "source " + HomeDir() + "/GPU_Serverless/venv_avx/bin/activate"
-	exec.Command(cmdVenv)
-	cmdRun := "python " + PATH + string(imageNum)
-	exec.Command(cmdRun)
+	var output []byte
+	var err error
+	var cmd *exec.Cmd
+	repoPATH := HomeDir() + "/GPU_Serverless"
+
+	//Activate the venv in python project repo
+	cmdVenv := "source " + "venv_avx/bin/activate"
+	cmd = exec.Command("bash", "-c", cmdVenv)
+	cmd.Dir = repoPATH
+	output, err = cmd.Output()
+	if err != nil {
+		fmt.Printf("Error activating venv. msg: %s \n", err.Error())
+		return
+	}
+	fmt.Printf("Activated AVX support... %s\n", output)
+
+	// Run WTB image classification task
+	FILE := "image_clf_inf.py "
+	cmdRun := "python " + FILE + strconv.Itoa(int(imageNum))
+	cmd = exec.Command("bash", "-c", cmdRun)
+	cmd.Dir = repoPATH + "/kubeless/image_clf/inference/local_version"
+	output, err = cmd.Output()
+	if err != nil {
+		fmt.Printf("Error running task. msg: %s \n", err.Error())
+		return
+	}
+	fmt.Printf("Output of task %s\n", output)
 }
 
 /*
