@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
@@ -15,7 +16,25 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
-func deploy(namespace string, deployment string, NumGPU int) {
+/*
+Request sends request to Nautilus based on runtime and image number
+*/
+func Request(runtime string, imageNum int) {
+	// namespace := "racelab"
+	// deployment := "image-clf-inf"
+	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
+	switch runtime {
+	case "cpu":
+		//deploy(namespace, deployment, 0)
+	case "gpu1":
+		//deploy(namespace, deployment, 1)
+	case "gpu2":
+		//deploy(namespace, deployment, 2)
+	}
+	//TODO make kubeless call to deployed function
+}
+
+func deploy(namespace string, deployment string, NumGPU int64) {
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
 		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
@@ -53,11 +72,11 @@ func deploy(namespace string, deployment string, NumGPU int) {
 		numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
 		fmt.Printf("Current Number of GPU is %v \n", numGpu.Value())
 		quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
-		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = quant
-		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = quant
+		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
+		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
 		_, updateErr := deploymentsClient.Update(result)
 
-		fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
+		//fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
 		return updateErr
 	})
 
