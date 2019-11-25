@@ -32,6 +32,7 @@ func Request(runtime string, imageNum int) {
 		//deploy(namespace, deployment, 2)
 	}
 	//TODO make kubeless call to deployed function
+
 }
 
 func deploy(namespace string, deployment string, NumGPU int64) {
@@ -57,7 +58,7 @@ func deploy(namespace string, deployment string, NumGPU int64) {
 	}
 
 	// namespace := "racelab"
-	// deployment := "image-clf-train"
+	// deployment := "image-clf-inf"
 
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 
