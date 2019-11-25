@@ -36,6 +36,10 @@ func GetBandWidth() float64 {
 	fields := strings.Fields(lastLine)
 	bandWidth, err := strconv.ParseFloat(fields[0], 64)
 	fmt.Printf("The bandwidth is %f megabits \n", bandWidth)
+	if bandWidth <= 0.0 {
+		fmt.Println("The bandwidth zeroed out! Simulate on average 70.7916 !")
+		bandWidth = 70.7916
+	}
 	return bandWidth
 }
 
@@ -54,7 +58,7 @@ func HomeDir() string {
 /*
 Extrapolate function inferences runtime by coefficient and intercept.
 */
-func Extrapolate(mode string, x int64) float64 {
+func Extrapolate(mode string, x int) float64 {
 	var coef float64
 	var intercept float64
 	switch mode {
@@ -78,7 +82,7 @@ func Extrapolate(mode string, x int64) float64 {
 /*
 GetTransferTime calculates the transfer time from Sedgwick reserve to Mayhem cloud to Nautilus
 */
-func GetTransferTime(imageNum int64) float64 {
+func GetTransferTime(imageNum int) float64 {
 	// Convert megabits to megabytes
 	bandwidth := GetBandWidth() / 8.0
 	// Average JPG image size of 1920 * 1080 = 0.212 MB
@@ -92,7 +96,7 @@ func GetTransferTime(imageNum int64) float64 {
 /*
 GetRunTime calculates the runtime of four scenarios: euca, cpu, gpu1, gpu2
 */
-func GetRunTime(imageNum int64) []float64 {
+func GetRunTime(imageNum int) []float64 {
 	eucaRuntime := Extrapolate("euca", imageNum)
 	cpuRuntime := Extrapolate("cpu", imageNum)
 	gpu1Runtime := Extrapolate("gpu1", imageNum)
@@ -104,7 +108,7 @@ func GetRunTime(imageNum int64) []float64 {
 /*
 GetTotalTime calculate total time (Addition of transfer and run time) of four scenarios
 */
-func GetTotalTime(imageNum int64) map[float64]string {
+func GetTotalTime(imageNum int) map[float64]string {
 	runtimes := GetRunTime(imageNum)
 	transferTimes := GetTransferTime(imageNum)
 	totalTimes := make(map[float64]string)

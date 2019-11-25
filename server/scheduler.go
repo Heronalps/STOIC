@@ -14,7 +14,7 @@ import (
 /*
 SelectRunTime select the runtime among four scenarios
 */
-func SelectRunTime(imageNum int64) string {
+func SelectRunTime(imageNum int) string {
 	totalTimes := GetTotalTime(imageNum)
 	fmt.Println(totalTimes)
 	// Sort the totalTimes map by key
@@ -28,9 +28,11 @@ func SelectRunTime(imageNum int64) string {
 }
 
 /*
-Schedule obtains total times of four scenarios
+Schedule obtains total times of four scenarios.
+If the task is intended to run on Nautilus,
+scheduler sends runtime and image to Mayhem cloud for relaying based on ip:port
 */
-func Schedule() {
+func Schedule(ip string, port int) {
 	imageNum := ImageCache()
 	switch runtime := SelectRunTime(imageNum); runtime {
 	case "euca":
@@ -38,14 +40,14 @@ func Schedule() {
 		RunOnEuca(imageNum)
 	default:
 		fmt.Println("Running on Nautilus...")
-		RunOnNautilus(runtime, imageNum)
+		RunOnNautilus(runtime, imageNum, ip, port)
 	}
 }
 
 /*
 RunOnEuca runs the task on mini euca edge cloud with AVX support
 */
-func RunOnEuca(imageNum int64) {
+func RunOnEuca(imageNum int) {
 	var output []byte
 	var err error
 	var cmd *exec.Cmd
@@ -62,13 +64,13 @@ func RunOnEuca(imageNum int64) {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
 		return
 	}
-
 	fmt.Printf("Output of task %s\n", output)
 }
 
 /*
 RunOnNautilus runs the task on Nautilus public cloud
 */
-func RunOnNautilus(runtime string, imageNum int64) {
+func RunOnNautilus(runtime string, imageNum int, ip string, port int) {
 	fmt.Println("Transferring images to Nautilus...")
+	SocketServer(ip, port, runtime, imageNum)
 }

@@ -20,21 +20,24 @@ import (
 Request sends request to Nautilus based on runtime and image number
 */
 func Request(runtime string, imageNum int) {
-	// namespace := "racelab"
-	// deployment := "image-clf-inf"
+	namespace := "racelab"
+	deployment := "image-clf-inf"
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
 	case "cpu":
-		//deploy(namespace, deployment, 0)
+		deploy(namespace, deployment, 0)
 	case "gpu1":
-		//deploy(namespace, deployment, 1)
+		deploy(namespace, deployment, 1)
 	case "gpu2":
-		//deploy(namespace, deployment, 2)
+		deploy(namespace, deployment, 2)
 	}
 	//TODO make kubeless call to deployed function
 
 }
 
+/*
+The function deploys kubeless function on Nautilus based on number of GPU
+*/
 func deploy(namespace string, deployment string, NumGPU int64) {
 	var kubeconfig *string
 	if home := homedir.HomeDir(); home != "" {
@@ -56,9 +59,6 @@ func deploy(namespace string, deployment string, NumGPU int64) {
 	if err != nil {
 		panic(err.Error())
 	}
-
-	// namespace := "racelab"
-	// deployment := "image-clf-inf"
 
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 
