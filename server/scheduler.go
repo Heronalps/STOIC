@@ -53,7 +53,7 @@ func RunOnEuca(imageNum int64) {
 
 	// Run WTB image classification task
 	FILE := "./kubeless/image_clf/inference/local_version/image_clf_inf.py "
-	cmdRun := "source " + "venv_avx/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
+	cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
 	cmd = exec.Command("bash", "-c", cmdRun)
 	cmd.Dir = repoPATH
 	fmt.Printf("Start running WTB task on %d images \n", imageNum)
@@ -70,5 +70,5 @@ func RunOnEuca(imageNum int64) {
 RunOnNautilus runs the task on Nautilus public cloud
 */
 func RunOnNautilus(runtime string, imageNum int64) {
-
+	fmt.Println("Transferring images to Nautilus...")
 }
