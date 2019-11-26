@@ -7,6 +7,7 @@ require (
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/pkg/errors v0.8.1 // indirect
+	github.com/serverhorror/rog-go v0.0.0-20150622204439-87e4e0161534
 	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c // indirect
 	golang.org/x/net v0.0.0-20191124235446-72fef5d5e266 // indirect
 	golang.org/x/oauth2 v0.0.0-20191122200657-5d9234df094c // indirect

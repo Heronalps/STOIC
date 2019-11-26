@@ -3,7 +3,9 @@ package client
 import (
 	"flag"
 	"fmt"
+	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,8 +35,19 @@ func Request(runtime string, imageNum int) {
 	case "gpu2":
 		deploy(namespace, deployment, 2)
 	}
-	//TODO make kubeless call to deployed function
+	//make initial kubeless call to depolyed function to avoid cold start
+	fmt.Println("Probing deployed kubeless function to avoid cold start ...")
+	cmd := "sh invoke_inf.sh " + strconv.Itoa(1)
+	output, err := exec.Command("bash", "-c", cmd).Output()
+	fmt.Println("Finish Probing ...")
 
+	//make kubeless call to deployed function
+	cmd = "sh invoke_inf.sh " + strconv.Itoa(imageNum)
+	output, err = exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(string(output))
 }
 
 /*
@@ -97,8 +110,7 @@ func deploy(namespace string, deployment string, NumGPU int64) {
 			result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
 			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
 		}
-		fmt.Println("Successfully deployed...")
-
+		fmt.Println("Kubeless function is successfully deployed...")
 		if updateErr != nil {
 			fmt.Println(updateErr)
 		}

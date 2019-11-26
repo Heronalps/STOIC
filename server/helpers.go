@@ -5,12 +5,13 @@ This module contains all helper functions.
 package server
 
 import (
-	"bufio"
 	"fmt"
 	"os/exec"
 	"os/user"
 	"strconv"
 	"strings"
+
+	"github.com/serverhorror/rog-go/reverse"
 )
 
 /*
@@ -18,7 +19,7 @@ GetBandWidth solicits bandwidth of Pi Zero at Sedgwick Reserve.
 */
 func GetBandWidth() float64 {
 	url := "http://169.231.235.221/sedgtomayhem.txt"
-	lines := "1"
+	lines := "10"
 	//fmt.Printf("Tailing http endpoint : %s\n", url)
 
 	cmd := "curl " + url + " | tail -" + lines
@@ -27,14 +28,24 @@ func GetBandWidth() float64 {
 		println(err.Error())
 		return 0
 	}
-
-	scanner := bufio.NewScanner(strings.NewReader(string(out)))
-	var lastLine string
+	// Use reverse scanner to capture the last nonzero bandwidth
+	scanner := reverse.NewScanner(strings.NewReader(string(out)))
+	var (
+		lastLine  string
+		bandWidth float64
+	)
 	for scanner.Scan() {
 		lastLine = scanner.Text()
+		fields := strings.Fields(lastLine)
+		bandWidth, err = strconv.ParseFloat(fields[0], 64)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		if bandWidth > 0.0 {
+			break
+		}
 	}
-	fields := strings.Fields(lastLine)
-	bandWidth, err := strconv.ParseFloat(fields[0], 64)
+
 	fmt.Printf("The bandwidth is %f megabits \n", bandWidth)
 	if bandWidth <= 0.0 {
 		fmt.Println("The bandwidth zeroed out! Simulate on average 70.7916 !")
