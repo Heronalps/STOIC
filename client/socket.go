@@ -4,6 +4,7 @@ package client
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -50,9 +51,12 @@ ILOOP:
 		case io.EOF:
 			break ILOOP
 		case nil:
+			fmt.Printf("data: %s \n", data)
 			dataSlice := strings.Split(data, " ")
 			runtime = dataSlice[0]
 			imageNum, err = strconv.Atoi(dataSlice[1])
+			fmt.Printf("runtime: %s \n", runtime)
+			fmt.Printf("imageNum: %d \n", imageNum)
 			if err != nil {
 				log.Println(err.Error())
 				continue

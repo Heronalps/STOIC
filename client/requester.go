@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"path/filepath"
+	"strings"
+	"time"
 
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -36,30 +38,39 @@ func Request(runtime string, imageNum int) {
 }
 
 /*
-The function deploys kubeless function on Nautilus based on number of GPU
+StaticKubeconfig : static kubernetes config
 */
-func deploy(namespace string, deployment string, NumGPU int64) {
-	var kubeconfig *string
+var kubeconfig string
+
+func getKubeConfig() string {
+	if kubeconfig != "" {
+		return kubeconfig
+	}
 	if home := homedir.HomeDir(); home != "" {
-		kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
+		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
 	} else {
-		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		flag.StringVar(&kubeconfig, "kubeconfig", "", "absolute path to the kubeconfig file")
 	}
 	flag.Parse()
+	return kubeconfig
+}
 
+/*
+Deploy patches kubeless function on Nautilus based on number of GPU
+*/
+func deploy(namespace string, deployment string, NumGPU int64) {
+	kubeconfig := getKubeConfig()
 	// use the current context in kubeconfig
 	// This config is credential information of kubernetes
-	config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		panic(err.Error())
 	}
-
 	// create the clientset
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
-
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 
 	fmt.Println("Updating deployment...")
@@ -76,8 +87,21 @@ func deploy(namespace string, deployment string, NumGPU int64) {
 		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
 		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
 		_, updateErr := deploymentsClient.Update(result)
+		fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
 
-		//fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
+		fmt.Println("Waiting kubeless function to be deployed...")
+		time.Sleep(3 * time.Second)
+		result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
+		for !strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.") {
+			time.Sleep(3 * time.Second)
+			result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
+			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
+		}
+		fmt.Println("Successfully deployed...")
+
+		if updateErr != nil {
+			fmt.Println(updateErr)
+		}
 		return updateErr
 	})
 

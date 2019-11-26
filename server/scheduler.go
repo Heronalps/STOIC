@@ -28,8 +28,7 @@ func SelectRunTime(imageNum int) string {
 }
 
 /*
-Schedule obtains total times of four scenarios.
-If the task is intended to run on Nautilus,
+Schedule is the entry point of Scheduler. If the task is intended to run on Nautilus,
 scheduler sends runtime and image to Mayhem cloud for relaying based on ip:port
 */
 func Schedule(ip string, port int) {

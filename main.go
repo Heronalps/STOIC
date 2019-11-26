@@ -9,7 +9,8 @@ func main() {
 	// for i := 0; i < 10; i++ {
 	// 	fmt.Println(server.ImageCache())
 	// }
-	server.Schedule("127.0.0.1", 5001)
 	// client.SocketClient(5001)
 	// server.SocketServer("127.0.0.1", 5001, "cpu", 10)
+	server.Schedule("127.0.0.1", 5001)
+	// client.Deploy("racelab", "image-clf-inf", 0)
 }
