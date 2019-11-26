@@ -21,7 +21,8 @@ func SocketServer(ip string, port int, runtime string, imageNum int) {
 	}
 
 	defer conn.Close()
-
+	// TODO: Add lock to avoid race condition on kubeless function on the client
+	// Server socket sends message only if it obtains the lock, otherwise being blocked
 	message := runtime + " " + strconv.Itoa(imageNum)
 	conn.Write([]byte(message))
 	conn.Write([]byte(StopCharacter))

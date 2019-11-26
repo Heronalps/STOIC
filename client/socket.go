@@ -70,6 +70,10 @@ ILOOP:
 			return
 		}
 	}
+	// TODO : Add lock to avoid race condition on kubeless function
+	// It requires checking kubeless process and
+	// write back to server socket if the kubeless function is available
+
 	Request(runtime, imageNum)
 }
 
