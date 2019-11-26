@@ -14,7 +14,7 @@ func SocketServer(ip string, port int, runtime string, imageNum int) {
 	addr := strings.Join([]string{ip, strconv.Itoa(port)}, ":")
 	conn, err := net.Dial("tcp", addr)
 
-	StopCharacter := " "
+	StopCharacter := " #"
 	if err != nil {
 		log.Fatalln(err)
 		return

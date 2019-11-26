@@ -4,7 +4,7 @@ package client
 
 import (
 	"bufio"
-	"fmt"
+	"bytes"
 	"io"
 	"log"
 	"net"
@@ -42,26 +42,27 @@ func handler(conn net.Conn) {
 		buf      = make([]byte, 1024)
 		runtime  string
 		imageNum int
+		data     bytes.Buffer
 	)
 ILOOP:
 	for {
 		n, err := reader.Read(buf)
-		data := string(buf[:n])
+		data.Write(buf[:n])
 		switch err {
 		case io.EOF:
 			break ILOOP
 		case nil:
-			fmt.Printf("data: %s \n", data)
-			dataSlice := strings.Split(data, " ")
-			runtime = dataSlice[0]
-			imageNum, err = strconv.Atoi(dataSlice[1])
-			fmt.Printf("runtime: %s \n", runtime)
-			fmt.Printf("imageNum: %d \n", imageNum)
 			if err != nil {
 				log.Println(err.Error())
 				continue
 			}
-			if isTransportOver(data) {
+			if isTransportOver(data.String()) {
+				// fmt.Printf("data :%sEOF \n", data.String())
+				dataSlice := strings.Split(data.String(), " ")
+				runtime = dataSlice[0]
+				imageNum, err = strconv.Atoi(dataSlice[1])
+				// fmt.Printf("runtime: %s \n", runtime)
+				// fmt.Printf("imageNum: %d \n", imageNum)
 				break ILOOP
 			}
 		default:
@@ -73,7 +74,7 @@ ILOOP:
 }
 
 func isTransportOver(data string) (over bool) {
-	StopCharacter := " "
+	StopCharacter := " #"
 	over = strings.HasSuffix(data, StopCharacter)
 	return
 }

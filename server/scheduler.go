@@ -25,6 +25,7 @@ func SelectRunTime(imageNum int) string {
 	sort.Float64s(keys)
 	fmt.Printf("The task is scheduled at %s for %f seconds\n", totalTimes[keys[0]], keys[0])
 	return totalTimes[keys[0]]
+	//return "euca"
 }
 
 /*

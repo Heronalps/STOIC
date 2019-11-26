@@ -13,4 +13,5 @@ func main() {
 	// server.SocketServer("127.0.0.1", 5001, "cpu", 10)
 	server.Schedule("127.0.0.1", 5001)
 	// client.Deploy("racelab", "image-clf-inf", 0)
+
 }
