@@ -36,11 +36,12 @@ func Request(runtime string, imageNum int) {
 		deploy(namespace, deployment, 2)
 	}
 	//make initial kubeless call to depolyed function to avoid cold start
+	time.Sleep(1 * time.Second)
 	fmt.Println("Probing deployed kubeless function to avoid cold start ...")
 	cmd := "sh invoke_inf.sh " + strconv.Itoa(1)
 	output, err := exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Error msg : ", err.Error())
 	}
 	fmt.Println(string(output))
 	fmt.Println("Finish Probing ...")
@@ -49,7 +50,7 @@ func Request(runtime string, imageNum int) {
 	cmd = "sh invoke_inf.sh " + strconv.Itoa(imageNum)
 	output, err = exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("Error msg : ", err.Error())
 	}
 	fmt.Println(string(output))
 }
