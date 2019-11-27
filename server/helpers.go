@@ -6,8 +6,10 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"os/exec"
 	"os/user"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -128,4 +130,23 @@ func GetTotalTime(imageNum int) map[float64]string {
 	totalTimes[runtimes[2]+transferTimes] = "gpu1"
 	totalTimes[runtimes[3]+transferTimes] = "gpu2"
 	return totalTimes
+}
+
+/*
+parseElapsed capture time in output
+*/
+func parseElapsed(output []byte) float64 {
+	re := regexp.MustCompile(`Time with model loading: (\d*\.\d*)`)
+	// []byte - elapsed time of task
+	elapsed := re.FindSubmatch(output)
+	if len(elapsed) == 0 {
+		log.Println("No Elapsed time is received output ...")
+		return 0.0
+	}
+	result, err := strconv.ParseFloat(string(elapsed[1]), 64)
+	if err != nil {
+		log.Println(err.Error())
+		return 0.0
+	}
+	return result
 }

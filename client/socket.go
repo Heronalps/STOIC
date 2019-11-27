@@ -39,6 +39,7 @@ func handler(conn net.Conn) {
 	defer conn.Close()
 	var (
 		reader   = bufio.NewReader(conn)
+		writer   = bufio.NewWriter(conn)
 		buf      = make([]byte, 1024)
 		runtime  string
 		imageNum int
@@ -74,7 +75,10 @@ ILOOP:
 	// It requires checking kubeless process and
 	// write back to server socket if the kubeless function is available
 
-	Request(runtime, imageNum)
+	elapsed := Request(runtime, imageNum)
+	writer.Write(elapsed)
+	writer.Flush()
+	log.Println("Sent output to server...")
 }
 
 func isTransportOver(data string) (over bool) {

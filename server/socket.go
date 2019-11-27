@@ -10,14 +10,14 @@ import (
 /*
 SocketServer sends wtb task request to the client socket
 */
-func SocketServer(ip string, port int, runtime string, imageNum int) {
+func SocketServer(ip string, port int, runtime string, imageNum int) float64 {
 	addr := strings.Join([]string{ip, strconv.Itoa(port)}, ":")
 	conn, err := net.Dial("tcp", addr)
 
 	StopCharacter := " #"
 	if err != nil {
 		log.Fatalln(err)
-		return
+		return 0
 	}
 
 	defer conn.Close()
@@ -26,5 +26,14 @@ func SocketServer(ip string, port int, runtime string, imageNum int) {
 	message := runtime + " " + strconv.Itoa(imageNum)
 	conn.Write([]byte(message))
 	conn.Write([]byte(StopCharacter))
-	log.Printf("Send: %s", message)
+	log.Printf("Sent: %s \n", message)
+
+	buff := make([]byte, 1024)
+	n, _ := conn.Read(buff)
+	log.Println("Received output from client...")
+	elapsed := parseElapsed(buff[:n])
+	if err != nil {
+		log.Println(err.Error())
+	}
+	return elapsed
 }

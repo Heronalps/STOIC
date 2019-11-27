@@ -31,23 +31,24 @@ func SelectRunTime(imageNum int) string {
 Schedule is the entry point of Scheduler. If the task is intended to run on Nautilus,
 scheduler sends runtime and image to Mayhem cloud for relaying based on ip:port
 */
-func Schedule(ip string, port int) int {
+func Schedule(ip string, port int) (int, float64) {
 	imageNum := ImageCache()
+	var elapsed float64
 	switch runtime := SelectRunTime(imageNum); runtime {
 	case "euca":
 		fmt.Println("Running on euca...")
-		RunOnEuca(imageNum)
+		elapsed = RunOnEuca(imageNum)
 	default:
 		fmt.Println("Running on Nautilus...")
-		RunOnNautilus(runtime, imageNum, ip, port)
+		elapsed = RunOnNautilus(runtime, imageNum, ip, port)
 	}
-	return imageNum
+	return imageNum, elapsed
 }
 
 /*
 RunOnEuca runs the task on mini euca edge cloud with AVX support
 */
-func RunOnEuca(imageNum int) {
+func RunOnEuca(imageNum int) float64 {
 	var output []byte
 	var err error
 	var cmd *exec.Cmd
@@ -62,15 +63,16 @@ func RunOnEuca(imageNum int) {
 	output, err = cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
-		return
+		return 0
 	}
-	fmt.Printf("Output of task %s\n", output)
+	fmt.Printf("Output of task %s\n", string(output))
+	return parseElapsed(output)
 }
 
 /*
 RunOnNautilus runs the task on Nautilus public cloud
 */
-func RunOnNautilus(runtime string, imageNum int, ip string, port int) {
+func RunOnNautilus(runtime string, imageNum int, ip string, port int) float64 {
 	fmt.Println("Transferring images to Nautilus...")
-	SocketServer(ip, port, runtime, imageNum)
+	return SocketServer(ip, port, runtime, imageNum)
 }

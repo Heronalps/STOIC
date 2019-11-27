@@ -23,38 +23,48 @@ import (
 /*
 Request sends request to Nautilus based on runtime and image number
 */
-func Request(runtime string, imageNum int) {
+func Request(runtime string, imageNum int) []byte {
 	namespace := "racelab"
 	deployment := "image-clf-inf"
+	var (
+		isGPUSame bool
+		cmd       string
+		output    []byte
+		err       error
+	)
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
 	case "cpu":
-		deploy(namespace, deployment, 0)
+		isGPUSame = deploy(namespace, deployment, 0)
 	case "gpu1":
-		deploy(namespace, deployment, 1)
+		isGPUSame = deploy(namespace, deployment, 1)
 	case "gpu2":
-		deploy(namespace, deployment, 2)
+		isGPUSame = deploy(namespace, deployment, 2)
 	}
-	//Make initial kubeless call to depolyed function to avoid cold start
+	//If the pod is re-deployed, make initial kubeless call to depolyed function to avoid cold start
 	//Wait a second for deployment to complete
 	time.Sleep(1 * time.Second)
-
-	fmt.Println("Probing deployed kubeless function to avoid cold start ...")
-	cmd := "sh invoke_inf.sh " + strconv.Itoa(1)
-	output, err := exec.Command("bash", "-c", cmd).Output()
-	if err != nil {
-		fmt.Println("Error msg : ", err.Error())
+	if !isGPUSame {
+		fmt.Println("Probing deployed kubeless function to avoid cold start ...")
+		cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
+		output, err = exec.Command("bash", "-c", cmd).Output()
+		if err != nil {
+			fmt.Println("Error msg : ", err.Error())
+		}
+		fmt.Println(string(output))
+		fmt.Println("Finish Probing ...")
+	} else {
+		fmt.Println("Using same pod, No probing needed....")
 	}
-	fmt.Println(string(output))
-	fmt.Println("Finish Probing ...")
 
 	//make kubeless call to deployed function
-	cmd = "sh invoke_inf.sh " + strconv.Itoa(imageNum)
+	cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(imageNum)
 	output, err = exec.Command("bash", "-c", cmd).Output()
 	if err != nil {
 		fmt.Println("Error msg : ", err.Error())
 	}
 	fmt.Println(string(output))
+	return output
 }
 
 /*
@@ -78,7 +88,7 @@ func getKubeConfig() string {
 /*
 Deploy patches kubeless function on Nautilus based on number of GPU
 */
-func deploy(namespace string, deployment string, NumGPU int64) {
+func deploy(namespace string, deployment string, NumGPU int64) bool {
 	kubeconfig := getKubeConfig()
 	// use the current context in kubeconfig
 	// This config is credential information of kubernetes
@@ -94,7 +104,10 @@ func deploy(namespace string, deployment string, NumGPU int64) {
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 
 	fmt.Println("Updating deployment...")
-
+	var (
+		prevNumGPU int64
+		currNumGPU int64
+	)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
 		if getErr != nil {
@@ -103,11 +116,13 @@ func deploy(namespace string, deployment string, NumGPU int64) {
 
 		numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
 		fmt.Printf("Current Number of GPU is %v \n", numGpu.Value())
+		prevNumGPU = numGpu.Value()
 		quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
 		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
 		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
 		_, updateErr := deploymentsClient.Update(result)
 		fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
+		currNumGPU = quant.Value()
 
 		fmt.Println("Waiting kubeless function to be deployed...")
 		time.Sleep(3 * time.Second)
@@ -127,4 +142,5 @@ func deploy(namespace string, deployment string, NumGPU int64) {
 	if retryErr != nil {
 		panic(fmt.Errorf("Update failed: %v", retryErr))
 	}
+	return prevNumGPU == currNumGPU
 }

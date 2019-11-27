@@ -20,16 +20,26 @@ func main() {
 		client.SocketClient(*port)
 	} else if *runtime == "server" {
 		var (
-			imageNum int
-			batches  int
+			imageNum  int
+			batches   int
+			totalTime float64
 		)
 
 		for {
-			imageNum += server.Schedule(*ip, *port)
+			images, elapsed := server.Schedule(*ip, *port)
+			if elapsed == 0.0 {
+				fmt.Println("The task was not executed...")
+				fmt.Println("continue...")
+				continue
+			}
+			imageNum += images
+			totalTime += elapsed
 			batches++
-			time.Sleep(3 * time.Minute)
+			time.Sleep(1 * time.Minute)
 			fmt.Printf("%d images has been inferenced...\n", imageNum)
 			fmt.Printf("%d batches has been processed...\n", batches)
+			fmt.Printf("%f seconds has elapsed...\n", totalTime)
+			fmt.Println("==================Next Batch===========================")
 		}
 	}
 }
