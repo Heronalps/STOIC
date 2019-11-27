@@ -29,7 +29,7 @@ func main() {
 			batches++
 			fmt.Printf("%d images has been inferenced...\n", imageNum)
 			fmt.Printf("%d batches has been processed...\n", batches)
-			time.Sleep(2 * time.Second)
+			time.Sleep(90 * time.Second)
 		}
 	}
 }
