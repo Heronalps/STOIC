@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"time"
 
 	"github.com/heronalps/STOIC/client"
@@ -18,9 +19,17 @@ func main() {
 	if *runtime == "client" {
 		client.SocketClient(*port)
 	} else if *runtime == "server" {
+		var (
+			imageNum int
+			batches  int
+		)
+
 		for {
-			server.Schedule(*ip, *port)
-			time.Sleep(2 * time.Minute)
+			imageNum += server.Schedule(*ip, *port)
+			batches++
+			fmt.Printf("%d images has been inferenced...\n", imageNum)
+			fmt.Printf("%d batches has been processed...\n", batches)
+			time.Sleep(2 * time.Second)
 		}
 	}
 }
