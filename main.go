@@ -27,9 +27,9 @@ func main() {
 		for {
 			imageNum += server.Schedule(*ip, *port)
 			batches++
+			time.Sleep(3 * time.Minute)
 			fmt.Printf("%d images has been inferenced...\n", imageNum)
 			fmt.Printf("%d batches has been processed...\n", batches)
-			time.Sleep(90 * time.Second)
 		}
 	}
 }
