@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"time"
 
 	"github.com/heronalps/STOIC/client"
 	"github.com/heronalps/STOIC/server"
@@ -35,7 +34,6 @@ func main() {
 			imageNum += images
 			totalTime += elapsed
 			batches++
-			time.Sleep(1 * time.Minute)
 			fmt.Printf("%d images has been inferenced...\n", imageNum)
 			fmt.Printf("%d batches has been processed...\n", batches)
 			fmt.Printf("%f seconds has elapsed...\n", totalTime)

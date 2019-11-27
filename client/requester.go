@@ -27,11 +27,13 @@ func Request(runtime string, imageNum int) []byte {
 	namespace := "racelab"
 	deployment := "image-clf-inf"
 	var (
+		output    []byte
 		isGPUSame bool
 		cmd       string
-		output    []byte
 		err       error
 	)
+	resultChannel := make(chan []byte)
+
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
 	case "cpu":
@@ -44,27 +46,36 @@ func Request(runtime string, imageNum int) []byte {
 	//If the pod is re-deployed, make initial kubeless call to depolyed function to avoid cold start
 	//Wait a second for deployment to complete
 	time.Sleep(1 * time.Second)
-	if !isGPUSame {
-		fmt.Println("Probing deployed kubeless function to avoid cold start ...")
-		cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
+	go func() {
+		if !isGPUSame {
+			fmt.Println("Probing deployed kubeless function to avoid cold start ...")
+			cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
+			output, err = exec.Command("bash", "-c", cmd).Output()
+			if err != nil {
+				fmt.Println("Error msg : ", err.Error())
+			}
+			fmt.Println(string(output))
+			fmt.Println("Finish Probing ...")
+		} else {
+			fmt.Println("Using same pod, No probing needed....")
+		}
+
+		//make kubeless call to deployed function
+		cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(imageNum)
 		output, err = exec.Command("bash", "-c", cmd).Output()
 		if err != nil {
 			fmt.Println("Error msg : ", err.Error())
 		}
 		fmt.Println(string(output))
-		fmt.Println("Finish Probing ...")
-	} else {
-		fmt.Println("Using same pod, No probing needed....")
-	}
+		resultChannel <- output
+	}()
 
-	//make kubeless call to deployed function
-	cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(imageNum)
-	output, err = exec.Command("bash", "-c", cmd).Output()
-	if err != nil {
-		fmt.Println("Error msg : ", err.Error())
-	}
-	fmt.Println(string(output))
-	return output
+	result := <-resultChannel
+	return result
+}
+
+func invoke() {
+
 }
 
 /*
