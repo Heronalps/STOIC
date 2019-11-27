@@ -4,3 +4,4 @@ STOIC
 /build
 **/.ipynb_checkpoints
 *.csv
+*.txt

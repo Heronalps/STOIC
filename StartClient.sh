@@ -1,1 +1,1 @@
-go run main.go -runtime=client -port=5001
+go run main.go -runtime=client -port=5001 | tee -a client_log.txt

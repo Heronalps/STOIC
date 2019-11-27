@@ -1,1 +1,1 @@
-go run main.go -runtime=server -ip=127.0.0.1 -port=5001
+go run main.go -runtime=server -ip=127.0.0.1 -port=5001 | tee -a server_log.txt
