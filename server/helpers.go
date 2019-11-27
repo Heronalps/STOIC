@@ -16,6 +16,12 @@ import (
 	"github.com/serverhorror/rog-go/reverse"
 )
 
+const (
+	cpuDeploymentTime  = 18.0
+	gpu1DeploymentTime = 26.0
+	gpu2DeploymentTime = 65.0
+)
+
 /*
 GetBandWidth solicits bandwidth of Pi Zero at Sedgwick Reserve.
 */
@@ -79,14 +85,14 @@ func Extrapolate(mode string, x int) float64 {
 		coef = 2.39549861
 		intercept = 13.600537473199736
 	case "cpu":
-		coef = 1.35328625
-		intercept = 29.910393951759985
+		coef = 1.33380247
+		intercept = 14.91093042617645
 	case "gpu1":
-		coef = 0.34666546
-		intercept = 92.16208453231344
+		coef = 0.3271631
+		intercept = 28.163551818338643
 	case "gpu2":
-		coef = 0.21877092
-		intercept = 143.26647033799347
+		coef = 0.19928721
+		intercept = 21.267003248222906
 	}
 
 	return float64(x)*coef + intercept
@@ -125,10 +131,10 @@ func GetTotalTime(imageNum int) map[float64]string {
 	runtimes := GetRunTime(imageNum)
 	transferTimes := GetTransferTime(imageNum)
 	totalTimes := make(map[float64]string)
-	totalTimes[runtimes[0]+transferTimes] = "euca"
-	totalTimes[runtimes[1]+transferTimes] = "cpu"
-	totalTimes[runtimes[2]+transferTimes] = "gpu1"
-	totalTimes[runtimes[3]+transferTimes] = "gpu2"
+	totalTimes[runtimes[0]] = "euca"
+	totalTimes[runtimes[1]+transferTimes+cpuDeploymentTime] = "cpu"
+	totalTimes[runtimes[2]+transferTimes+gpu1DeploymentTime] = "gpu1"
+	totalTimes[runtimes[3]+transferTimes+gpu2DeploymentTime] = "gpu2"
 	return totalTimes
 }
 
