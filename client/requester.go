@@ -35,8 +35,10 @@ func Request(runtime string, imageNum int) {
 	case "gpu2":
 		deploy(namespace, deployment, 2)
 	}
-	//make initial kubeless call to depolyed function to avoid cold start
+	//Make initial kubeless call to depolyed function to avoid cold start
+	//Wait a second for deployment to complete
 	time.Sleep(1 * time.Second)
+
 	fmt.Println("Probing deployed kubeless function to avoid cold start ...")
 	cmd := "sh invoke_inf.sh " + strconv.Itoa(1)
 	output, err := exec.Command("bash", "-c", cmd).Output()

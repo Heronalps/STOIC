@@ -24,6 +24,6 @@ For WTB photo repository, the average amount of photo per hour is 42.75, and std
 */
 func ImageCache() int {
 	mean := 42.75
-	stdev := 26.5
+	stdev := 39.5
 	return int(math.Ceil(math.Abs(RandNum(mean, stdev))))
 }
