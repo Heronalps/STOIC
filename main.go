@@ -20,7 +20,7 @@ func main() {
 	} else if *runtime == "server" {
 		for {
 			server.Schedule(*ip, *port)
-			time.Sleep(3 * time.Minute)
+			time.Sleep(2 * time.Minute)
 		}
 	}
 }

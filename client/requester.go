@@ -39,6 +39,10 @@ func Request(runtime string, imageNum int) {
 	fmt.Println("Probing deployed kubeless function to avoid cold start ...")
 	cmd := "sh invoke_inf.sh " + strconv.Itoa(1)
 	output, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	fmt.Println(string(output))
 	fmt.Println("Finish Probing ...")
 
 	//make kubeless call to deployed function
