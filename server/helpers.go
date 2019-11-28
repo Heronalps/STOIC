@@ -18,7 +18,7 @@ import (
 
 const (
 	cpuDeploymentTime  = 18.0
-	gpu1DeploymentTime = 26.0
+	gpu1DeploymentTime = 46.0
 	gpu2DeploymentTime = 65.0
 )
 
@@ -54,7 +54,6 @@ func GetBandWidth() float64 {
 		}
 	}
 
-	fmt.Printf("The bandwidth is %f megabits \n", bandWidth)
 	if bandWidth <= 0.0 {
 		fmt.Println("The bandwidth zeroed out! Simulate on average 70.7916 !")
 		bandWidth = 70.7916
@@ -108,7 +107,6 @@ func GetTransferTime(imageNum int) float64 {
 	JPGSize := 212 * 1e-3
 
 	transferTime := float64(imageNum) * JPGSize / bandwidth
-	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, transferTime)
 	return transferTime
 }
 
@@ -129,13 +127,31 @@ GetTotalTime calculate total time (Addition of transfer and run time) of four sc
 */
 func GetTotalTime(imageNum int) map[float64]string {
 	runtimes := GetRunTime(imageNum)
-	transferTimes := GetTransferTime(imageNum)
 	totalTimes := make(map[float64]string)
 	totalTimes[runtimes[0]] = "euca"
-	totalTimes[runtimes[1]+transferTimes+cpuDeploymentTime] = "cpu"
-	totalTimes[runtimes[2]+transferTimes+gpu1DeploymentTime] = "gpu1"
-	totalTimes[runtimes[3]+transferTimes+gpu2DeploymentTime] = "gpu2"
+	totalTimes[runtimes[1]+GetAdditionTime("cpu", imageNum)] = "cpu"
+	totalTimes[runtimes[2]+GetAdditionTime("gpu1", imageNum)] = "gpu1"
+	totalTimes[runtimes[3]+GetAdditionTime("gpu2", imageNum)] = "gpu2"
 	return totalTimes
+}
+
+/*
+GetAdditionTime returns the sum of corresponding transfer and deployment time of runtime and image num
+*/
+func GetAdditionTime(runtime string, imageNum int) float64 {
+	transferTime := GetTransferTime(imageNum)
+	var additionTime float64
+	switch runtime {
+	case "euca":
+		additionTime = 0.0
+	case "cpu":
+		additionTime = transferTime + cpuDeploymentTime
+	case "gpu1":
+		additionTime = transferTime + gpu1DeploymentTime
+	case "gpu2":
+		additionTime = transferTime + gpu2DeploymentTime
+	}
+	return additionTime
 }
 
 /*
@@ -146,7 +162,7 @@ func parseElapsed(output []byte) float64 {
 	// []byte - elapsed time of task
 	elapsed := re.FindSubmatch(output)
 	if len(elapsed) == 0 {
-		log.Println("No Elapsed time is received output ...")
+		log.Println("No elapsed time is received in output ...")
 		return 0.0
 	}
 	result, err := strconv.ParseFloat(string(elapsed[1]), 64)

@@ -3,6 +3,7 @@ package client
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os/exec"
 	"path/filepath"
 	"strconv"
@@ -31,22 +32,29 @@ func Request(runtime string, imageNum int) []byte {
 		isGPUSame bool
 		cmd       string
 		err       error
+		result    []byte
 	)
 	resultChannel := make(chan []byte)
 
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
 	case "cpu":
-		isGPUSame = deploy(namespace, deployment, 0)
+		isGPUSame, err = deploy(namespace, deployment, 0)
 	case "gpu1":
-		isGPUSame = deploy(namespace, deployment, 1)
+		isGPUSame, err = deploy(namespace, deployment, 1)
 	case "gpu2":
-		isGPUSame = deploy(namespace, deployment, 2)
+		isGPUSame, err = deploy(namespace, deployment, 2)
 	}
-	//If the pod is re-deployed, make initial kubeless call to depolyed function to avoid cold start
-	//Wait a second for deployment to complete
-	time.Sleep(1 * time.Second)
+	if err != nil {
+		log.Println(err.Error())
+		return result
+	}
+
+	// Wait 3 second for deployment to complete
+	time.Sleep(3 * time.Second)
 	go func() {
+		// If the pod is re-deployed,
+		// make initial kubeless call to depolyed function to avoid cold start
 		if !isGPUSame {
 			fmt.Println("Probing deployed kubeless function to avoid cold start ...")
 			cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
@@ -70,12 +78,8 @@ func Request(runtime string, imageNum int) []byte {
 		resultChannel <- output
 	}()
 
-	result := <-resultChannel
+	result = <-resultChannel
 	return result
-}
-
-func invoke() {
-
 }
 
 /*
@@ -99,7 +103,7 @@ func getKubeConfig() string {
 /*
 Deploy patches kubeless function on Nautilus based on number of GPU
 */
-func deploy(namespace string, deployment string, NumGPU int64) bool {
+func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 	kubeconfig := getKubeConfig()
 	// use the current context in kubeconfig
 	// This config is credential information of kubernetes
@@ -122,7 +126,8 @@ func deploy(namespace string, deployment string, NumGPU int64) bool {
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 		result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
 		if getErr != nil {
-			panic(fmt.Errorf("Failed to get latest version of Deployment %v", getErr))
+			log.Printf("Failed to get latest version of Deployment %v", getErr)
+			return getErr
 		}
 
 		numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
@@ -151,7 +156,7 @@ func deploy(namespace string, deployment string, NumGPU int64) bool {
 	})
 
 	if retryErr != nil {
-		panic(fmt.Errorf("Update failed: %v", retryErr))
+		log.Printf("Update failed: %v", retryErr)
 	}
-	return prevNumGPU == currNumGPU
+	return prevNumGPU == currNumGPU, retryErr
 }
