@@ -41,6 +41,7 @@ func main() {
 			batches++
 			fmt.Printf("%d images has been inferenced...\n", totalImage)
 			fmt.Printf("%d batches has been processed...\n", batches)
+			fmt.Printf("%f seconds for this batch...\n", elapsed)
 			fmt.Printf("%f seconds has elapsed...\n", totalTime)
 			if *batch != 0 && *batch == batches {
 				os.Exit(0)
