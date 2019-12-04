@@ -31,8 +31,11 @@ func SelectRunTime(imageNum int) string {
 Schedule is the entry point of Scheduler. If the task is intended to run on Nautilus,
 scheduler sends runtime and image to Mayhem cloud for relaying based on ip:port
 */
-func Schedule(ip string, port int, runtime string) (int, float64) {
-	imageNum := ImageCache()
+func Schedule(ip string, port int, runtime string, imageNum int) (int, float64) {
+	if imageNum == 0 {
+		imageNum = ImageCache()
+	}
+
 	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
 	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, GetTransferTime(imageNum))
 
@@ -41,9 +44,9 @@ func Schedule(ip string, port int, runtime string) (int, float64) {
 		runtime = SelectRunTime(imageNum)
 	}
 	switch runtime {
-	case "euca":
-		fmt.Println("Running on euca...")
-		elapsed = RunOnEuca(imageNum)
+	case "edge":
+		fmt.Println("Running on edge...")
+		elapsed = RunOnEdge(imageNum)
 	default:
 		fmt.Println("Running on Nautilus...")
 		elapsed = RunOnNautilus(runtime, imageNum, ip, port)
@@ -55,9 +58,9 @@ func Schedule(ip string, port int, runtime string) (int, float64) {
 }
 
 /*
-RunOnEuca runs the task on mini euca edge cloud with AVX support
+RunOnEdge runs the task on mini edge cloud with AVX support
 */
-func RunOnEuca(imageNum int) float64 {
+func RunOnEdge(imageNum int) float64 {
 	var output []byte
 	var err error
 	var cmd *exec.Cmd

@@ -1,1 +1,1 @@
-go run main.go -node=server -ip=127.0.0.1 -port=5001 -runtime=gpu2 | tee -a server_log.txt
+go run main.go -node=server -ip=127.0.0.1 -port=5001 -image=10 -runtime=edge -batch=24 | tee -a server_log.txt

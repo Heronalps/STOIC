@@ -80,7 +80,7 @@ func Extrapolate(mode string, x int) float64 {
 	var coef float64
 	var intercept float64
 	switch mode {
-	case "euca":
+	case "edge":
 		coef = 2.39549861
 		intercept = 13.600537473199736
 	case "cpu":
@@ -111,14 +111,14 @@ func GetTransferTime(imageNum int) float64 {
 }
 
 /*
-GetRunTime calculates the runtime of four scenarios: euca, cpu, gpu1, gpu2
+GetRunTime calculates the runtime of four scenarios: edge, cpu, gpu1, gpu2
 */
 func GetRunTime(imageNum int) []float64 {
-	eucaRuntime := Extrapolate("euca", imageNum)
+	edgeRuntime := Extrapolate("edge", imageNum)
 	cpuRuntime := Extrapolate("cpu", imageNum)
 	gpu1Runtime := Extrapolate("gpu1", imageNum)
 	gpu2Runtime := Extrapolate("gpu2", imageNum)
-	runtimes := []float64{eucaRuntime, cpuRuntime, gpu1Runtime, gpu2Runtime}
+	runtimes := []float64{edgeRuntime, cpuRuntime, gpu1Runtime, gpu2Runtime}
 	return runtimes
 }
 
@@ -128,7 +128,7 @@ GetTotalTime calculate total time (Addition of transfer and run time) of four sc
 func GetTotalTime(imageNum int) map[float64]string {
 	runtimes := GetRunTime(imageNum)
 	totalTimes := make(map[float64]string)
-	totalTimes[runtimes[0]] = "euca"
+	totalTimes[runtimes[0]] = "edge"
 	totalTimes[runtimes[1]+GetAdditionTime("cpu", imageNum)] = "cpu"
 	totalTimes[runtimes[2]+GetAdditionTime("gpu1", imageNum)] = "gpu1"
 	totalTimes[runtimes[3]+GetAdditionTime("gpu2", imageNum)] = "gpu2"
@@ -142,7 +142,7 @@ func GetAdditionTime(runtime string, imageNum int) float64 {
 	transferTime := GetTransferTime(imageNum)
 	var additionTime float64
 	switch runtime {
-	case "euca":
+	case "edge":
 		additionTime = 0.0
 	case "cpu":
 		additionTime = transferTime + cpuDeploymentTime
