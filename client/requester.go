@@ -124,6 +124,14 @@ func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 		currNumGPU int64
 	)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+
+		// Recover from "panic: assignment to entry in nil map"
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Printf("Panic : %s \n", r)
+			}
+		}()
+
 		result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
 		if getErr != nil {
 			log.Printf("Failed to get latest version of Deployment %v", getErr)
@@ -131,7 +139,6 @@ func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 		}
 
 		numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
-		fmt.Printf("Current Number of GPU is %v \n", numGpu.Value())
 		prevNumGPU = numGpu.Value()
 		quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
 		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant

@@ -158,7 +158,7 @@ func GetAdditionTime(runtime string, imageNum int) float64 {
 parseElapsed capture time in output
 */
 func parseElapsed(output []byte) float64 {
-	re := regexp.MustCompile(`Time with model loading: (\d*\.\d*)`)
+	re := regexp.MustCompile(`Time without model loading (\d*\.\d*)`)
 	// []byte - elapsed time of task
 	elapsed := re.FindSubmatch(output)
 	if len(elapsed) == 0 {
