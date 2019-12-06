@@ -140,6 +140,7 @@ func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 
 		numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
 		prevNumGPU = numGpu.Value()
+		fmt.Printf("Current Number of GPU is %v \n", prevNumGPU)
 		quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
 		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
 		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant

@@ -15,11 +15,11 @@ func main() {
 	ip := flag.String("ip", "127.0.0.1", "IP address of client")
 	port := flag.Int("port", 5001, "Port of client")
 	runtime := flag.String("runtime", "", "Runtime of WTB tasks: edge/cpu/gpu1/gpu2")
-	//imageNum := flag.Int("image", 0, "Image number in one batch")
+	imageNum := flag.Int("image", 0, "Image number in one batch")
 	batch := flag.Int("batch", 0, "Batchs of image")
+	preset := flag.Bool("preset", false, "If the batch sizes are preset")
 	flag.Parse()
-	randomSize := [24]int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93,
-		20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
+	randomSize := [24]int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93, 20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
 
 	if *node == "client" {
 		client.SocketClient(*port)
@@ -31,7 +31,10 @@ func main() {
 		)
 
 		for i := 0; i < len(randomSize); i++ {
-			images, elapsed := server.Schedule(*ip, *port, *runtime, randomSize[i])
+			if *preset {
+				*imageNum = randomSize[i]
+			}
+			images, elapsed := server.Schedule(*ip, *port, *runtime, *imageNum)
 			if elapsed == 0.0 {
 				fmt.Println("The task was not executed...")
 				fmt.Println("continue...")
