@@ -19,8 +19,8 @@ func main() {
 	batch := flag.Int("batch", 0, "Batchs of image")
 	preset := flag.Bool("preset", false, "If the batch sizes are preset")
 	flag.Parse()
-	randomSize := [24]int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93, 20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
-
+	randomSize := []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93, 20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
+	slice := randomSize[21:]
 	if *node == "client" {
 		client.SocketClient(*port)
 	} else if *node == "server" {
@@ -30,9 +30,9 @@ func main() {
 			totalTime  float64
 		)
 
-		for i := 0; i < len(randomSize); i++ {
+		for i := 0; i < len(slice); i++ {
 			if *preset {
-				*imageNum = randomSize[i]
+				*imageNum = slice[i]
 			}
 			images, elapsed := server.Schedule(*ip, *port, *runtime, *imageNum)
 			if elapsed == 0.0 {
