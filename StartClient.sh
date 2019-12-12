@@ -1,0 +1,1 @@
+go run main.go -node=client -port=5001 | tee -a client_log.txt

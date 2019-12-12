@@ -6,14 +6,15 @@ package server
 
 import (
 	"fmt"
-	"os/exec"
+	exec "os/exec"
 	"sort"
+	"strconv"
 )
 
 /*
 SelectRunTime select the runtime among four scenarios
 */
-func SelectRunTime(imageNum int64) string {
+func SelectRunTime(imageNum int) string {
 	totalTimes := GetTotalTime(imageNum)
 	fmt.Println(totalTimes)
 	// Sort the totalTimes map by key
@@ -21,38 +22,69 @@ func SelectRunTime(imageNum int64) string {
 	for k := range totalTimes {
 		keys = append(keys, k)
 	}
-	keys = sort.Float64Slice(keys)
+	sort.Float64s(keys)
 	fmt.Printf("The task is scheduled at %s for %f seconds\n", totalTimes[keys[0]], keys[0])
 	return totalTimes[keys[0]]
 }
 
 /*
-Schedule obtains total times of four scenarios
+Schedule is the entry point of Scheduler. If the task is intended to run on Nautilus,
+scheduler sends runtime and image to Mayhem cloud for relaying based on ip:port
 */
-func Schedule() {
-	imageNum := ImageCache()
-	switch runtime := SelectRunTime(imageNum); runtime {
-	case "euca":
-		RunOnEuca(imageNum)
-	default:
-		RunOnNautilus(runtime, imageNum)
+func Schedule(ip string, port int, runtime string, imageNum int) (int, float64) {
+	if imageNum == 0 {
+		imageNum = ImageCache()
 	}
+
+	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
+	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, GetTransferTime(imageNum))
+
+	var elapsed float64
+	if runtime == "" {
+		runtime = SelectRunTime(imageNum)
+	}
+	switch runtime {
+	case "edge":
+		fmt.Println("Running on edge...")
+		elapsed = RunOnEdge(imageNum)
+	default:
+		fmt.Println("Running on Nautilus...")
+		elapsed = RunOnNautilus(runtime, imageNum, ip, port)
+	}
+	if elapsed == 0.0 {
+		return imageNum, elapsed
+	}
+	return imageNum, elapsed + GetAdditionTime(runtime, imageNum)
 }
 
 /*
-RunOnEuca runs the task on mini euca edge cloud with AVX support
+RunOnEdge runs the task on mini edge cloud with AVX support
 */
-func RunOnEuca(imageNum int64) {
-	PATH := HomeDir() + "/GPU_Serverless/kubeless/image_clf/inference/local_version/image_clf_inf.py "
-	cmdVenv := "source " + HomeDir() + "/GPU_Serverless/venv_avx/bin/activate"
-	exec.Command(cmdVenv)
-	cmdRun := "python " + PATH + string(imageNum)
-	exec.Command(cmdRun)
+func RunOnEdge(imageNum int) float64 {
+	var output []byte
+	var err error
+	var cmd *exec.Cmd
+	repoPATH := HomeDir() + "/GPU_Serverless"
+
+	// Run WTB image classification task
+	FILE := "./kubeless/image_clf/inference/local_version/image_clf_inf.py "
+	cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
+	cmd = exec.Command("bash", "-c", cmdRun)
+	cmd.Dir = repoPATH
+	fmt.Printf("Start running WTB task on %d images \n", imageNum)
+	output, err = cmd.Output()
+	if err != nil {
+		fmt.Printf("Error running task. msg: %s \n", err.Error())
+		return 0
+	}
+	fmt.Printf("Output of task %s\n", string(output))
+	return parseElapsed(output)
 }
 
 /*
 RunOnNautilus runs the task on Nautilus public cloud
 */
-func RunOnNautilus(runtime string, imageNum int64) {
-
+func RunOnNautilus(runtime string, imageNum int, ip string, port int) float64 {
+	fmt.Println("Transferring images to Nautilus...")
+	return SocketServer(ip, port, runtime, imageNum)
 }
