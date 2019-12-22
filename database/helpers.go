@@ -26,10 +26,17 @@ func connectDB(username string, password string, ip string, port int) *sql.DB {
 /*
 CreateDatabase creates a database in MySQL instance
 */
-func CreateDatabase(name string) {
+func CreateDatabase(name string) bool {
 	db := connectDB(username, password, ip, port)
 	defer db.Close()
+	_, err := db.Exec("CREATE database " + name)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
 
+	fmt.Printf("Successfully created database %s ...", name)
+	return true
 }
 
 /*
