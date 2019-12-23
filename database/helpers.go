@@ -15,7 +15,7 @@ var port int = 3306
 
 func connectDB(username string, password string, ip string, port int) *sql.DB {
 	// Define Data Source Name
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/\n", username, password, ip, port)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/", username, password, ip, port)
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		panic(err.Error())
@@ -23,34 +23,86 @@ func connectDB(username string, password string, ip string, port int) *sql.DB {
 	return db
 }
 
+func useDB(db *sql.DB, dbName string) {
+	_, err := db.Exec("USE " + dbName)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Printf("Select the %s ...\n", dbName)
+}
+
 /*
-CreateDatabase creates a database in MySQL instance
+CreateDatabase creates a database in MySQL instance. CREATE operation is idempotent.
 */
-func CreateDatabase(name string) bool {
+func CreateDatabase(dbName string) error {
 	db := connectDB(username, password, ip, port)
 	defer db.Close()
-	_, err := db.Exec("CREATE database " + name)
+	_, err := db.Exec(fmt.Sprintf("CREATE database %s", dbName))
 	if err != nil {
+		fmt.Println("In CreateDatabase function ... ")
 		fmt.Println(err.Error())
-		return false
+		return err
 	}
 
-	fmt.Printf("Successfully created database %s ...", name)
-	return true
+	fmt.Printf("Successfully created database %s ...\n", dbName)
+	return err
 }
 
 /*
 CreateProcessingTimeTable creates a table for recording processing time of image batches
 */
-func CreateProcessingTimeTable() {
+func CreateProcessingTimeTable(dbName string) error {
 	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
 	defer db.Close()
+
+	stmt, err := db.Prepare(`CREATE TABLE ProcessingTime (
+		task_id INT NOT NULL AUTO_INCREMENT, 
+		time_stamp TIMESTAMP NOT NULL, 
+		image_num INT NOT NULL, 
+		edge FLOAT, 
+		cpu FLOAT, 
+		gpu1 FLOAT, 
+		gpu2 FLOAT, 
+		primary key(task_id));`)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	fmt.Println("ProcessingTime table is created successfully...")
+	return err
 }
 
 /*
 CreateDeploymentTimeTable creates a table for monitoring deployment time of runtimes
 */
-func CreateDeploymentTimeTable() {
+func CreateDeploymentTimeTable(dbName string) error {
 	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
 	defer db.Close()
+
+	stmt, err := db.Prepare(`CREATE TABLE DeploymentTime(
+		deployment_id INT NOT NULL AUTO_INCREMENT, 
+		time_stamp TIMESTAMP NOT NULL, 
+		edge FLOAT, 
+		cpu FLOAT, 
+		gpu1 FLOAT, 
+		gpu2 FLOAT, 
+		primary key(deployment_id));`)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	fmt.Println("DeploymentTime table is created successfully...")
+	return err
 }
