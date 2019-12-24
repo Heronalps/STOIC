@@ -17,7 +17,7 @@ func TestCreateDatabase(t *testing.T) {
 
 func TestCreateProcessingTimeTable(t *testing.T) {
 	dbName := "test"
-	err := database.CreateProcessingTimeTable(dbName)
+	err := database.CreateProcessingTimeTable(dbName, "edge")
 	if err != nil {
 		t.Errorf("TestCreateProcessingTimeTable...\n")
 		t.Errorf("ProcessingTime table was not created...\n")

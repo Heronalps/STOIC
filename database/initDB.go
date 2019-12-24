@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	// MySQL driver
 	_ "github.com/go-sql-driver/mysql"
@@ -51,30 +52,32 @@ func CreateDatabase(dbName string) error {
 /*
 CreateProcessingTimeTable creates a table for recording processing time of image batches
 */
-func CreateProcessingTimeTable(dbName string) error {
+func CreateProcessingTimeTable(dbName string, runtime string) error {
 	db := connectDB(username, password, ip, port)
 	useDB(db, dbName)
 	defer db.Close()
-
-	stmt, err := db.Prepare(`CREATE TABLE ProcessingTime (
+	stmtStr := fmt.Sprintf(`CREATE TABLE ProcessingTime%s (
 		task_id INT NOT NULL AUTO_INCREMENT, 
 		time_stamp TIMESTAMP NOT NULL, 
 		image_num INT NOT NULL, 
-		edge FLOAT, 
-		cpu FLOAT, 
-		gpu1 FLOAT, 
-		gpu2 FLOAT, 
-		primary key(task_id));`)
+		%s FLOAT, 
+		primary key(task_id));`, strings.Title(runtime), runtime)
+
+	stmt, err := db.Prepare(stmtStr)
 	if err != nil {
+		fmt.Println("Error in Preparing stmt...")
 		fmt.Println(err.Error())
 		return err
 	}
+	defer stmt.Close()
+
 	_, err = stmt.Exec()
 	if err != nil {
+		fmt.Println("Error in Executing stmt...")
 		fmt.Println(err.Error())
 		return err
 	}
-	fmt.Println("ProcessingTime table is created successfully...")
+	fmt.Printf("%s ProcessingTime table is created successfully...\n", runtime)
 	return err
 }
 
@@ -98,6 +101,8 @@ func CreateDeploymentTimeTable(dbName string) error {
 		fmt.Println(err.Error())
 		return err
 	}
+	defer stmt.Close()
+
 	_, err = stmt.Exec()
 	if err != nil {
 		fmt.Println(err.Error())
