@@ -6,18 +6,34 @@ import (
 	"github.com/heronalps/STOIC/database"
 )
 
+var dbName string = "test"
+var err error
+
 func TestCreateDatabase(t *testing.T) {
-	name := "test"
-	err := database.CreateDatabase(name)
+	err = database.CreateDatabase(dbName)
 	if err != nil {
 		t.Errorf("TestCreateDatabase.. \n")
-		t.Errorf("%s was not created...\n", name)
+		t.Errorf("%s was not created...\n", dbName)
 	}
 }
 
 func TestCreateProcessingTimeTable(t *testing.T) {
-	dbName := "test"
-	err := database.CreateProcessingTimeTable(dbName, "edge")
+	err = database.CreateProcessingTimeTable(dbName, "edge")
+	if err != nil {
+		t.Errorf("TestCreateProcessingTimeTable...\n")
+		t.Errorf("ProcessingTime table was not created...\n")
+	}
+	err = database.CreateProcessingTimeTable(dbName, "cpu")
+	if err != nil {
+		t.Errorf("TestCreateProcessingTimeTable...\n")
+		t.Errorf("ProcessingTime table was not created...\n")
+	}
+	err = database.CreateProcessingTimeTable(dbName, "gpu1")
+	if err != nil {
+		t.Errorf("TestCreateProcessingTimeTable...\n")
+		t.Errorf("ProcessingTime table was not created...\n")
+	}
+	err = database.CreateProcessingTimeTable(dbName, "gpu2")
 	if err != nil {
 		t.Errorf("TestCreateProcessingTimeTable...\n")
 		t.Errorf("ProcessingTime table was not created...\n")
@@ -25,10 +41,17 @@ func TestCreateProcessingTimeTable(t *testing.T) {
 }
 
 func TestCreateDeploymentTimeTable(t *testing.T) {
-	dbName := "test"
-	err := database.CreateDeploymentTimeTable(dbName)
+	err = database.CreateDeploymentTimeTable(dbName)
 	if err != nil {
 		t.Errorf("TestCreateDeploymentTimeTable...\n")
 		t.Errorf("DeploymentTime table was not created...\n")
+	}
+}
+
+func TestAppendRecord(t *testing.T) {
+	err = database.AppendRecord(dbName, "edge", 10, 1.56)
+	if err != nil {
+		t.Errorf("TestAppendRecord...\n")
+		t.Errorf("The record was not appended...\n")
 	}
 }
