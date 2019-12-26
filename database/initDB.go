@@ -9,10 +9,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+//Global variable of Configuration
+var dbName string = "test"
 var username string = "root"
 var password string = "123456"
 var ip string = "127.0.0.1"
 var port int = 3306
+var namespace string = "racelab"
+var deployment string = "image-clf-inf"
 
 func connectDB(username string, password string, ip string, port int) *sql.DB {
 	// Define Data Source Name
@@ -92,7 +96,6 @@ func CreateDeploymentTimeTable(dbName string) error {
 	stmt, err := db.Prepare(`CREATE TABLE DeploymentTime(
 		deployment_id INT NOT NULL AUTO_INCREMENT, 
 		time_stamp TIMESTAMP NOT NULL, 
-		edge FLOAT, 
 		cpu FLOAT, 
 		gpu1 FLOAT, 
 		gpu2 FLOAT, 

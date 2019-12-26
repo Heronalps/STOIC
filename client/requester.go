@@ -39,11 +39,11 @@ func Request(runtime string, imageNum int) []byte {
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
 	case "cpu":
-		isGPUSame, err = deploy(namespace, deployment, 0)
+		isGPUSame, _, err = Deploy(namespace, deployment, 0)
 	case "gpu1":
-		isGPUSame, err = deploy(namespace, deployment, 1)
+		isGPUSame, _, err = Deploy(namespace, deployment, 1)
 	case "gpu2":
-		isGPUSame, err = deploy(namespace, deployment, 2)
+		isGPUSame, _, err = Deploy(namespace, deployment, 2)
 	}
 	if err != nil {
 		log.Println(err.Error())
@@ -101,9 +101,34 @@ func getKubeConfig() string {
 }
 
 /*
+QueryGPUNum queries the number of GPU in current pod
+*/
+func QueryGPUNum(namespace string, deployment string) int64 {
+	kubeconfig := getKubeConfig()
+	// use the current context in kubeconfig
+	// This config is credential information of kubernetes
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		panic(err.Error())
+	}
+	// create the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	deploymentsClient := clientset.AppsV1().Deployments(namespace)
+	result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
+	if getErr != nil {
+		log.Printf("Failed to get latest version of Deployment %v", getErr)
+	}
+	numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
+	return numGpu.Value()
+}
+
+/*
 Deploy patches kubeless function on Nautilus based on number of GPU
 */
-func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
+func Deploy(namespace string, deployment string, NumGPU int64) (bool, float64, error) {
 	kubeconfig := getKubeConfig()
 	// use the current context in kubeconfig
 	// This config is credential information of kubernetes
@@ -122,6 +147,9 @@ func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 	var (
 		prevNumGPU int64
 		currNumGPU int64
+		timeStamp0 time.Time
+		timeStamp1 time.Time
+		duration   float64
 	)
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
@@ -144,6 +172,9 @@ func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 		quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
 		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
 		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
+
+		timeStamp0 = time.Now()
+
 		_, updateErr := deploymentsClient.Update(result)
 		fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
 		currNumGPU = quant.Value()
@@ -156,6 +187,10 @@ func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 			result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
 			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
 		}
+
+		timeStamp1 = time.Now()
+		duration = float64(timeStamp1.Sub(timeStamp0))
+
 		fmt.Println("Kubeless function is successfully deployed...")
 		if updateErr != nil {
 			fmt.Println(updateErr)
@@ -166,5 +201,6 @@ func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 	if retryErr != nil {
 		log.Printf("Update failed: %v", retryErr)
 	}
-	return prevNumGPU == currNumGPU, retryErr
+
+	return prevNumGPU == currNumGPU, duration, retryErr
 }
