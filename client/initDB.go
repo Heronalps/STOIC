@@ -68,12 +68,13 @@ func CreateProcessingTimeTable(dbName string, runtime string) error {
 		primary key(task_id));`, strings.Title(runtime), runtime)
 
 	stmt, err := db.Prepare(stmtStr)
+	defer stmt.Close()
+
 	if err != nil {
 		fmt.Println("Error in Preparing stmt...")
 		fmt.Println(err.Error())
 		return err
 	}
-	defer stmt.Close()
 
 	_, err = stmt.Exec()
 	if err != nil {
@@ -100,11 +101,12 @@ func CreateDeploymentTimeTable(dbName string) error {
 		gpu1 FLOAT, 
 		gpu2 FLOAT, 
 		primary key(deployment_id));`)
+	defer stmt.Close()
+
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
 	}
-	defer stmt.Close()
 
 	_, err = stmt.Exec()
 	if err != nil {
@@ -112,5 +114,44 @@ func CreateDeploymentTimeTable(dbName string) error {
 		return err
 	}
 	fmt.Println("DeploymentTime table is created successfully...")
+	return err
+}
+
+/*
+CreateRegressionTable creates a table for Bayesian Ridge Regression coefficient and intercept
+*/
+func CreateRegressionTable(dbName string) error {
+	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
+	defer db.Close()
+
+	stmt, err := db.Prepare(`CREATE TABLE Regression(
+		runtime VARCHAR(32) NOT NULL,
+		coeff FLOAT NOT NULL, 
+		intercept FLOAT NOT NULL);`)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	stmt, err = db.Prepare(`INSERT INTO Regression VALUE (?, ?, ?);`)
+	defer stmt.Close()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	_, err = stmt.Exec("edge", 1.0, 1.0)
+	_, err = stmt.Exec("cpu", 1.0, 1.0)
+	_, err = stmt.Exec("gpu1", 1.0, 1.0)
+	_, err = stmt.Exec("gpu2", 1.0, 1.0)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
 	return err
 }

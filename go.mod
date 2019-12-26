@@ -8,8 +8,8 @@ require (
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/pa-m/sklearn v0.0.0-20191204205223-bc18cf651a9f // indirect
 	github.com/pelletier/go-toml v1.6.0 // indirect
-	github.com/pkg/errors v0.8.1 // indirect
 	github.com/serverhorror/rog-go v0.0.0-20150622204439-87e4e0161534
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v0.0.5

@@ -194,7 +194,8 @@ func Deploy(namespace string, deployment string, NumGPU int64) (bool, float64, e
 
 		// End Timestamp
 		timeStamp1 = time.Now()
-		duration = float64(timeStamp1.Sub(timeStamp0))
+		// Convert nanoseconds to seconds
+		duration = float64(timeStamp1.Sub(timeStamp0)) * 1e-9
 
 		fmt.Println("Kubeless function is successfully deployed...")
 		if updateErr != nil {

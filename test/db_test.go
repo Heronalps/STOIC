@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/heronalps/STOIC/database"
+	"github.com/heronalps/STOIC/client"
 )
 
 func TestCreateDatabase(t *testing.T) {
-	err = database.CreateDatabase(dbName)
+	err = client.CreateDatabase(dbName)
 	if err != nil {
 		t.Errorf("TestCreateDatabase.. \n")
 		t.Errorf("%s was not created...\n", dbName)
@@ -16,22 +16,22 @@ func TestCreateDatabase(t *testing.T) {
 }
 
 func TestCreateProcessingTimeTable(t *testing.T) {
-	err = database.CreateProcessingTimeTable(dbName, "edge")
+	err = client.CreateProcessingTimeTable(dbName, "edge")
 	if err != nil {
 		t.Errorf("TestCreateProcessingTimeTable...\n")
 		t.Errorf("ProcessingTime table was not created...\n")
 	}
-	err = database.CreateProcessingTimeTable(dbName, "cpu")
+	err = client.CreateProcessingTimeTable(dbName, "cpu")
 	if err != nil {
 		t.Errorf("TestCreateProcessingTimeTable...\n")
 		t.Errorf("ProcessingTime table was not created...\n")
 	}
-	err = database.CreateProcessingTimeTable(dbName, "gpu1")
+	err = client.CreateProcessingTimeTable(dbName, "gpu1")
 	if err != nil {
 		t.Errorf("TestCreateProcessingTimeTable...\n")
 		t.Errorf("ProcessingTime table was not created...\n")
 	}
-	err = database.CreateProcessingTimeTable(dbName, "gpu2")
+	err = client.CreateProcessingTimeTable(dbName, "gpu2")
 	if err != nil {
 		t.Errorf("TestCreateProcessingTimeTable...\n")
 		t.Errorf("ProcessingTime table was not created...\n")
@@ -39,7 +39,7 @@ func TestCreateProcessingTimeTable(t *testing.T) {
 }
 
 func TestCreateDeploymentTimeTable(t *testing.T) {
-	err = database.CreateDeploymentTimeTable(dbName)
+	err = client.CreateDeploymentTimeTable(dbName)
 	if err != nil {
 		t.Errorf("TestCreateDeploymentTimeTable...\n")
 		t.Errorf("DeploymentTime table was not created...\n")
@@ -47,7 +47,7 @@ func TestCreateDeploymentTimeTable(t *testing.T) {
 }
 
 func TestAppendRecordProcessing(t *testing.T) {
-	err = database.AppendRecordProcessing(dbName, "edge", 10, 1.56)
+	err = client.AppendRecordProcessing(dbName, "edge", 10, 1.56)
 	if err != nil {
 		t.Errorf("TestAppendRecord...\n")
 		t.Errorf("The record was not appended...\n")
@@ -55,7 +55,7 @@ func TestAppendRecordProcessing(t *testing.T) {
 }
 
 func TestAppendRecordDeployment(t *testing.T) {
-	err = database.AppendRecordDeployment(dbName, 1.1, 1.2, 1.3)
+	err = client.AppendRecordDeployment(dbName, 1.1, 1.2, 1.3)
 	if err != nil {
 		t.Errorf("TestAppendRecord...\n")
 		t.Errorf("The record was not appended...\n")
@@ -64,8 +64,8 @@ func TestAppendRecordDeployment(t *testing.T) {
 
 func TestQueryDeploymentTime(t *testing.T) {
 	var deploymentTime interface{}
-	deploymentTime = database.QueryDeploymentTime(1)
-	defer database.QueryDeploymentTime(0)
+	deploymentTime = client.QueryDeploymentTime(1)
+	defer client.QueryDeploymentTime(0)
 
 	duration, ok := deploymentTime.(float64)
 	if !ok {
@@ -75,8 +75,15 @@ func TestQueryDeploymentTime(t *testing.T) {
 }
 
 func TestUpdateDeploymentTimeTable(t *testing.T) {
-	err = database.UpdateDeploymentTimeTable()
+	err = client.UpdateDeploymentTimeTable()
 	if err != nil {
 		t.Errorf("Updating DeploymentTime table was not successful ...\n")
+	}
+}
+
+func TestCreateRegressionTable(t *testing.T) {
+	err = client.CreateRegressionTable(dbName)
+	if err != nil {
+		t.Errorf("Creating Regression Table was not successful ...\n")
 	}
 }
