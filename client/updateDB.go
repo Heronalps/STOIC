@@ -1,10 +1,8 @@
-package database
+package client
 
 import (
 	"fmt"
 	"strings"
-
-	"github.com/heronalps/STOIC/client"
 )
 
 /*
@@ -54,7 +52,7 @@ func QueryDeploymentTime(numGPU int64) float64 {
 		err      error
 	)
 
-	_, duration, err = client.Deploy(namespace, deployment, numGPU)
+	_, duration, err = Deploy(namespace, deployment, numGPU)
 
 	if err != nil {
 		fmt.Println(err.Error())
@@ -74,7 +72,7 @@ func UpdateDeploymentTimeTable() error {
 	)
 
 	// Start from the current GPU number + 1
-	numGPU = client.QueryGPUNum(namespace, deployment)
+	numGPU = QueryGPUNum(namespace, deployment)
 	for i := 0; i < 3; i++ {
 		numGPU = (numGPU + 1) % 3
 		deploymentTimes[numGPU] = QueryDeploymentTime(numGPU)

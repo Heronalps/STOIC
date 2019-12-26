@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/heronalps/STOIC/server"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -24,7 +25,7 @@ import (
 /*
 Request sends request to Nautilus based on runtime and image number
 */
-func Request(runtime string, imageNum int) []byte {
+func Request(runtime string, imageNum int) ([]byte, float64) {
 	namespace := "racelab"
 	deployment := "image-clf-inf"
 	var (
@@ -33,6 +34,7 @@ func Request(runtime string, imageNum int) []byte {
 		cmd       string
 		err       error
 		result    []byte
+		duration  float64
 	)
 	resultChannel := make(chan []byte)
 
@@ -47,7 +49,7 @@ func Request(runtime string, imageNum int) []byte {
 	}
 	if err != nil {
 		log.Println(err.Error())
-		return result
+		return result, duration
 	}
 
 	// Wait 3 second for deployment to complete
@@ -74,12 +76,13 @@ func Request(runtime string, imageNum int) []byte {
 		if err != nil {
 			fmt.Println("Error msg : ", err.Error())
 		}
+		duration = server.ParseElapsed(output)
 		fmt.Println(string(output))
 		resultChannel <- output
 	}()
 
 	result = <-resultChannel
-	return result
+	return result, duration
 }
 
 /*
@@ -173,6 +176,7 @@ func Deploy(namespace string, deployment string, NumGPU int64) (bool, float64, e
 		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
 		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
 
+		// Start Timestamp
 		timeStamp0 = time.Now()
 
 		_, updateErr := deploymentsClient.Update(result)
@@ -188,6 +192,7 @@ func Deploy(namespace string, deployment string, NumGPU int64) (bool, float64, e
 			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
 		}
 
+		// End Timestamp
 		timeStamp1 = time.Now()
 		duration = float64(timeStamp1.Sub(timeStamp0))
 

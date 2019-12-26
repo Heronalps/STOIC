@@ -78,7 +78,7 @@ func RunOnEdge(imageNum int) float64 {
 		return 0
 	}
 	fmt.Printf("Output of task %s\n", string(output))
-	return parseElapsed(output)
+	return ParseElapsed(output)
 }
 
 /*

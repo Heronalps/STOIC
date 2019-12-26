@@ -5,6 +5,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -75,8 +76,11 @@ ILOOP:
 	// It requires checking kubeless process and
 	// write back to server socket if the kubeless function is available
 
-	elapsed := Request(runtime, imageNum)
-	writer.Write(elapsed)
+	output, duration := Request(runtime, imageNum)
+	AppendRecordProcessing(dbName, runtime, imageNum, duration)
+	fmt.Printf("Updating ProcessingTime table of %s duration %f...\n", runtime, duration)
+
+	writer.Write(output)
 	writer.Flush()
 	log.Println("Sent output to server...")
 }

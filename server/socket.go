@@ -31,7 +31,7 @@ func SocketServer(ip string, port int, runtime string, imageNum int) float64 {
 	buff := make([]byte, 1024)
 	n, _ := conn.Read(buff)
 	log.Println("Received output from client...")
-	elapsed := parseElapsed(buff[:n])
+	elapsed := ParseElapsed(buff[:n])
 	if err != nil {
 		log.Println(err.Error())
 	}
