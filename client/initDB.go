@@ -64,6 +64,8 @@ func CreateProcessingTimeTable(dbName string, runtime string) error {
 		task_id INT NOT NULL AUTO_INCREMENT, 
 		time_stamp TIMESTAMP NOT NULL, 
 		image_num INT NOT NULL, 
+		application VARCHAR(64),
+		version VARCHAR(16),
 		%s FLOAT, 
 		primary key(task_id));`, strings.Title(runtime), runtime)
 

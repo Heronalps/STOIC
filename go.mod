@@ -8,7 +8,7 @@ require (
 	github.com/googleapis/gnostic v0.3.1 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/pa-m/sklearn v0.0.0-20191204205223-bc18cf651a9f // indirect
+	github.com/pa-m/sklearn v0.0.0-20191204205223-bc18cf651a9f
 	github.com/pelletier/go-toml v1.6.0 // indirect
 	github.com/serverhorror/rog-go v0.0.0-20150622204439-87e4e0161534
 	github.com/spf13/cast v1.3.1 // indirect
@@ -20,6 +20,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20191122200657-5d9234df094c // indirect
 	golang.org/x/sys v0.0.0-20191220220014-0732a990476f // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
+	gonum.org/v1/gonum v0.6.1
 	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/yaml.v2 v2.2.7 // indirect
 	k8s.io/apimachinery v0.0.0-20191123233150-4c4803ed55e3
