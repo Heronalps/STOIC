@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/heronalps/STOIC/server"
+	"github.com/heronalps/STOIC/helpers"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -24,10 +24,9 @@ import (
 
 /*
 Request sends request to Nautilus based on runtime and image number
+return output & processing time
 */
 func Request(runtime string, imageNum int, app string, version string) ([]byte, float64) {
-	namespace := "racelab"
-	deployment := "image-clf-inf"
 	var (
 		output    []byte
 		isGPUSame bool
@@ -76,7 +75,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 		if err != nil {
 			fmt.Println("Error msg : ", err.Error())
 		}
-		duration = server.ParseElapsed(output)
+		duration = helpers.ParseElapsed(output)
 		fmt.Println(string(output))
 		resultChannel <- output
 	}()

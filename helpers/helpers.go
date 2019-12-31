@@ -2,7 +2,7 @@
 This module contains all helper functions.
 */
 
-package server
+package helpers
 
 import (
 	"fmt"
@@ -142,8 +142,13 @@ func GetTotalTime(imageNum int) map[float64]string {
 GetAdditionTime returns the sum of corresponding transfer and deployment time of runtime and image num
 */
 func GetAdditionTime(runtime string, imageNum int) float64 {
-	transferTime := GetTransferTime(imageNum)
-	var additionTime float64
+	var (
+		additionTime float64
+		transferTime float64
+	)
+
+	transferTime = GetTransferTime(imageNum)
+
 	switch runtime {
 	case "edge":
 		additionTime = 0.0

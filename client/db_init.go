@@ -24,7 +24,7 @@ func useDB(db *sql.DB, dbName string) {
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Printf("Select the %s ...\n", dbName)
+	//fmt.Printf("Select the %s database ...\n", dbName)
 }
 
 /*

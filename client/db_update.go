@@ -10,6 +10,7 @@ AppendRecordProcessing appends a record of (image num, duration) to Processing T
 */
 func AppendRecordProcessing(dbName string, runtime string, imageNum int,
 	duration float64, application string, version string) error {
+
 	db := connectDB(username, password, ip, port)
 	useDB(db, dbName)
 	defer db.Close()

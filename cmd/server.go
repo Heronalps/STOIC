@@ -11,10 +11,7 @@ import (
 // serverCmd represents the server command
 var (
 	ip       string
-	runtime  string
 	imageNum int
-	app      string
-	version  string
 	batch    int
 	preset   bool
 
@@ -23,7 +20,8 @@ var (
 		Short: "Run STOIC Server",
 		Long:  `Run STOIC Socket Server`,
 		Run: func(cmd *cobra.Command, args []string) {
-			randomSize := []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93, 20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
+			randomSize := []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93,
+				20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
 			slice := randomSize[21:]
 			var (
 				totalImage int
@@ -32,17 +30,21 @@ var (
 			)
 
 			for i := 0; i < len(slice); i++ {
+				// image flag has high precedence than preset
 				if preset {
 					imageNum = slice[i]
+				} else if imageNum == 0 {
+					imageNum = server.ImageCache()
 				}
-				images, elapsed := server.Schedule(ip, port, runtime, imageNum, app, version)
+
+				elapsed := server.SocketServer(ip, port, imageNum)
 				if elapsed == 0.0 {
 					fmt.Println("The task was not executed...")
 					fmt.Println("continue...")
 					fmt.Println("==================Next Batch===========================")
 					continue
 				}
-				totalImage += images
+				totalImage += imageNum
 				totalTime += elapsed
 				batches++
 				fmt.Printf("%d images has been inferenced...\n", totalImage)
@@ -61,10 +63,7 @@ var (
 func init() {
 	runCmd.AddCommand(serverCmd)
 	serverCmd.Flags().StringVar(&ip, "ip", "127.0.0.1", "The IP address of client")
-	serverCmd.Flags().StringVarP(&runtime, "runtime", "r", "", "Runtimes of WTB task: edge/cpu/gpu1/gpu2")
 	serverCmd.Flags().IntVarP(&imageNum, "image", "n", 0, "Image number in one batch")
-	serverCmd.Flags().StringVar(&app, "app", "wtb", "The ML application")
-	serverCmd.Flags().StringVar(&version, "version", "1.0", "The version of application")
 	serverCmd.Flags().IntVarP(&batch, "batch", "b", 0, "Batches of image")
 	serverCmd.Flags().BoolVarP(&preset, "preset", "s", false, "If the batch size is preset")
 }
