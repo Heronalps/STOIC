@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -10,7 +11,7 @@ import (
 /*
 SocketServer sends wtb task request to the client socket
 */
-func SocketServer(ip string, port int, runtime string, imageNum int) float64 {
+func SocketServer(ip string, port int, runtime string, imageNum int, app string, version string) float64 {
 	addr := strings.Join([]string{ip, strconv.Itoa(port)}, ":")
 	conn, err := net.Dial("tcp", addr)
 
@@ -23,7 +24,7 @@ func SocketServer(ip string, port int, runtime string, imageNum int) float64 {
 	defer conn.Close()
 	// TODO: Add lock to avoid race condition on kubeless function on the client
 	// Server socket sends message only if it obtains the lock, otherwise being blocked
-	message := runtime + " " + strconv.Itoa(imageNum)
+	message := fmt.Sprintf("%s %s %s %s", runtime, strconv.Itoa(imageNum), app, version)
 	conn.Write([]byte(message))
 	conn.Write([]byte(StopCharacter))
 	log.Printf("Sent: %s \n", message)

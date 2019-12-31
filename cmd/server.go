@@ -13,6 +13,8 @@ var (
 	ip       string
 	runtime  string
 	imageNum int
+	app      string
+	version  string
 	batch    int
 	preset   bool
 
@@ -33,7 +35,7 @@ var (
 				if preset {
 					imageNum = slice[i]
 				}
-				images, elapsed := server.Schedule(ip, port, runtime, imageNum)
+				images, elapsed := server.Schedule(ip, port, runtime, imageNum, app, version)
 				if elapsed == 0.0 {
 					fmt.Println("The task was not executed...")
 					fmt.Println("continue...")
@@ -61,6 +63,8 @@ func init() {
 	serverCmd.Flags().StringVar(&ip, "ip", "127.0.0.1", "The IP address of client")
 	serverCmd.Flags().StringVarP(&runtime, "runtime", "r", "", "Runtimes of WTB task: edge/cpu/gpu1/gpu2")
 	serverCmd.Flags().IntVarP(&imageNum, "image", "n", 0, "Image number in one batch")
+	serverCmd.Flags().StringVar(&app, "app", "wtb", "The ML application")
+	serverCmd.Flags().StringVar(&version, "version", "1.0", "The version of application")
 	serverCmd.Flags().IntVarP(&batch, "batch", "b", 0, "Batches of image")
 	serverCmd.Flags().BoolVarP(&preset, "preset", "s", false, "If the batch size is preset")
 }

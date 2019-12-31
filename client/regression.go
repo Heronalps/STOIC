@@ -3,7 +3,7 @@ package client
 import (
 	"fmt"
 	"math/rand"
-	"strings"
+	"time"
 
 	linearmodel "github.com/pa-m/sklearn/linear_model"
 	"github.com/pa-m/sklearn/metrics"
@@ -11,28 +11,23 @@ import (
 )
 
 /*
-QueryDataSet queries a certain amount of data point of runtimes from ProcessingTime table
-*/
-func QueryDataSet(runtime string, numDP int) {
-	db := connectDB(username, password, ip, port)
-	useDB(db, dbName)
-	defer db.Close()
-	stmtStr := fmt.Sprintf(`SELECT image_num, %s from ProcessingTime%s order by task_id desc limit ?;`, runtime, strings.Title(runtime))
-	stmt, err := db.Prepare(stmtStr)
-	defer stmt.Close()
-
-	_, err = stmt.Exec(numDP)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-
-}
-
-/*
 Regress function
 */
-func Regress(dataset float64) {
-
+func Regress(runtime string, app string, version string, numDP int) (float64, float64) {
+	var (
+		coef      float64
+		intercept float64
+	)
+	X, Y := QueryDataSet(runtime, app, version, numDP)
+	row, _ := X.Dims()
+	nSamples, nOutputs := row, 1
+	YPred := mat.NewDense(nSamples, nOutputs, nil)
+	model := linearmodel.NewBayesianRidge()
+	model.Fit(X, Y)
+	model.Predict(X, YPred)
+	coef = model.LinearModel.Coef.At(0, 0)
+	intercept = model.LinearModel.Intercept.At(0, 0)
+	return coef, intercept
 }
 
 /*
@@ -49,7 +44,6 @@ func Regress2() {
 			return 1. + 2.*X.At(i, 0) + 3.*X.At(i, 1) + 4.*X.At(i, 2)
 		}
 		return 1. - 2.*X.At(i, 0) + 3.*X.At(i, 1) + float64(o)*X.At(i, 2)
-
 	}
 	Y := mat.NewDense(nSamples, nOutputs, nil)
 	Y.Apply(func(i int, o int, v float64) float64 {
@@ -67,12 +61,15 @@ func Regress2() {
 	// fmt.Printf("(0,3): %f \n", Y.At(0, 3))
 	// fmt.Printf("(0,4): %f \n", Y.At(0, 4))
 	m := linearmodel.NewBayesianRidge()
-	//start := time.Now()
+	start := time.Now()
 	m.Fit(X, Y)
-	//elapsed := time.Since(start)
+	elapsed := time.Since(start)
 	Ypred := mat.NewDense(nSamples, nOutputs, nil)
 	m.Predict(X, Ypred)
 	fmt.Printf("YPred (0, 0) : %f \n", Ypred.At(0, 0))
+	fmt.Printf("Coef: %v \n", m.LinearModel.Coef)
+	fmt.Printf("Intercept: %v \n", m.LinearModel.Intercept)
+	fmt.Printf("Elapsed: %v \n", elapsed)
 	r2score := metrics.R2Score(Y, Ypred, nil, "variance_weighted").At(0, 0)
 	if r2score > .999 {
 		fmt.Println("BayesianRidge ok")

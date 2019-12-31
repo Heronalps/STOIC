@@ -47,7 +47,7 @@ func TestCreateDeploymentTimeTable(t *testing.T) {
 }
 
 func TestAppendRecordProcessing(t *testing.T) {
-	err = client.AppendRecordProcessing(dbName, "edge", 10, 1.56)
+	err = client.AppendRecordProcessing(dbName, "edge", 10, 1.56, "wtb", "1.0")
 	if err != nil {
 		t.Errorf("TestAppendRecord...\n")
 		t.Errorf("The record was not appended...\n")
@@ -86,4 +86,10 @@ func TestCreateRegressionTable(t *testing.T) {
 	if err != nil {
 		t.Errorf("Creating Regression Table was not successful ...\n")
 	}
+}
+
+func TestQueryDataSet(t *testing.T) {
+	X, Y := client.QueryDataSet(runtime, app, version, numDP)
+	fmt.Printf("X: %v \n", X)
+	fmt.Printf("Y: %v \n", Y)
 }

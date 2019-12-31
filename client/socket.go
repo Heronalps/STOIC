@@ -44,6 +44,8 @@ func handler(conn net.Conn) {
 		buf      = make([]byte, 1024)
 		runtime  string
 		imageNum int
+		app      string
+		version  string
 		data     bytes.Buffer
 	)
 ILOOP:
@@ -63,6 +65,8 @@ ILOOP:
 				dataSlice := strings.Split(data.String(), " ")
 				runtime = dataSlice[0]
 				imageNum, err = strconv.Atoi(dataSlice[1])
+				app = dataSlice[2]
+				version = dataSlice[3]
 				// fmt.Printf("runtime: %s \n", runtime)
 				// fmt.Printf("imageNum: %d \n", imageNum)
 				break ILOOP
@@ -76,8 +80,8 @@ ILOOP:
 	// It requires checking kubeless process and
 	// write back to server socket if the kubeless function is available
 
-	output, duration := Request(runtime, imageNum)
-	AppendRecordProcessing(dbName, runtime, imageNum, duration)
+	output, duration := Request(runtime, imageNum, app, version)
+	AppendRecordProcessing(dbName, runtime, imageNum, duration, app, version)
 	fmt.Printf("Updating ProcessingTime table of %s duration %f...\n", runtime, duration)
 
 	writer.Write(output)

@@ -8,15 +8,16 @@ import (
 /*
 AppendRecordProcessing appends a record of (image num, duration) to Processing Time table of specific runtime
 */
-func AppendRecordProcessing(dbName string, runtime string, imageNum int, duration float64) error {
+func AppendRecordProcessing(dbName string, runtime string, imageNum int,
+	duration float64, application string, version string) error {
 	db := connectDB(username, password, ip, port)
 	useDB(db, dbName)
 	defer db.Close()
-	stmtStr := fmt.Sprintf(`INSERT INTO ProcessingTime%s (image_num, %s) VALUES (?, ?);`, strings.Title(runtime), runtime)
+	stmtStr := fmt.Sprintf(`INSERT INTO ProcessingTime%s (image_num, application, version, %s) VALUES (?, ?, ?, ?);`, strings.Title(runtime), runtime)
 	stmt, err := db.Prepare(stmtStr)
 	defer stmt.Close()
 
-	_, err = stmt.Exec(imageNum, duration)
+	_, err = stmt.Exec(imageNum, application, version, duration)
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
@@ -82,4 +83,13 @@ func UpdateDeploymentTimeTable() error {
 		fmt.Println(err.Error())
 	}
 	return err
+}
+
+/*
+UpdateRegressionTimeTable updates coefficient and intercept of specific runtime in the Regression Table
+
+Caution: Updating Regression Table is subject to disk I/O. Keep this functionality for future necessary use case
+*/
+func UpdateRegressionTimeTable(runtime string) error {
+	return nil
 }

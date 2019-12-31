@@ -9,15 +9,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-//Global variable of Configuration
-var dbName string = "test"
-var username string = "root"
-var password string = "123456"
-var ip string = "127.0.0.1"
-var port int = 3306
-var namespace string = "racelab"
-var deployment string = "image-clf-inf"
-
 func connectDB(username string, password string, ip string, port int) *sql.DB {
 	// Define Data Source Name
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/", username, password, ip, port)

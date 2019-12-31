@@ -25,7 +25,7 @@ import (
 /*
 Request sends request to Nautilus based on runtime and image number
 */
-func Request(runtime string, imageNum int) ([]byte, float64) {
+func Request(runtime string, imageNum int, app string, version string) ([]byte, float64) {
 	namespace := "racelab"
 	deployment := "image-clf-inf"
 	var (

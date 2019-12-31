@@ -76,10 +76,13 @@ func HomeDir() string {
 /*
 Extrapolate function inferences runtime by coefficient and intercept.
 */
-func Extrapolate(mode string, x int) float64 {
-	var coef float64
-	var intercept float64
-	switch mode {
+func Extrapolate(runtime string, x int) float64 {
+	var (
+		coef      float64
+		intercept float64
+	)
+	// coef, intercept = Regress(runtime)
+	switch runtime {
 	case "edge":
 		coef = 2.39549861
 		intercept = 13.600537473199736

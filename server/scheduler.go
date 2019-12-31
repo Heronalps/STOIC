@@ -31,7 +31,7 @@ func SelectRunTime(imageNum int) string {
 Schedule is the entry point of Scheduler. If the task is intended to run on Nautilus,
 scheduler sends runtime and image to Mayhem cloud for relaying based on ip:port
 */
-func Schedule(ip string, port int, runtime string, imageNum int) (int, float64) {
+func Schedule(ip string, port int, runtime string, imageNum int, app string, version string) (int, float64) {
 	if imageNum == 0 {
 		imageNum = ImageCache()
 	}
@@ -49,7 +49,7 @@ func Schedule(ip string, port int, runtime string, imageNum int) (int, float64) 
 		elapsed = RunOnEdge(imageNum)
 	default:
 		fmt.Println("Running on Nautilus...")
-		elapsed = RunOnNautilus(runtime, imageNum, ip, port)
+		elapsed = RunOnNautilus(runtime, imageNum, ip, port, app, version)
 	}
 	if elapsed == 0.0 {
 		return imageNum, elapsed
@@ -84,7 +84,7 @@ func RunOnEdge(imageNum int) float64 {
 /*
 RunOnNautilus runs the task on Nautilus public cloud
 */
-func RunOnNautilus(runtime string, imageNum int, ip string, port int) float64 {
+func RunOnNautilus(runtime string, imageNum int, ip string, port int, app string, version string) float64 {
 	fmt.Println("Transferring images to Nautilus...")
-	return SocketServer(ip, port, runtime, imageNum)
+	return SocketServer(ip, port, runtime, imageNum, app, version)
 }
