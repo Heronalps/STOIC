@@ -2,7 +2,7 @@
 This module contains all helper functions.
 */
 
-package helpers
+package client
 
 import (
 	"fmt"
@@ -76,28 +76,30 @@ func HomeDir() string {
 /*
 Extrapolate function inferences runtime by coefficient and intercept.
 */
-func Extrapolate(runtime string, x int) float64 {
+func Extrapolate(runtime string, imageNum int, app string, version string) float64 {
 	var (
 		coef      float64
 		intercept float64
 	)
-	// coef, intercept = Regress(runtime)
-	switch runtime {
-	case "edge":
-		coef = 2.39549861
-		intercept = 13.600537473199736
-	case "cpu":
-		coef = 1.33380247
-		intercept = 14.91093042617645
-	case "gpu1":
-		coef = 0.3271631
-		intercept = 28.163551818338643
-	case "gpu2":
-		coef = 0.19928721
-		intercept = 21.267003248222906
+	coef, intercept = Regress(runtime, app, version, numDP)
+	if coef == 0.0 && intercept == 0.0 {
+		switch runtime {
+		case "edge":
+			coef = 2.39549861
+			intercept = 13.600537473199736
+		case "cpu":
+			coef = 1.33380247
+			intercept = 14.91093042617645
+		case "gpu1":
+			coef = 0.3271631
+			intercept = 28.163551818338643
+		case "gpu2":
+			coef = 0.19928721
+			intercept = 21.267003248222906
+		}
 	}
 
-	return float64(x)*coef + intercept
+	return float64(imageNum)*coef + intercept
 }
 
 /*
@@ -114,27 +116,26 @@ func GetTransferTime(imageNum int) float64 {
 }
 
 /*
-GetRunTime calculates the runtime of four scenarios: edge, cpu, gpu1, gpu2
+GetProcTime calculates the runtime of four scenarios: edge, cpu, gpu1, gpu2
 */
-func GetRunTime(imageNum int) []float64 {
-	edgeRuntime := Extrapolate("edge", imageNum)
-	cpuRuntime := Extrapolate("cpu", imageNum)
-	gpu1Runtime := Extrapolate("gpu1", imageNum)
-	gpu2Runtime := Extrapolate("gpu2", imageNum)
-	runtimes := []float64{edgeRuntime, cpuRuntime, gpu1Runtime, gpu2Runtime}
-	return runtimes
+func GetProcTime(imageNum int, app string, version string) map[string]float64 {
+	procTimes := make(map[string]float64)
+	for i := 0; i < len(runtimes); i++ {
+		procTimes[runtimes[i]] = Extrapolate(runtimes[i], imageNum, app, version)
+	}
+	return procTimes
 }
 
 /*
 GetTotalTime calculate total time (Addition of transfer and run time) of four scenarios
 */
-func GetTotalTime(imageNum int) map[float64]string {
-	runtimes := GetRunTime(imageNum)
+func GetTotalTime(imageNum int, app string, version string) map[float64]string {
+	procTimes := GetProcTime(imageNum, app, version)
 	totalTimes := make(map[float64]string)
-	totalTimes[runtimes[0]] = "edge"
-	totalTimes[runtimes[1]+GetAdditionTime("cpu", imageNum)] = "cpu"
-	totalTimes[runtimes[2]+GetAdditionTime("gpu1", imageNum)] = "gpu1"
-	totalTimes[runtimes[3]+GetAdditionTime("gpu2", imageNum)] = "gpu2"
+	for i := 0; i < len(runtimes); i++ {
+		runtime := runtimes[i]
+		totalTimes[procTimes[runtime]+GetAdditionTime(runtime, imageNum)] = runtime
+	}
 	return totalTimes
 }
 

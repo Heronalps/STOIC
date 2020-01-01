@@ -19,8 +19,12 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 		intercept float64
 	)
 	X, Y := QueryDataSet(runtime, app, version, numDP)
-	row, _ := X.Dims()
-	nSamples, nOutputs := row, 1
+
+	if X == nil && Y == nil {
+		fmt.Printf("No data point of %s in DB...\n", runtime)
+		return 0.0, 0.0
+	}
+	nSamples, nOutputs := X.Dims()
 	YPred := mat.NewDense(nSamples, nOutputs, nil)
 	model := linearmodel.NewBayesianRidge()
 	model.Fit(X, Y)

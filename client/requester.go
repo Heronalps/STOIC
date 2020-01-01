@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/heronalps/STOIC/helpers"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -75,7 +74,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 		if err != nil {
 			fmt.Println("Error msg : ", err.Error())
 		}
-		duration = helpers.ParseElapsed(output)
+		duration = ParseElapsed(output)
 		fmt.Println(string(output))
 		resultChannel <- output
 	}()

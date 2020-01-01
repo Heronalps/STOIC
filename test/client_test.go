@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/heronalps/STOIC/client"
@@ -15,4 +16,9 @@ func TestQueryGPUNum(t *testing.T) {
 	if !ok {
 		t.Errorf("The query of GPU number was not successful ...\n")
 	}
+}
+
+func TestSelectRunTime(t *testing.T) {
+	runtime := client.SelectRunTime(56, app, version)
+	fmt.Println("runtime : " + runtime)
 }

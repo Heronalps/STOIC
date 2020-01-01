@@ -16,6 +16,8 @@ func QueryDataSet(runtime string, app string, version string, numDP int) (mat.Ma
 	var (
 		XSlice []float64
 		YSlice []float64
+		X      mat.Matrix
+		Y      mat.Matrix
 	)
 
 	db := connectDB(username, password, ip, port)
@@ -42,8 +44,12 @@ func QueryDataSet(runtime string, app string, version string, numDP int) (mat.Ma
 		YSlice = append(YSlice, procTime)
 	}
 	nSamples, nFeatures, nOutputs := len(XSlice), 1, 1
-	X := mat.NewDense(nSamples, nFeatures, XSlice)
-	Y := mat.NewDense(nSamples, nOutputs, YSlice)
+
+	// Database has data points for current runtime
+	if nSamples > 0 {
+		X = mat.NewDense(nSamples, nFeatures, XSlice)
+		Y = mat.NewDense(nSamples, nOutputs, YSlice)
+	}
 
 	return X, Y
 }

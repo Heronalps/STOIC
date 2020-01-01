@@ -9,8 +9,6 @@ import (
 	exec "os/exec"
 	"sort"
 	"strconv"
-
-	"github.com/heronalps/STOIC/helpers"
 )
 
 /*
@@ -19,15 +17,15 @@ Parameter: runtime is the preset runtime. If it's empty string, SelectRunTime wi
 Return: runtime for appending processing time to corresponding table
 */
 func Schedule(runtime string, imageNum int, app string, version string) (string, []byte, float64) {
-	fmt.Printf("The bandwidth is %f megabits \n", helpers.GetBandWidth())
-	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, helpers.GetTransferTime(imageNum))
+	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
+	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, GetTransferTime(imageNum))
 
 	var (
 		elapsed float64
 		output  []byte
 	)
 	if runtime == "" {
-		runtime = SelectRunTime(imageNum)
+		runtime = SelectRunTime(imageNum, app, version)
 	}
 	switch runtime {
 	case "edge":
@@ -40,14 +38,14 @@ func Schedule(runtime string, imageNum int, app string, version string) (string,
 	if elapsed == 0.0 {
 		return runtime, output, elapsed
 	}
-	return runtime, output, elapsed + helpers.GetAdditionTime(runtime, imageNum)
+	return runtime, output, elapsed + GetAdditionTime(runtime, imageNum)
 }
 
 /*
 SelectRunTime select the runtime among four scenarios
 */
-func SelectRunTime(imageNum int) string {
-	totalTimes := helpers.GetTotalTime(imageNum)
+func SelectRunTime(imageNum int, app string, version string) string {
+	totalTimes := GetTotalTime(imageNum, app, version)
 	fmt.Println(totalTimes)
 	// Sort the totalTimes map by key
 	keys := make([]float64, 0, len(totalTimes))
@@ -68,7 +66,7 @@ func RunOnEdge(imageNum int) ([]byte, float64) {
 		err    error
 		cmd    *exec.Cmd
 	)
-	repoPATH := helpers.HomeDir() + "/GPU_Serverless"
+	repoPATH := HomeDir() + "/GPU_Serverless"
 
 	// Run WTB image classification task
 	FILE := "./kubeless/image_clf/inference/local_version/image_clf_inf.py "
@@ -82,7 +80,7 @@ func RunOnEdge(imageNum int) ([]byte, float64) {
 		return output, 0
 	}
 	fmt.Printf("Output of task %s\n", string(output))
-	return output, helpers.ParseElapsed(output)
+	return output, ParseElapsed(output)
 }
 
 /*
