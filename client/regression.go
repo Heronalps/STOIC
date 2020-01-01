@@ -25,6 +25,10 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 		return 0.0, 0.0
 	}
 	nSamples, nOutputs := X.Dims()
+	if nSamples <= nOutputs {
+		fmt.Printf("Single data point of %s in DB...\n", runtime)
+		return Y.At(0, 0) / X.At(0, 0), 0
+	}
 	YPred := mat.NewDense(nSamples, nOutputs, nil)
 	model := linearmodel.NewBayesianRidge()
 	model.Fit(X, Y)
