@@ -16,12 +16,6 @@ import (
 	"github.com/serverhorror/rog-go/reverse"
 )
 
-const (
-	cpuDeploymentTime  = 18.0
-	gpu1DeploymentTime = 46.0
-	gpu2DeploymentTime = 65.0
-)
-
 /*
 GetBandWidth solicits bandwidth of Pi Zero at Sedgwick Reserve.
 */
@@ -140,27 +134,24 @@ func GetTotalTime(imageNum int, app string, version string) map[float64]string {
 }
 
 /*
+GetDeploymentTime returns the latest deployment time in the DeploymentTime table of specific runtime
+*/
+func GetDeploymentTime(runtime string) float64 {
+	if runtime == "edge" {
+		return 0.0
+	}
+	return QueryDeploymentTime(runtime)
+}
+
+/*
 GetAdditionTime returns the sum of corresponding transfer and deployment time of runtime and image num
 */
 func GetAdditionTime(runtime string, imageNum int) float64 {
-	var (
-		additionTime float64
-		transferTime float64
-	)
-
-	transferTime = GetTransferTime(imageNum)
-
-	switch runtime {
-	case "edge":
-		additionTime = 0.0
-	case "cpu":
-		additionTime = transferTime + cpuDeploymentTime
-	case "gpu1":
-		additionTime = transferTime + gpu1DeploymentTime
-	case "gpu2":
-		additionTime = transferTime + gpu2DeploymentTime
+	if runtime == "edge" {
+		return 0.0
 	}
-	return additionTime
+	transferTime := GetTransferTime(imageNum)
+	return transferTime + GetDeploymentTime(runtime)
 }
 
 /*

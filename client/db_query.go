@@ -38,7 +38,7 @@ func QueryDataSet(runtime string, app string, version string, numDP int) (mat.Ma
 			procTime float64
 		)
 		if err := rows.Scan(&imageNum, &procTime); err != nil {
-			fmt.Println(err)
+			fmt.Println(err.Error())
 		}
 		XSlice = append(XSlice, imageNum)
 		YSlice = append(YSlice, procTime)
@@ -52,4 +52,32 @@ func QueryDataSet(runtime string, app string, version string, numDP int) (mat.Ma
 	}
 
 	return X, Y
+}
+
+/*
+QueryDeploymentTime queries latest deployment time of specific runtime
+*/
+func QueryDeploymentTime(runtime string) float64 {
+	var (
+		deploymentTime float64
+	)
+
+	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
+	defer db.Close()
+	// LIMIT 1 => Latest deployment time
+	queryStr := fmt.Sprintf("SELECT %s from DeploymentTime ORDER BY deployment_id DESC LIMIT 1", runtime)
+	rows, err := db.Query(queryStr)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&deploymentTime); err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+	//fmt.Printf("deployment time : %f \n", deploymentTime)
+	return deploymentTime
 }

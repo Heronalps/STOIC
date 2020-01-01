@@ -46,9 +46,9 @@ func AppendRecordDeployment(dbName string, cpu float64, gpu1 float64, gpu2 float
 }
 
 /*
-QueryDeploymentTime queries the current deployment time on Nautilus for runtimes
+QueryDeploymentTimeNautilus queries the current deployment time on Nautilus for runtimes
 */
-func QueryDeploymentTime(numGPU int64) float64 {
+func QueryDeploymentTimeNautilus(numGPU int64) float64 {
 	var (
 		duration float64
 		err      error
@@ -77,7 +77,7 @@ func UpdateDeploymentTimeTable() error {
 	numGPU = QueryGPUNum(namespace, deployment)
 	for i := 0; i < 3; i++ {
 		numGPU = (numGPU + 1) % 3
-		deploymentTimes[numGPU] = QueryDeploymentTime(numGPU)
+		deploymentTimes[numGPU] = QueryDeploymentTimeNautilus(numGPU)
 	}
 	err = AppendRecordDeployment(dbName, deploymentTimes[0], deploymentTimes[1], deploymentTimes[2])
 	if err != nil {

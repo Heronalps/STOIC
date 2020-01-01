@@ -62,10 +62,10 @@ func TestAppendRecordDeployment(t *testing.T) {
 	}
 }
 
-func TestQueryDeploymentTime(t *testing.T) {
+func TestQueryDeploymentTimeNautilus(t *testing.T) {
 	var deploymentTime interface{}
-	deploymentTime = client.QueryDeploymentTime(1)
-	defer client.QueryDeploymentTime(0)
+	deploymentTime = client.QueryDeploymentTimeNautilus(1)
+	defer client.QueryDeploymentTimeNautilus(0)
 
 	duration, ok := deploymentTime.(float64)
 	if !ok {
