@@ -59,25 +59,28 @@ QueryDeploymentTime queries latest deployment time of specific runtime
 */
 func QueryDeploymentTime(runtime string) float64 {
 	var (
-		deploymentTime float64
+		deploymentTimes []float64
 	)
 
 	db := connectDB(username, password, ip, port)
 	useDB(db, dbName)
 	defer db.Close()
 	// LIMIT 1 => Latest deployment time
-	queryStr := fmt.Sprintf("SELECT %s from DeploymentTime ORDER BY deployment_id DESC LIMIT 1", runtime)
-	rows, err := db.Query(queryStr)
+	// LIMIT numDP => average on 10 latest deployment time
+	queryStr := fmt.Sprintf("SELECT %s from DeploymentTime ORDER BY deployment_id DESC LIMIT ?", runtime)
+	rows, err := db.Query(queryStr, deploymentTimeNumDP)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 	defer rows.Close()
 
 	for rows.Next() {
+		var deploymentTime float64
 		if err := rows.Scan(&deploymentTime); err != nil {
 			fmt.Println(err.Error())
 		}
+		deploymentTimes = append(deploymentTimes, deploymentTime)
 	}
 	//fmt.Printf("deployment time : %f \n", deploymentTime)
-	return deploymentTime
+	return Average(deploymentTimes)
 }

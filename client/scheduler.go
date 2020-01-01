@@ -26,6 +26,8 @@ func Schedule(runtime string, imageNum int, app string, version string) (string,
 	)
 	if runtime == "" {
 		runtime = SelectRunTime(imageNum, app, version)
+		// Update current runtime to accurately estimate deployment time
+		currentRuntime = runtime
 	}
 	switch runtime {
 	case "edge":

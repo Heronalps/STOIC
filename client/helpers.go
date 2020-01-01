@@ -75,7 +75,7 @@ func Extrapolate(runtime string, imageNum int, app string, version string) float
 		coef      float64
 		intercept float64
 	)
-	coef, intercept = Regress(runtime, app, version, numDP)
+	coef, intercept = Regress(runtime, app, version, procTimeNumDP)
 	if coef == 0.0 && intercept == 0.0 {
 		switch runtime {
 		case "edge":
@@ -137,7 +137,7 @@ func GetTotalTime(imageNum int, app string, version string) map[float64]string {
 GetDeploymentTime returns the latest deployment time in the DeploymentTime table of specific runtime
 */
 func GetDeploymentTime(runtime string) float64 {
-	if runtime == "edge" {
+	if runtime == "edge" || runtime == currentRuntime {
 		return 0.0
 	}
 	return QueryDeploymentTime(runtime)
@@ -171,4 +171,15 @@ func ParseElapsed(output []byte) float64 {
 		return 0.0
 	}
 	return result
+}
+
+/*
+Average returns the mean of float numbers in an array
+*/
+func Average(arr []float64) float64 {
+	var total float64
+	for _, value := range arr {
+		total += value
+	}
+	return total / float64(len(arr))
 }

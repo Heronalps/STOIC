@@ -5,8 +5,8 @@ var (
 	err        error
 	namespace  string = "racelab"
 	deployment string = "image-clf-inf"
-	runtime    string = "cpu"
-	app        string = "iris"
-	version    string = "1.1"
+	runtime    string = "gpu2"
+	app        string = "wtb"
+	version    string = "1.0"
 	numDP      int    = 10
 )

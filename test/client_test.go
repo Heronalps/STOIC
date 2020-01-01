@@ -22,3 +22,8 @@ func TestSelectRunTime(t *testing.T) {
 	runtime := client.SelectRunTime(56, app, version)
 	fmt.Println("runtime : " + runtime)
 }
+
+func TestGetDeploymentTime(t *testing.T) {
+	deploymentTime := client.GetDeploymentTime(runtime)
+	fmt.Printf("runtime: %f \n", deploymentTime)
+}

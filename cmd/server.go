@@ -10,10 +10,11 @@ import (
 
 // serverCmd represents the server command
 var (
-	ip       string
-	imageNum int
-	batch    int
-	preset   bool
+	ip             string
+	presetImageNum int
+	imageNum       int
+	batch          int
+	preset         bool
 
 	serverCmd = &cobra.Command{
 		Use:   "server",
@@ -31,10 +32,14 @@ var (
 
 			for i := 0; i < len(slice); i++ {
 				// image flag has high precedence than preset
-				if preset {
-					imageNum = slice[i]
-				} else if imageNum == 0 {
-					imageNum = server.ImageCache()
+				if presetImageNum == 0 {
+					if preset {
+						imageNum = slice[i]
+					} else {
+						imageNum = server.ImageCache()
+					}
+				} else {
+					imageNum = presetImageNum
 				}
 
 				elapsed := server.SocketServer(ip, port, imageNum)
@@ -63,7 +68,7 @@ var (
 func init() {
 	runCmd.AddCommand(serverCmd)
 	serverCmd.Flags().StringVar(&ip, "ip", "127.0.0.1", "The IP address of client")
-	serverCmd.Flags().IntVarP(&imageNum, "image", "n", 0, "Image number in one batch")
+	serverCmd.Flags().IntVarP(&presetImageNum, "image", "n", 0, "Image number in one batch")
 	serverCmd.Flags().IntVarP(&batch, "batch", "b", 0, "Batches of image")
 	serverCmd.Flags().BoolVarP(&preset, "preset", "s", false, "If the batch size is preset")
 }

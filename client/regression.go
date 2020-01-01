@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 
@@ -35,6 +36,9 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 	model.Predict(X, YPred)
 	coef = model.LinearModel.Coef.At(0, 0)
 	intercept = model.LinearModel.Intercept.At(0, 0)
+	if math.IsNaN(coef) || math.IsNaN(intercept) {
+		return 0.0, 0.0
+	}
 	return coef, intercept
 }
 

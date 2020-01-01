@@ -29,7 +29,7 @@ var (
 		Short: "Run STOIC client / server ",
 		Long:  `Run STOIC client / server to schedule tasks`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Please specify subcommand (client/server/db)..")
+			fmt.Println("Please specify subcommand (client/server/inquisitor/db)..")
 		},
 	}
 )
