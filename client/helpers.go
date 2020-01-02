@@ -124,11 +124,12 @@ func GetProcTime(imageNum int, app string, version string) map[string]float64 {
 GetTotalTime calculate total time (Addition of transfer and run time) of four scenarios
 */
 func GetTotalTime(imageNum int, app string, version string) map[float64]string {
+	transferTime := GetTransferTime(imageNum)
 	procTimes := GetProcTime(imageNum, app, version)
 	totalTimes := make(map[float64]string)
 	for i := 0; i < len(runtimes); i++ {
 		runtime := runtimes[i]
-		totalTimes[procTimes[runtime]+GetAdditionTime(runtime, imageNum)] = runtime
+		totalTimes[procTimes[runtime]+transferTime+GetDeploymentTime(runtime)] = runtime
 	}
 	return totalTimes
 }
@@ -141,17 +142,6 @@ func GetDeploymentTime(runtime string) float64 {
 		return 0.0
 	}
 	return QueryDeploymentTime(runtime)
-}
-
-/*
-GetAdditionTime returns the sum of corresponding transfer and deployment time of runtime and image num
-*/
-func GetAdditionTime(runtime string, imageNum int) float64 {
-	if runtime == "edge" {
-		return 0.0
-	}
-	transferTime := GetTransferTime(imageNum)
-	return transferTime + GetDeploymentTime(runtime)
 }
 
 /*

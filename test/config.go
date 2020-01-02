@@ -7,7 +7,7 @@ var (
 	deployment    string = "image-clf-inf"
 	runtime       string = "gpu2"
 	app           string = "iris"
-	version       string = "1.0"
+	version       string = "1.5"
 	updateVersion string = "1.3"
 	numDP         int    = 10
 )

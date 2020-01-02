@@ -17,13 +17,16 @@ Parameter: runtime is the preset runtime. If it's empty string, SelectRunTime wi
 Return: runtime for appending processing time to corresponding table
 */
 func Schedule(runtime string, imageNum int, app string, version string) []byte {
-	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
-	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, GetTransferTime(imageNum))
-
 	var (
-		elapsed float64
-		output  []byte
+		elapsed      float64
+		transferTime float64
+		output       []byte
 	)
+
+	transferTime = GetTransferTime(imageNum)
+	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
+	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, transferTime)
+
 	if runtime == "" {
 		runtime = SelectRunTime(imageNum, app, version)
 		// Update current runtime to accurately estimate deployment time
@@ -31,7 +34,6 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	}
 	output, elapsed = Request(runtime, imageNum, app, version)
 	if elapsed != 0.0 {
-		elapsed += GetAdditionTime(runtime, imageNum)
 		AppendRecordProcessing(dbName, runtime, imageNum, elapsed, app, version)
 	}
 	return output
@@ -48,7 +50,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		//output, elapsed = RunOnEdge(imageNum, app, version)
+		output, elapsed = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Println("Running on Nautilus...")
 		output, elapsed = RunOnNautilus(runtime, imageNum, app, version)
