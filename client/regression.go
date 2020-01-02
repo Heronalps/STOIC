@@ -24,12 +24,32 @@ func SetupRegression(app string, version string) {
 		InsertAppVersion(app, version)
 	}
 	// Set up the table when app / version is updated
-	if CompareVersion(version, dbVersion) == 1 {
+	result := CompareVersion(version, dbVersion)
+	if result == 1 {
 		fmt.Printf("Current version %s is greater than DB version %s ..\n", version, dbVersion)
 		UpdateAppVersion(app, version)
 		for _, runtime := range runtimes {
 			for _, imageNum := range setupImageNums {
 				Schedule(runtime, imageNum, app, version)
+			}
+		}
+	} else if result == 0 {
+		fmt.Printf("Current versioin %s equals to DB version %s .. \n", version, dbVersion)
+		fmt.Println("Checking if at least two data points exist for each runtime...")
+		for _, runtime := range runtimes {
+			var (
+				X    mat.Matrix
+				rows int = 0
+			)
+			// At least 2 data points exist for each app & version
+			X, _ = QueryDataSet(runtime, app, version, 2)
+			if X != nil {
+				rows, _ = X.Dims()
+			}
+			if rows < 2 {
+				for _, imageNum := range setupImageNums {
+					Schedule(runtime, imageNum, app, version)
+				}
 			}
 		}
 	}
