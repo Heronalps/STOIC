@@ -1,0 +1,1 @@
+./stoic run inquisitor -i 6

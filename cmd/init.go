@@ -1,5 +1,5 @@
 /*
-Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+Copyright © 2020 NAME HERE <EMAIL ADDRESS>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,25 +16,20 @@ limitations under the License.
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/heronalps/STOIC/client"
 	"github.com/spf13/cobra"
 )
 
-// runCmd represents the run command
-var (
-	port   int
-	runCmd = &cobra.Command{
-		Use:   "run",
-		Short: "Run STOIC client / server ",
-		Long:  `Run STOIC client / server to schedule tasks`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Please specify subcommand (client/server/inquisitor)..")
-		},
-	}
-)
+// initCmd represents the init command
+var initCmd = &cobra.Command{
+	Use:   "init",
+	Short: "Initialize database and all necessary tables",
+	Long:  `Initialize database and all necessary tables`,
+	Run: func(cmd *cobra.Command, args []string) {
+		client.InitDB()
+	},
+}
 
 func init() {
-	rootCmd.AddCommand(runCmd)
-	runCmd.PersistentFlags().IntVarP(&port, "port", "p", 5001, "Port of Client")
+	dbCmd.AddCommand(initCmd)
 }

@@ -1,5 +1,5 @@
 /*
-Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+Copyright © 2020 NAME HERE <EMAIL ADDRESS>
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,20 +21,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// runCmd represents the run command
-var (
-	port   int
-	runCmd = &cobra.Command{
-		Use:   "run",
-		Short: "Run STOIC client / server ",
-		Long:  `Run STOIC client / server to schedule tasks`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Please specify subcommand (client/server/inquisitor)..")
-		},
-	}
-)
+// dbCmd represents the db command
+var dbCmd = &cobra.Command{
+	Use:   "db",
+	Short: "All commands related to DB operation",
+	Long:  `All commands related to DB operation`,
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println("Please specify subcommand (init)..")
+	},
+}
 
 func init() {
-	rootCmd.AddCommand(runCmd)
-	runCmd.PersistentFlags().IntVarP(&port, "port", "p", 5001, "Port of Client")
+	rootCmd.AddCommand(dbCmd)
 }

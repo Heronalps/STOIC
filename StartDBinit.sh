@@ -1,0 +1,1 @@
+./stoic db init

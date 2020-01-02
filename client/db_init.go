@@ -28,6 +28,17 @@ func useDB(db *sql.DB, dbName string) {
 }
 
 /*
+InitDB initializes DB and all necessary tables
+*/
+func InitDB() {
+	CreateDatabase(dbName)
+	for _, runtime := range runtimes {
+		CreateProcessingTimeTable(dbName, runtime)
+	}
+	CreateDeploymentTimeTable(dbName)
+}
+
+/*
 CreateDatabase creates a database in MySQL instance. CREATE operation is idempotent.
 */
 func CreateDatabase(dbName string) error {
@@ -138,13 +149,13 @@ func CreateRegressionTable(dbName string) error {
 		fmt.Println(err.Error())
 		return err
 	}
-	_, err = stmt.Exec("edge", 1.0, 1.0)
-	_, err = stmt.Exec("cpu", 1.0, 1.0)
-	_, err = stmt.Exec("gpu1", 1.0, 1.0)
-	_, err = stmt.Exec("gpu2", 1.0, 1.0)
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
+	for _, runtime := range runtimes {
+		_, err = stmt.Exec(runtime, 1.0, 1.0)
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
 	}
+
 	return err
 }
