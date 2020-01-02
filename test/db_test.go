@@ -93,3 +93,29 @@ func TestQueryDataSet(t *testing.T) {
 	fmt.Printf("X: %v \n", X)
 	fmt.Printf("Y: %v \n", Y)
 }
+
+func TestCreateAppVersionTable(t *testing.T) {
+	err := client.CreateAppVersionTable(dbName)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func TestQueryAppVersion(t *testing.T) {
+	version := client.QueryAppVersion(app)
+	fmt.Println("version : " + version)
+}
+
+func TestInsertAppVersion(t *testing.T) {
+	err := client.InsertAppVersion(app, version)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func TestUpdateAppVersion(t *testing.T) {
+	err := client.UpdateAppVersion(app, updateVersion)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}

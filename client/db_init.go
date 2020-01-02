@@ -36,6 +36,7 @@ func InitDB() {
 		CreateProcessingTimeTable(dbName, runtime)
 	}
 	CreateDeploymentTimeTable(dbName)
+	CreateAppVersionTable(dbName)
 }
 
 /*
@@ -157,5 +158,29 @@ func CreateRegressionTable(dbName string) error {
 		}
 	}
 
+	return err
+}
+
+/*
+CreateAppVersionTable create table that maps application and latest version
+*/
+func CreateAppVersionTable(dbName string) error {
+	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
+	defer db.Close()
+
+	stmt, err := db.Prepare(`CREATE TABLE AppVersion(
+		app VARCHAR(64) NOT NULL,
+		version VARCHAR(16) NOT NULL);`)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
 	return err
 }

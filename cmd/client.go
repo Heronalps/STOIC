@@ -15,6 +15,7 @@ var (
 		Short: "Run STOIC client",
 		Long:  `Run STOIC socket client`,
 		Run: func(cmd *cobra.Command, args []string) {
+			client.SetupRegression(app, version)
 			client.SocketClient(port, runtime, app, version)
 		},
 	}

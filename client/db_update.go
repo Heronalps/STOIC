@@ -11,6 +11,8 @@ AppendRecordProcessing appends a record of (image num, duration) to Processing T
 func AppendRecordProcessing(dbName string, runtime string, imageNum int,
 	duration float64, application string, version string) error {
 
+	fmt.Printf("Updating ProcessingTime table of %s duration %f...\n", runtime, duration)
+
 	db := connectDB(username, password, ip, port)
 	useDB(db, dbName)
 	defer db.Close()
@@ -93,4 +95,42 @@ Caution: Updating Regression Table is subject to disk I/O. Keep this functionali
 */
 func UpdateRegressionTimeTable(runtime string) error {
 	return nil
+}
+
+/*
+UpdateAppVersion updates the latest version of an application
+*/
+func UpdateAppVersion(app string, version string) error {
+	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
+	defer db.Close()
+	stmtStr := fmt.Sprintf(`UPDATE AppVersion SET Version=? WHERE app=?;`)
+	stmt, err := db.Prepare(stmtStr)
+	defer stmt.Close()
+
+	_, err = stmt.Exec(version, app)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return err
+}
+
+/*
+InsertAppVersion inserts the nonexistent app and its current version
+*/
+func InsertAppVersion(app string, version string) error {
+	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
+	defer db.Close()
+	stmtStr := fmt.Sprintf(`INSERT INTO AppVersion (App, Version) VALUES (?, ?);`)
+	stmt, err := db.Prepare(stmtStr)
+	defer stmt.Close()
+
+	_, err = stmt.Exec(app, version)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return err
 }

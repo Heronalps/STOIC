@@ -12,6 +12,30 @@ import (
 )
 
 /*
+SetupRegression set up multiple data points in each runtime processing time table for regression
+when the app / version is updated
+*/
+func SetupRegression(app string, version string) {
+	dbVersion := QueryAppVersion(app)
+	fmt.Println("DB version : " + dbVersion)
+	fmt.Println("current version : " + version)
+	if dbVersion == "0" {
+		fmt.Printf("Insert app %s version %s to AppVersion table...\n", app, version)
+		InsertAppVersion(app, version)
+	}
+	// Set up the table when app / version is updated
+	if CompareVersion(version, dbVersion) == 1 {
+		fmt.Printf("Current version %s is greater than DB version %s ..\n", version, dbVersion)
+		UpdateAppVersion(app, version)
+		for _, runtime := range runtimes {
+			for _, imageNum := range setupImageNums {
+				Schedule(runtime, imageNum, app, version)
+			}
+		}
+	}
+}
+
+/*
 Regress function
 */
 func Regress(runtime string, app string, version string, numDP int) (float64, float64) {

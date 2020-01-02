@@ -84,3 +84,30 @@ func QueryDeploymentTime(runtime string) float64 {
 	//fmt.Printf("deployment time : %f \n", deploymentTime)
 	return Average(deploymentTimes)
 }
+
+/*
+QueryAppVersion queries the latest version of an application
+Returns 0 when app doesn't exist in AppVersion table
+*/
+func QueryAppVersion(app string) string {
+	var (
+		version string = "0"
+	)
+
+	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
+	defer db.Close()
+	queryStr := fmt.Sprintf("SELECT version from AppVersion WHERE app=?;")
+	rows, err := db.Query(queryStr, app)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&version); err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+	return version
+}

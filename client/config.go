@@ -10,6 +10,7 @@ var (
 	namespace           string   = "racelab"
 	deployment          string   = "image-clf-inf"
 	runtimes            []string = []string{"edge", "cpu", "gpu1", "gpu2"}
+	setupImageNums      []int    = []int{33, 10}
 	currentRuntime      string   = "edge"
 	procTimeNumDP       int      = 10
 	deploymentTimeNumDP int      = 10

@@ -22,10 +22,10 @@ import (
 )
 
 /*
-Request sends request to Nautilus based on runtime and image number
+RunOnNautilus sends request to Nautilus based on runtime and image number
 return output & processing time
 */
-func Request(runtime string, imageNum int, app string, version string) ([]byte, float64) {
+func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]byte, float64) {
 	var (
 		output    []byte
 		isGPUSame bool

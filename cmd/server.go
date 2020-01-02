@@ -15,14 +15,14 @@ var (
 	imageNum       int
 	batch          int
 	preset         bool
+	randomSize     []int = []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93,
+		20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
 
 	serverCmd = &cobra.Command{
 		Use:   "server",
 		Short: "Run STOIC Server",
 		Long:  `Run STOIC Socket Server`,
 		Run: func(cmd *cobra.Command, args []string) {
-			randomSize := []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93,
-				20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
 			slice := randomSize[21:]
 			var (
 				totalImage int

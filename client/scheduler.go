@@ -16,7 +16,7 @@ Schedule is the entry point of Scheduler.
 Parameter: runtime is the preset runtime. If it's empty string, SelectRunTime will select one.
 Return: runtime for appending processing time to corresponding table
 */
-func Schedule(runtime string, imageNum int, app string, version string) (string, []byte, float64) {
+func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
 	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, GetTransferTime(imageNum))
 
@@ -29,18 +29,31 @@ func Schedule(runtime string, imageNum int, app string, version string) (string,
 		// Update current runtime to accurately estimate deployment time
 		currentRuntime = runtime
 	}
+	output, elapsed = Request(runtime, imageNum, app, version)
+	if elapsed != 0.0 {
+		elapsed += GetAdditionTime(runtime, imageNum)
+		AppendRecordProcessing(dbName, runtime, imageNum, elapsed, app, version)
+	}
+	return output
+}
+
+/*
+Request is a wrap function both for executing jobs and setting up processing time table for regression
+*/
+func Request(runtime string, imageNum int, app string, version string) ([]byte, float64) {
+	var (
+		output  []byte
+		elapsed float64
+	)
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		output, elapsed = RunOnEdge(imageNum)
+		output, elapsed = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Println("Running on Nautilus...")
 		output, elapsed = RunOnNautilus(runtime, imageNum, app, version)
 	}
-	if elapsed == 0.0 {
-		return runtime, output, elapsed
-	}
-	return runtime, output, elapsed + GetAdditionTime(runtime, imageNum)
+	return output, elapsed
 }
 
 /*
@@ -62,7 +75,7 @@ func SelectRunTime(imageNum int, app string, version string) string {
 /*
 RunOnEdge runs the task on mini edge cloud with AVX support
 */
-func RunOnEdge(imageNum int) ([]byte, float64) {
+func RunOnEdge(imageNum int, app string, version string) ([]byte, float64) {
 	var (
 		output []byte
 		err    error
@@ -75,7 +88,7 @@ func RunOnEdge(imageNum int) ([]byte, float64) {
 	cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
 	cmd = exec.Command("bash", "-c", cmdRun)
 	cmd.Dir = repoPATH
-	fmt.Printf("Start running WTB task on %d images \n", imageNum)
+	fmt.Printf("Start running task %s version %s on %d images \n", app, version, imageNum)
 	output, err = cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
@@ -83,12 +96,4 @@ func RunOnEdge(imageNum int) ([]byte, float64) {
 	}
 	fmt.Printf("Output of task %s\n", string(output))
 	return output, ParseElapsed(output)
-}
-
-/*
-RunOnNautilus runs the task on Nautilus public cloud
-*/
-func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]byte, float64) {
-	fmt.Println("Transferring images to Nautilus...")
-	return Request(runtime, imageNum, app, version)
 }

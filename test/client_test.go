@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/heronalps/STOIC/client"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestQueryGPUNum(t *testing.T) {
@@ -26,4 +27,8 @@ func TestSelectRunTime(t *testing.T) {
 func TestGetDeploymentTime(t *testing.T) {
 	deploymentTime := client.GetDeploymentTime(runtime)
 	fmt.Printf("runtime: %f \n", deploymentTime)
+}
+
+func TestCompareVersion(t *testing.T) {
+	assert.Equal(t, client.CompareVersion("0", "1.0"), -1)
 }

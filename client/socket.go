@@ -75,10 +75,7 @@ ILOOP:
 	// It requires checking kubeless process and
 	// write back to server socket if the kubeless function is available
 
-	runtime, output, duration := Schedule(runtime, imageNum, app, version)
-	fmt.Println("runtime : " + runtime)
-	AppendRecordProcessing(dbName, runtime, imageNum, duration, app, version)
-	fmt.Printf("Updating ProcessingTime table of %s duration %f...\n", runtime, duration)
+	output := Schedule(runtime, imageNum, app, version)
 
 	writer.Write(output)
 	writer.Flush()

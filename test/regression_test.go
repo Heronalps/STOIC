@@ -16,3 +16,8 @@ func TestRegress(t *testing.T) {
 	fmt.Printf("coef : %v \n", coef)
 	fmt.Printf("intercept : %v \n", intercept)
 }
+
+func TestSetupRegression(t *testing.T) {
+	// go test cannot execute bash script, which returns 127 exit status
+	client.SetupRegression(app, updateVersion)
+}
