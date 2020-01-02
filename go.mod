@@ -3,6 +3,7 @@ module github.com/heronalps/STOIC
 go 1.13
 
 require (
+	github.com/avast/retry-go v2.4.3+incompatible
 	github.com/evanphx/json-patch v4.5.0+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
 	github.com/googleapis/gnostic v0.3.1 // indirect

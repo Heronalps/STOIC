@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	retrygo "github.com/avast/retry-go"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -34,7 +35,7 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 		result    []byte
 		duration  float64
 	)
-	resultChannel := make(chan []byte)
+	//resultChannel := make(chan []byte)
 
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
@@ -52,35 +53,44 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 
 	// Wait 3 second for deployment to complete
 	time.Sleep(3 * time.Second)
-	go func() {
-		// If the pod is re-deployed,
-		// make initial kubeless call to depolyed function to avoid cold start
-		if !isGPUSame {
-			fmt.Println("Probing deployed kubeless function to avoid cold start ...")
-			cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
+	retryErr := retrygo.Do(
+		func() error {
+			// If the pod is re-deployed,
+			// make initial kubeless call to depolyed function to avoid cold start
+			if !isGPUSame {
+				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
+				cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
+				output, err = exec.Command("bash", "-c", cmd).Output()
+				if err != nil {
+					fmt.Println("Error msg : ", err.Error())
+					return err
+				}
+				fmt.Println(string(output))
+				fmt.Println("Finish Probing ...")
+			} else {
+				fmt.Println("Using same pod, No probing needed....")
+			}
+
+			//make kubeless call to deployed function
+			cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(imageNum)
 			output, err = exec.Command("bash", "-c", cmd).Output()
 			if err != nil {
 				fmt.Println("Error msg : ", err.Error())
+				return err
 			}
+			duration = ParseElapsed(output)
 			fmt.Println(string(output))
-			fmt.Println("Finish Probing ...")
-		} else {
-			fmt.Println("Using same pod, No probing needed....")
-		}
+			//resultChannel <- output
+			return err
+		})
 
-		//make kubeless call to deployed function
-		cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(imageNum)
-		output, err = exec.Command("bash", "-c", cmd).Output()
-		if err != nil {
-			fmt.Println("Error msg : ", err.Error())
-		}
-		duration = ParseElapsed(output)
-		fmt.Println(string(output))
-		resultChannel <- output
-	}()
+	if retryErr != nil {
+		fmt.Printf("Request failed: %v ...", retryErr.Error())
+	}
 
-	result = <-resultChannel
-	return result, duration
+	//result = <-resultChannel
+	//return result, duration
+	return output, duration
 }
 
 /*
@@ -203,7 +213,7 @@ func Deploy(namespace string, deployment string, NumGPU int64) (bool, float64, e
 	})
 
 	if retryErr != nil {
-		log.Printf("Update failed: %v", retryErr)
+		log.Printf("Update failed: %v", retryErr.Error())
 	}
 
 	return prevNumGPU == currNumGPU, duration, retryErr

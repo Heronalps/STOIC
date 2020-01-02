@@ -32,3 +32,9 @@ func TestGetDeploymentTime(t *testing.T) {
 func TestCompareVersion(t *testing.T) {
 	assert.Equal(t, client.CompareVersion("0", "1.0"), -1)
 }
+
+func TestRunOnNautilus(t *testing.T) {
+	output, elapsed := client.RunOnNautilus(runtime, imageNum, app, version)
+	fmt.Printf("Output : %v..\n", output)
+	fmt.Printf("Elapsed : %v..\n", elapsed)
+}
