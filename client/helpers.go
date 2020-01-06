@@ -110,12 +110,47 @@ func GetTransferTime(imageNum int) float64 {
 }
 
 /*
+GetDeploymentTime returns the latest deployment time in the DeploymentTime table of specific runtime
+*/
+func GetDeploymentTime(runtime string) map[string]float64 {
+	var (
+		selectedRuntimes []string
+	)
+	deploymentTimes := make(map[string]float64)
+	if runtime != "" {
+		selectedRuntimes = []string{runtime}
+	} else {
+		selectedRuntimes = runtimes
+	}
+
+	for _, runtime := range selectedRuntimes {
+		var deploymentTime float64
+		if runtime == "edge" || runtime == currentRuntime {
+			deploymentTime = 0.0
+		} else {
+			deploymentTime = QueryDeploymentTime(runtime)
+		}
+		deploymentTimes[runtime] = deploymentTime
+	}
+
+	return deploymentTimes
+}
+
+/*
 GetProcTime calculates the runtime of four scenarios: edge, cpu, gpu1, gpu2
 */
-func GetProcTime(imageNum int, app string, version string) map[string]float64 {
+func GetProcTime(imageNum int, app string, version string, runtime string) map[string]float64 {
+	var (
+		selectedRuntimes []string
+	)
 	procTimes := make(map[string]float64)
-	for i := 0; i < len(runtimes); i++ {
-		procTimes[runtimes[i]] = Extrapolate(runtimes[i], imageNum, app, version)
+	if runtime != "" {
+		selectedRuntimes = []string{runtime}
+	} else {
+		selectedRuntimes = runtimes
+	}
+	for i := 0; i < len(selectedRuntimes); i++ {
+		procTimes[selectedRuntimes[i]] = Extrapolate(selectedRuntimes[i], imageNum, app, version)
 	}
 	return procTimes
 }
@@ -123,25 +158,29 @@ func GetProcTime(imageNum int, app string, version string) map[string]float64 {
 /*
 GetTotalTime calculate total time (Addition of transfer and run time) of four scenarios
 */
-func GetTotalTime(imageNum int, app string, version string) map[float64]string {
+func GetTotalTime(imageNum int, app string, version string, runtime string) (map[float64]string, map[string]*TimeLog) {
+	var (
+		selectedRuntimes []string
+	)
 	transferTime := GetTransferTime(imageNum)
-	procTimes := GetProcTime(imageNum, app, version)
-	totalTimes := make(map[float64]string)
-	for i := 0; i < len(runtimes); i++ {
-		runtime := runtimes[i]
-		totalTimes[procTimes[runtime]+transferTime+GetDeploymentTime(runtime)] = runtime
-	}
-	return totalTimes
-}
+	procTimes := GetProcTime(imageNum, app, version, runtime)
+	deploymentTimes := GetDeploymentTime(runtime)
 
-/*
-GetDeploymentTime returns the latest deployment time in the DeploymentTime table of specific runtime
-*/
-func GetDeploymentTime(runtime string) float64 {
-	if runtime == "edge" || runtime == currentRuntime {
-		return 0.0
+	totalTimes := make(map[float64]string)
+	timeLogs := make(map[string]*TimeLog)
+
+	// When runtime is manually set, only iterate over the chosen one
+	if runtime != "" {
+		selectedRuntimes = []string{runtime}
+	} else {
+		selectedRuntimes = runtimes
 	}
-	return QueryDeploymentTime(runtime)
+	for i := 0; i < len(selectedRuntimes); i++ {
+		runtime := selectedRuntimes[i]
+		totalTimes[procTimes[runtime]+transferTime+deploymentTimes[runtime]] = runtime
+		timeLogs[runtime] = CreateTimeLog(transferTime, deploymentTimes[runtime], procTimes[runtime])
+	}
+	return totalTimes, timeLogs
 }
 
 /*
@@ -212,4 +251,32 @@ func CompareVersion(version1 string, version2 string) int {
 		}
 	}
 	return 0
+}
+
+/*
+CreateTimeLog creates Time Log by three components
+*/
+func CreateTimeLog(transfer float64, deployment float64, processing float64) *TimeLog {
+	var (
+		timeLog *TimeLog
+		total   float64
+	)
+	total = transfer + deployment + processing
+	timeLog = &TimeLog{
+		Total:      total,
+		Transfer:   transfer,
+		Deployment: deployment,
+		Processing: processing,
+	}
+	return timeLog
+}
+
+/*
+LogTimes logs Predicted/Actual total response time, transfer time, deployment time, processing time
+*/
+func LogTimes(predTimeLog *TimeLog, actTimeLog *TimeLog) {
+	if predTimeLog != nil && actTimeLog != nil {
+		AppendRecordLogTime(predTimeLog.Total, predTimeLog.Transfer, predTimeLog.Deployment, predTimeLog.Processing,
+			actTimeLog.Total, actTimeLog.Transfer, actTimeLog.Deployment, actTimeLog.Processing)
+	}
 }

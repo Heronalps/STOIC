@@ -184,3 +184,36 @@ func CreateAppVersionTable(dbName string) error {
 	}
 	return err
 }
+
+/*
+CreateLogTimeTable create table for logging total response time and its component
+*/
+func CreateLogTimeTable(dbName string) error {
+	db := connectDB(username, password, ip, port)
+	useDB(db, dbName)
+	defer db.Close()
+
+	stmt, err := db.Prepare(`CREATE TABLE LogTime (
+		task_id INT NOT NULL AUTO_INCREMENT,
+		pred_total FLOAT NOT NULL,
+		pred_transfer FLOAT NOT NULL,
+		pred_deploy FLOAT NOT NULL,
+		pred_proc FLOAT NOT NULL,
+		act_total FLOAT NOT NULL,
+		act_transfer FLOAT NOT NULL,
+		act_deploy FLOAT NOT NULL,
+		act_proc FLOAT NOT NULL,
+		primary key(task_id));`)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec()
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return err
+}

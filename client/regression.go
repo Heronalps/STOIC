@@ -5,7 +5,6 @@ import (
 	"math"
 
 	linearmodel "github.com/pa-m/sklearn/linear_model"
-	"github.com/pa-m/sklearn/metrics"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -31,7 +30,7 @@ func SetupRegression(app string, version string) {
 				Schedule(runtime, imageNum, app, version)
 			}
 		}
-	} else if result == 0 {
+	} else {
 		fmt.Printf("Current version %s equals to DB version %s .. \n", version, dbVersion)
 		fmt.Println("Checking if at least two data points exist for each runtime...")
 		for _, runtime := range runtimes {
@@ -81,9 +80,9 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 	if math.IsNaN(coef) || math.IsNaN(intercept) {
 		return 0.0, 0.0
 	}
-	r2score := metrics.R2Score(Y, YPred, nil, "variance_weighted").At(0, 0)
-	if r2score > .999 {
-		fmt.Println("BayesianRidge ok")
-	}
+	// r2score := metrics.R2Score(Y, YPred, nil, "variance_weighted").At(0, 0)
+	// if r2score > .999 {
+	// 	fmt.Println("BayesianRidge ok")
+	// }
 	return coef, intercept
 }

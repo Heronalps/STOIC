@@ -15,3 +15,13 @@ var (
 	procTimeNumDP       int      = 10
 	deploymentTimeNumDP int      = 10
 )
+
+/*
+TimeLog contains total response time and its three components
+*/
+type TimeLog struct {
+	Total      float64
+	Transfer   float64
+	Deployment float64
+	Processing float64
+}

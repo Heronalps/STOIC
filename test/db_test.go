@@ -119,3 +119,17 @@ func TestUpdateAppVersion(t *testing.T) {
 		fmt.Println(err.Error())
 	}
 }
+
+func TestCreateLogTimeTable(t *testing.T) {
+	err := client.CreateLogTimeTable(dbName)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func TestAppendRecordLogTime(t *testing.T) {
+	err := client.AppendRecordLogTime(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}

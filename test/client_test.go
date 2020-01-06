@@ -20,13 +20,13 @@ func TestQueryGPUNum(t *testing.T) {
 }
 
 func TestSelectRunTime(t *testing.T) {
-	runtime := client.SelectRunTime(56, app, version)
+	runtime, _ := client.SelectRunTime(56, app, version, "")
 	fmt.Println("runtime : " + runtime)
 }
 
 func TestGetDeploymentTime(t *testing.T) {
-	deploymentTime := client.GetDeploymentTime(runtime)
-	fmt.Printf("runtime: %f \n", deploymentTime)
+	deploymentTimes := client.GetDeploymentTime(runtime)
+	fmt.Printf("runtime: %v \n", deploymentTimes)
 }
 
 func TestCompareVersion(t *testing.T) {
@@ -34,7 +34,23 @@ func TestCompareVersion(t *testing.T) {
 }
 
 func TestRunOnNautilus(t *testing.T) {
-	output, elapsed := client.RunOnNautilus(runtime, imageNum, app, version)
+	output, elapsed, _ := client.RunOnNautilus(runtime, imageNum, app, version)
 	fmt.Printf("Output : %v..\n", output)
 	fmt.Printf("Elapsed : %v..\n", elapsed)
+}
+
+func TestLogTimes(t *testing.T) {
+	predTimeLog := &client.TimeLog{
+		Total:      3.0,
+		Transfer:   1.0,
+		Deployment: 1.0,
+		Processing: 1.0,
+	}
+	actTimeLog := &client.TimeLog{
+		Total:      6.0,
+		Transfer:   2.0,
+		Deployment: 2.0,
+		Processing: 2.0,
+	}
+	client.LogTimes(predTimeLog, actTimeLog)
 }

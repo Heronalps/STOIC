@@ -26,29 +26,30 @@ import (
 RunOnNautilus sends request to Nautilus based on runtime and image number
 return output & processing time
 */
-func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]byte, float64) {
+func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]byte, float64, *TimeLog) {
 	var (
-		output    []byte
-		isGPUSame bool
-		cmd       string
-		err       error
-		result    []byte
-		duration  float64
+		output         []byte
+		isGPUSame      bool
+		cmd            string
+		err            error
+		result         []byte
+		procTime       float64
+		deploymentTime float64
 	)
 	//resultChannel := make(chan []byte)
 
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
 	case "cpu":
-		isGPUSame, _, err = Deploy(namespace, deployment, 0)
+		isGPUSame, deploymentTime, err = Deploy(namespace, deployment, 0)
 	case "gpu1":
-		isGPUSame, _, err = Deploy(namespace, deployment, 1)
+		isGPUSame, deploymentTime, err = Deploy(namespace, deployment, 1)
 	case "gpu2":
-		isGPUSame, _, err = Deploy(namespace, deployment, 2)
+		isGPUSame, deploymentTime, err = Deploy(namespace, deployment, 2)
 	}
 	if err != nil {
 		log.Println(err.Error())
-		return result, duration
+		return result, procTime, nil
 	}
 
 	// Wait 3 second for deployment to complete
@@ -78,7 +79,7 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 				fmt.Println("Error msg : ", err.Error())
 				return err
 			}
-			duration = ParseElapsed(output)
+			procTime = ParseElapsed(output)
 			fmt.Println(string(output))
 			//resultChannel <- output
 			return err
@@ -90,7 +91,7 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 
 	//result = <-resultChannel
 	//return result, duration
-	return output, duration
+	return output, procTime, CreateTimeLog(0.0, deploymentTime, procTime)
 }
 
 /*
@@ -202,8 +203,8 @@ func Deploy(namespace string, deployment string, NumGPU int64) (bool, float64, e
 
 		// End Timestamp
 		timeStamp1 = time.Now()
-		// Convert nanoseconds to seconds
-		duration = float64(timeStamp1.Sub(timeStamp0)) * 1e-9
+		// Convert nanoseconds to seconds; Substract 3 seconds of waiting time
+		duration = float64(timeStamp1.Sub(timeStamp0))*1e-9 - 3.0
 
 		fmt.Println("Kubeless function is successfully deployed...")
 		if updateErr != nil {
