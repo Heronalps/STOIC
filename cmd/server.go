@@ -23,18 +23,17 @@ var (
 		Short: "Run STOIC Server",
 		Long:  `Run STOIC Socket Server`,
 		Run: func(cmd *cobra.Command, args []string) {
-			slice := randomSize[21:]
 			var (
 				totalImage int
 				batches    int
 				totalTime  float64
 			)
 
-			for i := 0; i < len(slice); i++ {
+			for i := 0; i < batch; i++ {
 				// image flag has high precedence than preset
 				if presetImageNum == 0 {
 					if preset {
-						imageNum = slice[i]
+						imageNum = randomSize[i]
 					} else {
 						imageNum = server.ImageCache()
 					}
