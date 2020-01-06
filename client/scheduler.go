@@ -65,7 +65,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		//output, elapsed, actTimeLog = RunOnEdge(imageNum, app, version)
+		output, elapsed, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Println("Running on Nautilus...")
 		output, elapsed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)

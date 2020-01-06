@@ -28,4 +28,11 @@ sudo tar -C /usr/local/ -xzf go1.13.5.linux-amd64.tar.gz
 # Nautilus Credentials
 # scp service-account and mv to config in .kube
 
+# Kubeless
+export OS=$(uname -s| tr '[:upper:]' '[:lower:]')
+curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless_$OS-amd64.zip && \
+  unzip kubeless_$OS-amd64.zip && \
+  sudo mv bundles/kubeless_$OS-amd64/kubeless /usr/local/bin/
 
+# jq
+sudo apt-get install jq
