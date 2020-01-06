@@ -37,6 +37,7 @@ func InitDB() {
 	}
 	CreateDeploymentTimeTable(dbName)
 	CreateAppVersionTable(dbName)
+	CreateLogTimeTable(dbName)
 }
 
 /*
