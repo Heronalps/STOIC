@@ -1,7 +1,8 @@
 # /bin/bash
 sudo apt-get update && sudo apt-get install -y build-essential ca-certificates curl git libbz2-1.0 libc6 libffi6 libncurses5 libreadline6-dev libsqlite3-0 libsqlite3-dev libssl-dev libtinfo5 pkg-config unzip vim wget zlib1g
 
-git clone github.com/heronalps/STOIC
+git clone https://github.com/heronalps/STOIC
+
 
 # MySQL Server installation
 
@@ -36,3 +37,18 @@ curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeles
 
 # jq
 sudo apt-get install jq
+
+# GPU_Serverless
+git clone https://github.com/heronalps/GPU_Serverless
+cd GPU_Serverless
+sudo apt install virtualenv
+virtualenv venv --python=python3.6
+source venv/bin/activate
+
+pip install -r requirements.txt
+
+scp -r ./checkpoints/ ubuntu@128.111.45.119:~/GPU_Serverless/
+scp -r ./data/SantaCruzIsland_Labeled_5Class/ ubuntu@128.111.45.119:~/GPU_Serverless/
+scp -r ./data/SantaCruzIsland_Validation_5Class/ ubuntu@128.111.45.119:~/GPU_Serverless/
+
+
