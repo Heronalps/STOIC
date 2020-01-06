@@ -183,6 +183,7 @@ func CreateAppVersionTable(dbName string) error {
 		fmt.Println(err.Error())
 		return err
 	}
+	fmt.Println("AppVersion table is created successfully...")
 	return err
 }
 
@@ -221,5 +222,6 @@ func CreateLogTimeTable(dbName string) error {
 		fmt.Println(err.Error())
 		return err
 	}
+	fmt.Println("LogTime table is created successfully...")
 	return err
 }

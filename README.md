@@ -31,3 +31,13 @@ sh StartServer.sh
 ```bash
 ./stoic run server --ip=127.0.0.1 --port=5001 --runtime=gpu2 --batch=3 --image=32 --preset=true
 ```
+
+* MySQL remove sudo for mysql -u root -p
+
+Login with sudo:
+
+```bash
+sudo mysql -u root
+
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'test';
+```
