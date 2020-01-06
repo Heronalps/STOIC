@@ -9,6 +9,7 @@ var (
 	port                int      = 3306
 	namespace           string   = "racelab"
 	deployment          string   = "image-clf-inf"
+	timeQueryDeployment string   = "image-clf-inf37"
 	runtimes            []string = []string{"edge", "cpu", "gpu1", "gpu2"}
 	setupImageNums      []int    = []int{33, 10}
 	currentRuntime      string   = "edge"
