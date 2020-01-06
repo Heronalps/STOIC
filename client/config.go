@@ -11,10 +11,11 @@ var (
 	deployment          string   = "image-clf-inf"
 	timeQueryDeployment string   = "image-clf-inf37"
 	runtimes            []string = []string{"edge", "cpu", "gpu1", "gpu2"}
-	setupImageNums      []int    = []int{33, 10}
-	currentRuntime      string   = "edge"
-	procTimeNumDP       int      = 10
-	deploymentTimeNumDP int      = 10
+	NautilusRuntimes    map[string]struct{}
+	setupImageNums      []int  = []int{33, 10}
+	currentRuntime      string = "cpu" // cpu / gpu1 / gpu2
+	procTimeNumDP       int    = 10
+	deploymentTimeNumDP int    = 10
 )
 
 /*

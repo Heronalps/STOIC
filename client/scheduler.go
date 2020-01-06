@@ -31,10 +31,10 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, transferTime)
 
 	selectedRuntime, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
-	fmt.Println("Selected : " + selectedRuntime)
-	fmt.Println("Runtime : " + runtime)
 	// Update current runtime to accurately estimate deployment time
-	currentRuntime = selectedRuntime
+	if _, found := NautilusRuntimes[selectedRuntime]; found {
+		currentRuntime = selectedRuntime
+	}
 
 	output, elapsed, actTimeLog = Request(selectedRuntime, imageNum, app, version)
 	if predTimeLog != nil {
