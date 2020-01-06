@@ -20,7 +20,7 @@ func QueryDataSet(runtime string, app string, version string, numDP int) (mat.Ma
 		Y      mat.Matrix
 	)
 
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	queryStr := fmt.Sprintf(`SELECT image_num, %s from ProcessingTime%s 
@@ -62,7 +62,7 @@ func QueryDeploymentTime(runtime string) float64 {
 		deploymentTimes []float64
 	)
 
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	// LIMIT 1 => Latest deployment time
@@ -94,7 +94,7 @@ func QueryAppVersion(app string) string {
 		version string = "0"
 	)
 
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	queryStr := fmt.Sprintf("SELECT version from AppVersion WHERE app=?;")

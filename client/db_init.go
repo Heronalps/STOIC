@@ -44,7 +44,7 @@ func InitDB() {
 CreateDatabase creates a database in MySQL instance. CREATE operation is idempotent.
 */
 func CreateDatabase(dbName string) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	defer db.Close()
 	_, err := db.Exec(fmt.Sprintf("CREATE database %s", dbName))
 	if err != nil {
@@ -61,7 +61,7 @@ func CreateDatabase(dbName string) error {
 CreateProcessingTimeTable creates a table for recording processing time of image batches
 */
 func CreateProcessingTimeTable(dbName string, runtime string) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	stmtStr := fmt.Sprintf(`CREATE TABLE ProcessingTime%s (
@@ -96,7 +96,7 @@ func CreateProcessingTimeTable(dbName string, runtime string) error {
 CreateDeploymentTimeTable creates a table for monitoring deployment time of runtimes
 */
 func CreateDeploymentTimeTable(dbName string) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 
@@ -127,7 +127,7 @@ func CreateDeploymentTimeTable(dbName string) error {
 CreateRegressionTable creates a table for Bayesian Ridge Regression coefficient and intercept
 */
 func CreateRegressionTable(dbName string) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 
@@ -166,7 +166,7 @@ func CreateRegressionTable(dbName string) error {
 CreateAppVersionTable create table that maps application and latest version
 */
 func CreateAppVersionTable(dbName string) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 
@@ -191,7 +191,7 @@ func CreateAppVersionTable(dbName string) error {
 CreateLogTimeTable create table for logging total response time and its component
 */
 func CreateLogTimeTable(dbName string) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 

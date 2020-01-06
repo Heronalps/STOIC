@@ -13,7 +13,7 @@ func AppendRecordProcessing(dbName string, runtime string, imageNum int,
 
 	fmt.Printf("Updating ProcessingTime table of %s duration %f...\n", runtime, duration)
 
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	stmtStr := fmt.Sprintf(`INSERT INTO ProcessingTime%s (image_num, application, version, %s) VALUES (?, ?, ?, ?);`, strings.Title(runtime), runtime)
@@ -32,7 +32,7 @@ func AppendRecordProcessing(dbName string, runtime string, imageNum int,
 AppendRecordDeployment appends a record of (image num, duration) to Processing Time table of specific runtime
 */
 func AppendRecordDeployment(dbName string, cpu float64, gpu1 float64, gpu2 float64) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	stmtStr := fmt.Sprintf(`INSERT INTO DeploymentTime (cpu, gpu1, gpu2) VALUES (?, ?, ?);`)
@@ -101,7 +101,7 @@ func UpdateRegressionTimeTable(runtime string) error {
 UpdateAppVersion updates the latest version of an application
 */
 func UpdateAppVersion(app string, version string) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	stmtStr := fmt.Sprintf(`UPDATE AppVersion SET Version=? WHERE app=?;`)
@@ -120,7 +120,7 @@ func UpdateAppVersion(app string, version string) error {
 InsertAppVersion inserts the nonexistent app and its current version
 */
 func InsertAppVersion(app string, version string) error {
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	stmtStr := fmt.Sprintf(`INSERT INTO AppVersion (App, Version) VALUES (?, ?);`)
@@ -142,7 +142,7 @@ func AppendRecordLogTime(imageNum int, app string, version string, runtime strin
 	predTotal float64, predTransfer float64, predDeploy float64, predProc float64,
 	actTotal float64, actTransfer float64, actDeploy float64, actProc float64) error {
 
-	db := connectDB(username, password, ip, port)
+	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
 	stmt, err := db.Prepare(`INSERT INTO LogTime (image_num, app, version, runtime, 
