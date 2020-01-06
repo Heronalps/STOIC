@@ -1,1 +1,1 @@
-./stoic run inquisitor -i 6
+./STOIC run inquisitor -i 300

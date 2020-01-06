@@ -1,1 +1,1 @@
-./stoic db init
+./STOIC db init
