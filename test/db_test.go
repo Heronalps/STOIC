@@ -128,7 +128,7 @@ func TestCreateLogTimeTable(t *testing.T) {
 }
 
 func TestAppendRecordLogTime(t *testing.T) {
-	err := client.AppendRecordLogTime(1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
+	err := client.AppendRecordLogTime(imageNum, app, version, runtime, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

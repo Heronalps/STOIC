@@ -195,6 +195,11 @@ func CreateLogTimeTable(dbName string) error {
 
 	stmt, err := db.Prepare(`CREATE TABLE LogTime (
 		task_id INT NOT NULL AUTO_INCREMENT,
+		time_stamp TIMESTAMP NOT NULL,
+		image_num INT NOT NULL,
+		app varchar(64) NOT NULL,
+		version varchar(16) NOT NULL,
+		runtime VARCHAR(32) NOT NULL,
 		pred_total FLOAT NOT NULL,
 		pred_transfer FLOAT NOT NULL,
 		pred_deploy FLOAT NOT NULL,

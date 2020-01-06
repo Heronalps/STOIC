@@ -47,7 +47,7 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	if elapsed != 0.0 {
 		AppendRecordProcessing(dbName, selectedRuntime, imageNum, elapsed, app, version)
 		//For setup regressions, the prediction is based on preset coef & intercept
-		LogTimes(predTimeLog, actTimeLog)
+		LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
 	}
 
 	return output

@@ -138,15 +138,18 @@ func InsertAppVersion(app string, version string) error {
 /*
 AppendRecordLogTime appends a record to LogTime table
 */
-func AppendRecordLogTime(predTotal float64, predTransfer float64, predDeploy float64, predProc float64,
+func AppendRecordLogTime(imageNum int, app string, version string, runtime string,
+	predTotal float64, predTransfer float64, predDeploy float64, predProc float64,
 	actTotal float64, actTransfer float64, actDeploy float64, actProc float64) error {
 
 	db := connectDB(username, password, ip, port)
 	useDB(db, dbName)
 	defer db.Close()
-	stmt, err := db.Prepare(`INSERT INTO LogTime (pred_total, pred_transfer, pred_deploy, pred_proc,
-		act_total, act_transfer, act_deploy, act_proc) VALUES (?, ?, ?, ?, ?, ?, ?, ?);`)
-	_, err = stmt.Exec(predTotal, predTransfer, predDeploy, predProc,
+	stmt, err := db.Prepare(`INSERT INTO LogTime (image_num, app, version, runtime, 
+		pred_total, pred_transfer, pred_deploy, pred_proc,
+		act_total, act_transfer, act_deploy, act_proc) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);`)
+	_, err = stmt.Exec(imageNum, app, version, runtime,
+		predTotal, predTransfer, predDeploy, predProc,
 		actTotal, actTransfer, actDeploy, actProc)
 
 	if err != nil {

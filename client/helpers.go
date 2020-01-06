@@ -274,9 +274,10 @@ func CreateTimeLog(transfer float64, deployment float64, processing float64) *Ti
 /*
 LogTimes logs Predicted/Actual total response time, transfer time, deployment time, processing time
 */
-func LogTimes(predTimeLog *TimeLog, actTimeLog *TimeLog) {
+func LogTimes(imageNum int, app string, version string, runtime string, predTimeLog *TimeLog, actTimeLog *TimeLog) {
 	if predTimeLog != nil && actTimeLog != nil {
-		AppendRecordLogTime(predTimeLog.Total, predTimeLog.Transfer, predTimeLog.Deployment, predTimeLog.Processing,
+		AppendRecordLogTime(imageNum, app, version, runtime,
+			predTimeLog.Total, predTimeLog.Transfer, predTimeLog.Deployment, predTimeLog.Processing,
 			actTimeLog.Total, actTimeLog.Transfer, actTimeLog.Deployment, actTimeLog.Processing)
 	}
 }

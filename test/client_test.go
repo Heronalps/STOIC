@@ -52,5 +52,5 @@ func TestLogTimes(t *testing.T) {
 		Deployment: 2.0,
 		Processing: 2.0,
 	}
-	client.LogTimes(predTimeLog, actTimeLog)
+	client.LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
 }
