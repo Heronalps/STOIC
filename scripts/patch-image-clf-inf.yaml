@@ -1,0 +1,20 @@
+spec:
+  template:
+    spec:
+      containers:
+      - name: image-clf-inf
+        resources: 
+          requests: 
+            memory: 32Gi      
+            nvidia.com/gpu: 0
+          limits: 
+            memory: 64Gi
+            nvidia.com/gpu: 0
+        volumeMounts:
+        - mountPath: /racelab
+          name: imageclf-ceph
+      restartPolicy: Always
+      volumes:
+        - name: imageclf-ceph
+          persistentVolumeClaim:
+            claimName: imageclf-ceph
