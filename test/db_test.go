@@ -64,8 +64,8 @@ func TestAppendRecordDeployment(t *testing.T) {
 
 func TestQueryDeploymentTimeNautilus(t *testing.T) {
 	var deploymentTime interface{}
-	deploymentTime = client.QueryDeploymentTimeNautilus(1)
-	defer client.QueryDeploymentTimeNautilus(0)
+	deploymentTime = client.QueryDeploymentTimeNautilus(1, app)
+	defer client.QueryDeploymentTimeNautilus(0, app)
 
 	duration, ok := deploymentTime.(float64)
 	if !ok {
@@ -75,7 +75,7 @@ func TestQueryDeploymentTimeNautilus(t *testing.T) {
 }
 
 func TestUpdateDeploymentTimeTable(t *testing.T) {
-	err = client.UpdateDeploymentTimeTable()
+	err = client.UpdateDeploymentTimeTable(app)
 	if err != nil {
 		t.Errorf("Updating DeploymentTime table was not successful ...\n")
 	}

@@ -1,0 +1,147 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "28"
+  creationTimestamp: "2020-01-06T15:18:03Z"
+  generation: 28
+  labels:
+    created-by: kubeless
+    function: image-clf-inf
+  name: image-clf-inf
+  namespace: racelab
+  ownerReferences:
+  - apiVersion: kubeless.io/v1beta1
+    kind: Function
+    name: image-clf-inf
+    uid: 65f8930f-5aa4-4bb3-b8e2-90316ddc5d10
+  resourceVersion: "1071041805"
+  selfLink: /apis/apps/v1/namespaces/racelab/deployments/image-clf-inf
+  uid: 98a058a4-91ef-4fd8-a159-8031870de077
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      created-by: kubeless
+      function: image-clf-inf
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8080"
+        prometheus.io/scrape: "true"
+      creationTimestamp: null
+      labels:
+        created-by: kubeless
+        function: image-clf-inf
+    spec:
+      containers:
+      - env:
+        - name: FUNC_HANDLER
+          value: handler
+        - name: MOD_NAME
+          value: image_clf_inf
+        - name: FUNC_TIMEOUT
+          value: "10800"
+        - name: FUNC_RUNTIME
+          value: gpupython3.6
+        - name: FUNC_MEMORY_LIMIT
+          value: "0"
+        - name: FUNC_PORT
+          value: "8080"
+        - name: KUBELESS_INSTALL_VOLUME
+          value: /kubeless
+        - name: PYTHONPATH
+          value: $(KUBELESS_INSTALL_VOLUME)/lib/python3.6/site-packages:$(KUBELESS_INSTALL_VOLUME)
+        image: heronalps/kubeless-tf:1.1
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 3
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: image-clf-inf
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          limits:
+            memory: 64Gi
+            nvidia.com/gpu: "2"
+          requests:
+            memory: 32Gi
+            nvidia.com/gpu: "2"
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /racelab
+          name: imageclf-ceph
+        - mountPath: /kubeless
+          name: image-clf-inf
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - args:
+        - echo '6efad1d0c192e2668d1d322a67742dd226d04619168c271024692be81fd06bfb  /src/image_clf_inf.py'
+          > /tmp/func.sha256 && sha256sum -c /tmp/func.sha256 && cp /src/image_clf_inf.py
+          /kubeless/image_clf_inf.py && cp /src/requirements.txt /kubeless
+        command:
+        - sh
+        - -c
+        image: kubeless/unzip@sha256:f162c062973cca05459834de6ed14c039d45df8cdb76097f50b028a1621b3697
+        imagePullPolicy: IfNotPresent
+        name: prepare
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /kubeless
+          name: image-clf-inf
+        - mountPath: /src
+          name: image-clf-inf-deps
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: imageclf-ceph
+        persistentVolumeClaim:
+          claimName: imageclf-ceph
+      - emptyDir: {}
+        name: image-clf-inf
+      - configMap:
+          defaultMode: 420
+          name: image-clf-inf
+        name: image-clf-inf-deps
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2020-01-06T15:18:11Z"
+    lastUpdateTime: "2020-01-06T15:18:11Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2020-01-06T15:18:03Z"
+    lastUpdateTime: "2020-01-06T23:27:04Z"
+    message: ReplicaSet "image-clf-inf-bd4d8f544" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 28
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

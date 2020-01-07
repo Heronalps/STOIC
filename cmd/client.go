@@ -24,6 +24,6 @@ var (
 func init() {
 	runCmd.AddCommand(clientCmd)
 	clientCmd.Flags().StringVarP(&runtime, "runtime", "r", "", "Runtimes of WTB task: edge/cpu/gpu1/gpu2")
-	clientCmd.Flags().StringVar(&app, "app", "wtb", "The ML application")
+	clientCmd.Flags().StringVar(&app, "app", "image-clf-inf", "The ML application")
 	clientCmd.Flags().StringVar(&version, "version", "1.0", "The version of application")
 }
