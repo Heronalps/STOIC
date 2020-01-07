@@ -19,6 +19,6 @@ var (
 
 func init() {
 	dbCmd.AddCommand(setupCmd)
-	setupCmd.Flags().StringVarP(&app, "app", "a", "wtb", "The application name")
+	setupCmd.Flags().StringVarP(&app, "app", "a", "image-clf-inf", "The application name")
 	setupCmd.Flags().StringVarP(&version, "version", "v", "1.0", "The version of application")
 }

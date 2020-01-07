@@ -125,7 +125,7 @@ func GetDeploymentTime(runtime string) map[string]float64 {
 
 	for _, runtime := range selectedRuntimes {
 		var deploymentTime float64
-		if runtime == "edge" || runtime == currentRuntime {
+		if runtime == "edge" {
 			deploymentTime = 0.0
 		} else {
 			deploymentTime = QueryDeploymentTime(runtime)

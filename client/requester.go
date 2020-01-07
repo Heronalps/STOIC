@@ -42,11 +42,11 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
 	case "cpu":
-		isGPUSame, deploymentTime, err = Deploy(namespace, deployment, 0, app)
+		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 0, app)
 	case "gpu1":
-		isGPUSame, deploymentTime, err = Deploy(namespace, deployment, 1, app)
+		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 1, app)
 	case "gpu2":
-		isGPUSame, deploymentTime, err = Deploy(namespace, deployment, 2, app)
+		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 2, app)
 	}
 	if err != nil {
 		log.Println(err.Error())
@@ -59,7 +59,9 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 		func() error {
 			// If the pod is re-deployed,
 			// make initial kubeless call to depolyed function to avoid cold start
-			if !isGPUSame {
+			// Update - After refactoring Deploy function, every invocation will redeploy.
+			// Add true condition to always probe
+			if !isGPUSame || true {
 				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
 				cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
 				output, err = exec.Command("bash", "-c", cmd).Output()
@@ -117,6 +119,10 @@ func getKubeConfig() string {
 QueryGPUNum queries the number of GPU in current pod
 */
 func QueryGPUNum(namespace string, deployment string) int64 {
+	var (
+		numGpu resource.Quantity
+	)
+
 	kubeconfig := getKubeConfig()
 	// use the current context in kubeconfig
 	// This config is credential information of kubernetes
@@ -133,13 +139,18 @@ func QueryGPUNum(namespace string, deployment string) int64 {
 	result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
 	if getErr != nil {
 		log.Printf("Failed to get latest version of Deployment %v", getErr)
+		return 0
 	}
-	numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
-	return numGpu.Value()
+	if result.Spec.Template.Spec.Containers != nil {
+		numGpu = result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
+		return numGpu.Value()
+	}
+
+	return 0
 }
 
 /*
-Deploy patches kubeless function on Nautilus based on number of GPU
+Deploy function deploys new deployment and patches kubeless function on Nautilus based on number of GPU
 */
 func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool, float64, error) {
 	var (
@@ -169,7 +180,8 @@ func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	_ = <-IsPodReady(deploymentsClient)
+	//Async call using channel await to join
+	_ = <-IsPodReady(deployment, deploymentsClient)
 	// Create Deployment End Timestamp
 	tsCreateEnd := time.Now()
 
@@ -211,7 +223,9 @@ func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool
 		currNumGPU = quant.Value()
 
 		fmt.Println("Waiting kubeless function to be deployed...")
-		_ = <-IsPodReady(deploymentsClient)
+
+		//Async call using channel await to join
+		_ = <-IsPodReady(deployment, deploymentsClient)
 		// Update End Timestamp
 		tsUpdateEnd = time.Now()
 
@@ -243,6 +257,8 @@ func CreateDeployment(app string) error {
 	)
 	if app == "image-clf-inf" {
 		pythonVersion = "3.6"
+
+		// image-clf-inf37 is for periodically querying deployment time
 	} else if app == "image-clf-inf37" {
 		pythonVersion = "3.7"
 	}
@@ -264,7 +280,7 @@ func CreateDeployment(app string) error {
 /*
 IsPodReady makes judgement about if a deployment is ready
 */
-func IsPodReady(deploymentsClient appsv1.DeploymentInterface) <-chan bool {
+func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface) <-chan bool {
 	r := make(chan bool)
 	go func() {
 		result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})

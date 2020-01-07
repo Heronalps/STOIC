@@ -76,7 +76,7 @@ func UpdateDeploymentTimeTable(app string) error {
 	)
 
 	// Start from the current GPU number + 1
-	numGPU = QueryGPUNum(namespace, deployment)
+	numGPU = QueryGPUNum(namespace, timeQueryDeployment)
 	for i := 0; i < 3; i++ {
 		numGPU = (numGPU + 1) % 3
 		deploymentTimes[numGPU] = QueryDeploymentTimeNautilus(numGPU, app)

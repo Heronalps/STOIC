@@ -32,9 +32,9 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 
 	selectedRuntime, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
 	// Update current runtime to accurately estimate deployment time
-	if _, found := NautilusRuntimes[selectedRuntime]; found {
-		currentRuntime = selectedRuntime
-	}
+	// if _, found := NautilusRuntimes[selectedRuntime]; found {
+	// 	currentRuntime = selectedRuntime
+	// }
 
 	output, elapsed, actTimeLog = Request(selectedRuntime, imageNum, app, version)
 	if predTimeLog != nil {
