@@ -1,0 +1,1 @@
+SELECT UNIX_TIMESTAMP(time_stamp) as epoch, cpu, gpu1, gpu2 from DeploymentTime; 

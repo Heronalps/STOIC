@@ -15,6 +15,7 @@ var (
 	imageNum       int
 	batch          int
 	preset         bool
+	index          int
 	randomSize     []int = []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93,
 		20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
 
@@ -29,11 +30,15 @@ var (
 				totalTime  float64
 			)
 
-			for i := 0; i < batch; i++ {
+			for {
 				// image flag has high precedence than preset
 				if presetImageNum == 0 {
 					if preset {
-						imageNum = randomSize[i]
+						imageNum = randomSize[index]
+						index++
+						if index >= len(randomSize) {
+							os.Exit(0)
+						}
 					} else {
 						imageNum = server.ImageCache()
 					}
@@ -55,6 +60,7 @@ var (
 				fmt.Printf("%d batches has been processed...\n", batches)
 				fmt.Printf("%f seconds for this batch...\n", elapsed)
 				fmt.Printf("%f seconds has elapsed...\n", totalTime)
+				// When batch is 0, it marks infinitely execution
 				if batch != 0 && batch == batches {
 					os.Exit(0)
 				}
