@@ -99,14 +99,22 @@ func Extrapolate(runtime string, imageNum int, app string, version string) float
 /*
 GetTransferTime calculates the transfer time from Sedgwick reserve to Mayhem cloud to Nautilus
 */
-func GetTransferTime(imageNum int) float64 {
+func GetTransferTime(imageNum int) map[string]float64 {
+	transferTimes := make(map[string]float64)
 	// Convert megabits to megabytes
 	bandwidth := GetBandWidth() / 8.0
 	// Average JPG image size of 1920 * 1080 = 0.212 MB
 	JPGSize := 212 * 1e-3
 
 	transferTime := float64(imageNum) * JPGSize / bandwidth
-	return transferTime
+	for i := 0; i < len(runtimes); i++ {
+		if runtimes[i] == "edge" {
+			transferTimes[runtimes[i]] = 0.0
+		} else {
+			transferTimes[runtimes[i]] = transferTime
+		}
+	}
+	return transferTimes
 }
 
 /*
@@ -162,7 +170,7 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 	var (
 		selectedRuntimes []string
 	)
-	transferTime := GetTransferTime(imageNum)
+	transferTimes := GetTransferTime(imageNum)
 	procTimes := GetProcTime(imageNum, app, version, runtime)
 	deploymentTimes := GetDeploymentTime(runtime)
 
@@ -176,9 +184,9 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 		selectedRuntimes = runtimes
 	}
 	for i := 0; i < len(selectedRuntimes); i++ {
-		runtime := selectedRuntimes[i]
-		totalTimes[procTimes[runtime]+transferTime+deploymentTimes[runtime]] = runtime
-		timeLogs[runtime] = CreateTimeLog(transferTime, deploymentTimes[runtime], procTimes[runtime])
+		currRuntime := selectedRuntimes[i]
+		totalTimes[transferTimes[currRuntime]+deploymentTimes[currRuntime]+procTimes[currRuntime]] = currRuntime
+		timeLogs[currRuntime] = CreateTimeLog(transferTimes[currRuntime], deploymentTimes[currRuntime], procTimes[currRuntime])
 	}
 	return totalTimes, timeLogs
 }

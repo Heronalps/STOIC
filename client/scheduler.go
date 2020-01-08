@@ -18,34 +18,31 @@ Return: runtime for appending processing time to corresponding table
 */
 func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	var (
-		elapsed         float64
-		transferTime    float64
 		output          []byte
 		selectedRuntime string
 		predTimeLog     *TimeLog
 		actTimeLog      *TimeLog
 	)
 
-	transferTime = GetTransferTime(imageNum)
-	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
-	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, transferTime)
+	transferTimes := GetTransferTime(imageNum)
 
 	selectedRuntime, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
+	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
+	fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
+		imageNum, transferTimes[selectedRuntime], selectedRuntime)
+
 	// Update current runtime to accurately estimate deployment time
 	// if _, found := NautilusRuntimes[selectedRuntime]; found {
 	// 	currentRuntime = selectedRuntime
 	// }
 
-	output, elapsed, actTimeLog = Request(selectedRuntime, imageNum, app, version)
-	if predTimeLog != nil {
-		predTimeLog.Transfer = transferTime
-	}
+	output, actTimeLog = Request(selectedRuntime, imageNum, app, version)
 	if actTimeLog != nil {
-		actTimeLog.Transfer = transferTime
+		actTimeLog.Transfer = transferTimes[selectedRuntime]
 	}
 
-	if elapsed != 0.0 {
-		AppendRecordProcessing(dbName, selectedRuntime, imageNum, elapsed, app, version)
+	if actTimeLog.Processing != 0.0 {
+		AppendRecordProcessing(dbName, selectedRuntime, imageNum, actTimeLog.Processing, app, version)
 		//For setup regressions, the prediction is based on preset coef & intercept
 		LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
 	}
@@ -56,21 +53,21 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 /*
 Request is a wrap function both for executing jobs and setting up processing time table for regression
 */
-func Request(runtime string, imageNum int, app string, version string) ([]byte, float64, *TimeLog) {
+func Request(runtime string, imageNum int, app string, version string) ([]byte, *TimeLog) {
 	var (
 		output     []byte
-		elapsed    float64
 		actTimeLog *TimeLog
 	)
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		output, elapsed, actTimeLog = RunOnEdge(imageNum, app, version)
+		output, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Println("Running on Nautilus...")
-		output, elapsed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
+		output, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
 	}
-	return output, elapsed, actTimeLog
+	// The transfer time field is 0.0 in actTimeLog at this point
+	return output, actTimeLog
 }
 
 /*
@@ -79,7 +76,7 @@ SelectRunTime select the runtime among four scenarios
 func SelectRunTime(imageNum int, app string, version string, runtime string) (string, *TimeLog) {
 
 	// If the runtime is manually set, the results only have preset runtime
-	totalTimes, predTimeLog := GetTotalTime(imageNum, app, version, runtime)
+	totalTimes, predTimeLogMap := GetTotalTime(imageNum, app, version, runtime)
 	fmt.Println(totalTimes)
 
 	// Sort the totalTimes map by key
@@ -90,13 +87,13 @@ func SelectRunTime(imageNum int, app string, version string, runtime string) (st
 	sort.Float64s(keys)
 	selectedRuntime := totalTimes[keys[0]]
 	fmt.Printf("The task is scheduled at %s for %f seconds\n", selectedRuntime, keys[0])
-	return selectedRuntime, predTimeLog[selectedRuntime]
+	return selectedRuntime, predTimeLogMap[selectedRuntime]
 }
 
 /*
 RunOnEdge runs the task on mini edge cloud with AVX support
 */
-func RunOnEdge(imageNum int, app string, version string) ([]byte, float64, *TimeLog) {
+func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 	var (
 		output []byte
 		err    error
@@ -113,10 +110,9 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, float64, *Time
 	output, err = cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
-		return output, 0, nil
+		return output, nil
 	}
 	fmt.Printf("Output of task %s\n", string(output))
-	procTime := ParseElapsed(output)
 
-	return output, ParseElapsed(output), CreateTimeLog(0.0, 0.0, procTime)
+	return output, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
 }

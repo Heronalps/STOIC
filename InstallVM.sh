@@ -8,6 +8,7 @@ git clone https://github.com/heronalps/STOIC
 
 sudo apt install mysql-server
 
+# Don't install VALIDATE PASSWORD plugin
 sudo mysql_secure_installation
 
 systemctl status mysql.service
@@ -23,14 +24,18 @@ chmod +x ./kubectl
 sudo mv ./kubectl /usr/local/bin/kubectl
 
 # Go
-
+curl -LO https://dl.google.com/go/go1.13.5.linux-amd64.tar.gz
 sudo tar -C /usr/local/ -xzf go1.13.5.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+
+
 
 # Nautilus Credentials
 # scp service-account and mv to config in .kube
 
 # Kubeless
 export OS=$(uname -s| tr '[:upper:]' '[:lower:]')
+export RELEASE=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
 curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeless_$OS-amd64.zip && \
   unzip kubeless_$OS-amd64.zip && \
   sudo mv bundles/kubeless_$OS-amd64/kubeless /usr/local/bin/
@@ -46,10 +51,11 @@ virtualenv venv --python=python3.6
 source venv/bin/activate
 
 pip install -r requirements.txt
+mkdir data
 
-scp -r ./checkpoints/ ubuntu@128.111.45.119:~/GPU_Serverless/
-scp -r ./data/SantaCruzIsland_Labeled_5Class/ ubuntu@128.111.45.119:~/GPU_Serverless/
-scp -r ./data/SantaCruzIsland_Validation_5Class/ ubuntu@128.111.45.119:~/GPU_Serverless/
+scp -r ./checkpoints/ ubuntu@128.111.45.117:~/GPU_Serverless/
+scp -r ./data/SantaCruzIsland_Labeled_5Class/ ubuntu@128.111.45.117:~/GPU_Serverless/data
+scp -r ./data/SantaCruzIsland_Validation_5Class/ ubuntu@128.111.45.117:~/GPU_Serverless/data
 
 # yq 
-snap install yq
+sudo snap install yq
