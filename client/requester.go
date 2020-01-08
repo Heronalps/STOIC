@@ -17,7 +17,6 @@ import (
 	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	"k8s.io/client-go/util/retry"
 
 	// oidc authorization
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
@@ -61,9 +60,9 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 			// make initial kubeless call to depolyed function to avoid cold start
 			// Update - After refactoring Deploy function, every invocation will redeploy.
 			// Add true condition to always probe
-			if !isGPUSame || true {
+			if true || !isGPUSame {
 				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
-				cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
+				cmd = fmt.Sprintf("sh ./scripts/invoke_inf.sh %d", 1)
 				output, err = exec.Command("bash", "-c", cmd).Output()
 				if err != nil {
 					fmt.Println("Error msg : ", err.Error())
@@ -173,10 +172,11 @@ func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool
 	}
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 
+	fmt.Println("Updating deployment...")
 	// Create Deployment Start Timestamp
 	tsCreateStart := time.Now()
 
-	err = CreateDeployment(app)
+	err = CreateDeployment(app, NumGPU)
 	if err != nil {
 		fmt.Println(err.Error())
 	}
@@ -185,71 +185,72 @@ func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool
 	// Create Deployment End Timestamp
 	tsCreateEnd := time.Now()
 
-	fmt.Println("Updating deployment...")
 	var (
-		prevNumGPU    int64
-		currNumGPU    int64
-		tsUpdateStart time.Time
-		tsUpdateEnd   time.Time
-		duration      float64
+		prevNumGPU int64
+		currNumGPU int64
+		// tsUpdateStart time.Time
+		// tsUpdateEnd   time.Time
+		duration float64
 	)
-	retryErr = retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	// Change GPU number is executed in the deploy.sh
 
-		// Recover from "panic: assignment to entry in nil map"
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Printf("Panic : %s \n", r)
-			}
-		}()
+	// retryErr = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
-		result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
-		if getErr != nil {
-			log.Printf("Failed to get latest version of Deployment %v", getErr)
-			return getErr
-		}
+	// 	// Recover from "panic: assignment to entry in nil map"
+	// 	defer func() {
+	// 		if r := recover(); r != nil {
+	// 			fmt.Printf("Panic : %s \n", r)
+	// 		}
+	// 	}()
 
-		numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
-		prevNumGPU = numGpu.Value()
-		fmt.Printf("Current Number of GPU is %v \n", prevNumGPU)
-		quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
-		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
-		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
+	// 	result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
+	// 	if getErr != nil {
+	// 		log.Printf("Failed to get latest version of Deployment %v", getErr)
+	// 		return getErr
+	// 	}
 
-		// Update Start Timestamp
-		tsUpdateStart = time.Now()
+	// 	numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
+	// 	prevNumGPU = numGpu.Value()
+	// 	fmt.Printf("Current Number of GPU is %v \n", prevNumGPU)
+	// 	quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
+	// 	result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
+	// 	result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
 
-		_, updateErr := deploymentsClient.Update(result)
-		fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
-		currNumGPU = quant.Value()
+	// 	// Update Start Timestamp
+	// 	tsUpdateStart = time.Now()
 
-		fmt.Println("Waiting kubeless function to be deployed...")
+	// 	_, updateErr := deploymentsClient.Update(result)
+	// 	fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
+	// 	currNumGPU = quant.Value()
 
-		//Async call using channel await to join
-		_ = <-IsPodReady(deployment, deploymentsClient)
-		// Update End Timestamp
-		tsUpdateEnd = time.Now()
+	// 	fmt.Println("Waiting kubeless function to be deployed...")
 
-		// Convert nanoseconds to seconds; Substract 3 seconds of waiting time
-		duration = (float64(tsCreateEnd.Sub(tsCreateStart))+float64(tsUpdateEnd.Sub(tsUpdateStart)))*1e-9 - 3.0
+	// 	//Async call using channel await to join
+	// 	_ = <-IsPodReady(deployment, deploymentsClient)
+	// 	// Update End Timestamp
+	// 	tsUpdateEnd = time.Now()
 
-		fmt.Println("Kubeless function is successfully deployed...")
-		if updateErr != nil {
-			fmt.Println(updateErr)
-		}
-		return updateErr
-	})
+	// 	fmt.Println("Kubeless function is successfully deployed...")
+	// 	if updateErr != nil {
+	// 		fmt.Println(updateErr)
+	// 	}
+	// 	return updateErr
+	// })
 
-	if retryErr != nil {
-		log.Printf("Update failed: %v", retryErr.Error())
-	}
+	// if retryErr != nil {
+	// 	log.Printf("Update failed: %v", retryErr.Error())
+	// }
 
+	// Convert nanoseconds to seconds; Substract 3 seconds of waiting time
+	// duration = (float64(tsCreateEnd.Sub(tsCreateStart))+float64(tsUpdateEnd.Sub(tsUpdateStart)))*1e-9 - 3.0
+	duration = (float64(tsCreateEnd.Sub(tsCreateStart)))*1e-9 - 3.0
 	return prevNumGPU == currNumGPU, duration, retryErr
 }
 
 /*
 CreateDeployment creates new deployment
 */
-func CreateDeployment(app string) error {
+func CreateDeployment(app string, NumGPU int64) error {
 	var (
 		pythonVersion string
 		err           error
@@ -263,7 +264,8 @@ func CreateDeployment(app string) error {
 		pythonVersion = "3.7"
 	}
 	// Create new deployment
-	cmdRun := fmt.Sprintf("sh ./scripts/deploy.sh %s %s", app, pythonVersion)
+	cmdRun := fmt.Sprintf("sh ./scripts/deploy.sh %s %s %d", app, pythonVersion, NumGPU)
+	//fmt.Println(cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
 	//cmd.Dir = repoPATH
 	fmt.Printf("Creating new deployment of app %s \n", app)

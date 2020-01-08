@@ -3,11 +3,11 @@ spec:
     spec:
       containers:
       - name: image-clf-inf
-        resources: 
-          requests: 
-            memory: 32Gi      
+        resources:
+          requests:
+            memory: 32Gi
             nvidia.com/gpu: 0
-          limits: 
+          limits:
             memory: 64Gi
             nvidia.com/gpu: 0
         volumeMounts:
@@ -15,6 +15,6 @@ spec:
           name: imageclf-ceph
       restartPolicy: Always
       volumes:
-        - name: imageclf-ceph
-          persistentVolumeClaim:
-            claimName: imageclf-ceph
+      - name: imageclf-ceph
+        persistentVolumeClaim:
+          claimName: imageclf-ceph

@@ -51,4 +51,5 @@ scp -r ./checkpoints/ ubuntu@128.111.45.119:~/GPU_Serverless/
 scp -r ./data/SantaCruzIsland_Labeled_5Class/ ubuntu@128.111.45.119:~/GPU_Serverless/
 scp -r ./data/SantaCruzIsland_Validation_5Class/ ubuntu@128.111.45.119:~/GPU_Serverless/
 
-
+# yq 
+snap install yq
