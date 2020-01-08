@@ -5,6 +5,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -16,7 +17,7 @@ import (
 /*
 SocketClient listens to the task request from the server
 */
-func SocketClient(port int) {
+func SocketClient(port int, runtime string, app string, version string) {
 	listen, err := net.Listen("tcp4", ":"+strconv.Itoa(port))
 	if err != nil {
 		log.Fatalf("Socket listen port %d failed,%s", port, err)
@@ -31,17 +32,16 @@ func SocketClient(port int) {
 			log.Fatalln(err)
 			continue
 		}
-		go handler(conn)
+		go handler(conn, runtime, app, version)
 	}
 }
 
-func handler(conn net.Conn) {
+func handler(conn net.Conn, runtime string, app string, version string) {
 	defer conn.Close()
 	var (
 		reader   = bufio.NewReader(conn)
 		writer   = bufio.NewWriter(conn)
 		buf      = make([]byte, 1024)
-		runtime  string
 		imageNum int
 		data     bytes.Buffer
 	)
@@ -60,8 +60,8 @@ ILOOP:
 			if isTransportOver(data.String()) {
 				// fmt.Printf("data :%sEOF \n", data.String())
 				dataSlice := strings.Split(data.String(), " ")
-				runtime = dataSlice[0]
-				imageNum, err = strconv.Atoi(dataSlice[1])
+				imageNum, err = strconv.Atoi(dataSlice[0])
+
 				// fmt.Printf("runtime: %s \n", runtime)
 				// fmt.Printf("imageNum: %d \n", imageNum)
 				break ILOOP
@@ -75,10 +75,11 @@ ILOOP:
 	// It requires checking kubeless process and
 	// write back to server socket if the kubeless function is available
 
-	elapsed := Request(runtime, imageNum)
-	writer.Write(elapsed)
+	output := Schedule(runtime, imageNum, app, version)
+
+	writer.Write(output)
 	writer.Flush()
-	log.Println("Sent output to server...")
+	fmt.Println("Sent output to server...")
 }
 
 func isTransportOver(data string) (over bool) {

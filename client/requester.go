@@ -10,76 +10,90 @@ import (
 	"strings"
 	"time"
 
+	retrygo "github.com/avast/retry-go"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	appsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	"k8s.io/client-go/util/retry"
 
 	// oidc authorization
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
 /*
-Request sends request to Nautilus based on runtime and image number
+RunOnNautilus sends request to Nautilus based on runtime and image number
+return output & processing time
 */
-func Request(runtime string, imageNum int) []byte {
-	namespace := "racelab"
-	deployment := "image-clf-inf"
+func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]byte, float64, *TimeLog) {
 	var (
-		output    []byte
-		isGPUSame bool
-		cmd       string
-		err       error
-		result    []byte
+		output         []byte
+		isGPUSame      bool
+		cmd            string
+		err            error
+		result         []byte
+		procTime       float64
+		deploymentTime float64
 	)
-	resultChannel := make(chan []byte)
+	//resultChannel := make(chan []byte)
 
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 	switch runtime {
 	case "cpu":
-		isGPUSame, err = deploy(namespace, deployment, 0)
+		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 0, app)
 	case "gpu1":
-		isGPUSame, err = deploy(namespace, deployment, 1)
+		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 1, app)
 	case "gpu2":
-		isGPUSame, err = deploy(namespace, deployment, 2)
+		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 2, app)
 	}
 	if err != nil {
 		log.Println(err.Error())
-		return result
+		return result, procTime, nil
 	}
 
 	// Wait 3 second for deployment to complete
 	time.Sleep(3 * time.Second)
-	go func() {
-		// If the pod is re-deployed,
-		// make initial kubeless call to depolyed function to avoid cold start
-		if !isGPUSame {
-			fmt.Println("Probing deployed kubeless function to avoid cold start ...")
-			cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(1)
+	retryErr := retrygo.Do(
+		func() error {
+			// If the pod is re-deployed,
+			// make initial kubeless call to depolyed function to avoid cold start
+			// Update - After refactoring Deploy function, every invocation will redeploy.
+			// Add true condition to always probe
+			if true || !isGPUSame {
+				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
+				cmd = fmt.Sprintf("sh ./scripts/invoke_inf.sh %d", 1)
+				output, err = exec.Command("bash", "-c", cmd).Output()
+				if err != nil {
+					fmt.Println("Error msg : ", err.Error())
+					return err
+				}
+				fmt.Println(string(output))
+				fmt.Println("Finish Probing ...")
+			} else {
+				fmt.Println("Using same pod, No probing needed....")
+			}
+
+			//make kubeless call to deployed function
+			cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(imageNum)
 			output, err = exec.Command("bash", "-c", cmd).Output()
 			if err != nil {
 				fmt.Println("Error msg : ", err.Error())
+				return err
 			}
+			procTime = ParseElapsed(output)
 			fmt.Println(string(output))
-			fmt.Println("Finish Probing ...")
-		} else {
-			fmt.Println("Using same pod, No probing needed....")
-		}
+			//resultChannel <- output
+			return err
+		})
 
-		//make kubeless call to deployed function
-		cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(imageNum)
-		output, err = exec.Command("bash", "-c", cmd).Output()
-		if err != nil {
-			fmt.Println("Error msg : ", err.Error())
-		}
-		fmt.Println(string(output))
-		resultChannel <- output
-	}()
+	if retryErr != nil {
+		fmt.Printf("Request failed: %v ...", retryErr.Error())
+	}
 
-	result = <-resultChannel
-	return result
+	//result = <-resultChannel
+	//return result, duration
+	return output, procTime, CreateTimeLog(0.0, deploymentTime, procTime)
 }
 
 /*
@@ -101,9 +115,13 @@ func getKubeConfig() string {
 }
 
 /*
-Deploy patches kubeless function on Nautilus based on number of GPU
+QueryGPUNum queries the number of GPU in current pod
 */
-func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
+func QueryGPUNum(namespace string, deployment string) int64 {
+	var (
+		numGpu resource.Quantity
+	)
+
 	kubeconfig := getKubeConfig()
 	// use the current context in kubeconfig
 	// This config is credential information of kubernetes
@@ -117,54 +135,168 @@ func deploy(namespace string, deployment string, NumGPU int64) (bool, error) {
 		panic(err.Error())
 	}
 	deploymentsClient := clientset.AppsV1().Deployments(namespace)
+	result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
+	if getErr != nil {
+		log.Printf("Failed to get latest version of Deployment %v", getErr)
+		return 0
+	}
+	if result.Spec.Template.Spec.Containers != nil {
+		numGpu = result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
+		return numGpu.Value()
+	}
+
+	return 0
+}
+
+/*
+Deploy function deploys new deployment and patches kubeless function on Nautilus based on number of GPU
+*/
+func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool, float64, error) {
+	var (
+		retryErr error
+	)
+
+	kubeconfig := getKubeConfig()
+
+	// use the current context in kubeconfig
+	// This config is credential information of kubernetes
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// create the clientset
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
+	deploymentsClient := clientset.AppsV1().Deployments(namespace)
 
 	fmt.Println("Updating deployment...")
+	// Create Deployment Start Timestamp
+	tsCreateStart := time.Now()
+
+	err = CreateDeployment(app, NumGPU)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	//Async call using channel await to join
+	_ = <-IsPodReady(deployment, deploymentsClient)
+	// Create Deployment End Timestamp
+	tsCreateEnd := time.Now()
+
 	var (
 		prevNumGPU int64
 		currNumGPU int64
+		// tsUpdateStart time.Time
+		// tsUpdateEnd   time.Time
+		duration float64
 	)
-	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	// Change GPU number is executed in the deploy.sh
 
-		// Recover from "panic: assignment to entry in nil map"
-		defer func() {
-			if r := recover(); r != nil {
-				fmt.Printf("Panic : %s \n", r)
-			}
-		}()
+	// retryErr = retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
+	// 	// Recover from "panic: assignment to entry in nil map"
+	// 	defer func() {
+	// 		if r := recover(); r != nil {
+	// 			fmt.Printf("Panic : %s \n", r)
+	// 		}
+	// 	}()
+
+	// 	result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
+	// 	if getErr != nil {
+	// 		log.Printf("Failed to get latest version of Deployment %v", getErr)
+	// 		return getErr
+	// 	}
+
+	// 	numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
+	// 	prevNumGPU = numGpu.Value()
+	// 	fmt.Printf("Current Number of GPU is %v \n", prevNumGPU)
+	// 	quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
+	// 	result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
+	// 	result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
+
+	// 	// Update Start Timestamp
+	// 	tsUpdateStart = time.Now()
+
+	// 	_, updateErr := deploymentsClient.Update(result)
+	// 	fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
+	// 	currNumGPU = quant.Value()
+
+	// 	fmt.Println("Waiting kubeless function to be deployed...")
+
+	// 	//Async call using channel await to join
+	// 	_ = <-IsPodReady(deployment, deploymentsClient)
+	// 	// Update End Timestamp
+	// 	tsUpdateEnd = time.Now()
+
+	// 	fmt.Println("Kubeless function is successfully deployed...")
+	// 	if updateErr != nil {
+	// 		fmt.Println(updateErr)
+	// 	}
+	// 	return updateErr
+	// })
+
+	// if retryErr != nil {
+	// 	log.Printf("Update failed: %v", retryErr.Error())
+	// }
+
+	// Convert nanoseconds to seconds; Substract 3 seconds of waiting time
+	// duration = (float64(tsCreateEnd.Sub(tsCreateStart))+float64(tsUpdateEnd.Sub(tsUpdateStart)))*1e-9 - 3.0
+	duration = (float64(tsCreateEnd.Sub(tsCreateStart)))*1e-9 - 3.0
+	return prevNumGPU == currNumGPU, duration, retryErr
+}
+
+/*
+CreateDeployment creates new deployment
+*/
+func CreateDeployment(app string, NumGPU int64) error {
+	var (
+		pythonVersion string
+		err           error
+		cmd           *exec.Cmd
+	)
+	if app == "image-clf-inf" {
+		pythonVersion = "3.6"
+
+		// image-clf-inf37 is for periodically querying deployment time
+	} else if app == "image-clf-inf37" {
+		pythonVersion = "3.7"
+	}
+	// Create new deployment
+	cmdRun := fmt.Sprintf("sh ./scripts/deploy.sh %s %s %d", app, pythonVersion, NumGPU)
+	//fmt.Println(cmdRun)
+	cmd = exec.Command("bash", "-c", cmdRun)
+	//cmd.Dir = repoPATH
+	fmt.Printf("Creating new deployment of app %s \n", app)
+	_, err = cmd.Output()
+
+	if err != nil {
+		fmt.Printf("Error creating deployment. msg: %s \n", err.Error())
+		return err
+	}
+
+	return err
+}
+
+/*
+IsPodReady makes judgement about if a deployment is ready
+*/
+func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface) <-chan bool {
+	r := make(chan bool)
+	go func() {
 		result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
-		if getErr != nil {
-			log.Printf("Failed to get latest version of Deployment %v", getErr)
-			return getErr
-		}
-
-		numGpu := result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"]
-		prevNumGPU = numGpu.Value()
-		fmt.Printf("Current Number of GPU is %v \n", prevNumGPU)
-		quant := resource.NewQuantity(NumGPU, resource.DecimalSI)
-		result.Spec.Template.Spec.Containers[0].Resources.Limits["nvidia.com/gpu"] = *quant
-		result.Spec.Template.Spec.Containers[0].Resources.Requests["nvidia.com/gpu"] = *quant
-		_, updateErr := deploymentsClient.Update(result)
-		fmt.Printf("Updated Number of GPU is %v \n", quant.Value())
-		currNumGPU = quant.Value()
-
-		fmt.Println("Waiting kubeless function to be deployed...")
 		time.Sleep(3 * time.Second)
-		result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
 		for !strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.") {
 			time.Sleep(3 * time.Second)
 			result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
 			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
 		}
-		fmt.Println("Kubeless function is successfully deployed...")
-		if updateErr != nil {
-			fmt.Println(updateErr)
+		if getErr != nil {
+			fmt.Println(getErr.Error())
 		}
-		return updateErr
-	})
+		r <- true
+	}()
 
-	if retryErr != nil {
-		log.Printf("Update failed: %v", retryErr)
-	}
-	return prevNumGPU == currNumGPU, retryErr
+	return r
 }
