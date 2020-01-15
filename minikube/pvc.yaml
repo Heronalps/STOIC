@@ -17,7 +17,7 @@ kind: PersistentVolumeClaim
 metadata:
   name: wtb-pvc
 spec:
-  storageClassName: fast
+  storageClassName: ""
   volumeName: wtb-pv
   accessModes:
   - ReadWriteOnce

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: transfer-pod
+spec:
+  containers:
+  - name: edge-container
+    image: gitlab-registry.nautilus.optiputer.net/prp/jupyterlab:latest
+    command: ["sleep", "infinity"]
+    volumeMounts:
+    - mountPath: /racelab
+      name: wtb-pv
+  volumes:
+    - name: wtb-pv
+      persistentVolumeClaim:
+        claimName: wtb-pvc
+    restartPolicy: Always
