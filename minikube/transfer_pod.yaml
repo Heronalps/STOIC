@@ -6,7 +6,6 @@ spec:
   containers:
   - name: edge-container
     image: heronalps/hello:latest
-    command: ["sleep", "infinity"]
     volumeMounts:
     - mountPath: /racelab
       name: wtb-pv
