@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: edge-container
-    image: heronalps/hello:latest
+    image: kubeless/function-image-builder:latest
     volumeMounts:
     - mountPath: /racelab
       name: wtb-pv
