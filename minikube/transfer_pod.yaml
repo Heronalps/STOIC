@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: edge-container
-    image: kubeless/function-image-builder:latest
+    image: k8s.gcr.io/echoserver:1.10
     volumeMounts:
     - mountPath: /racelab
       name: wtb-pv
