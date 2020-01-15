@@ -12,6 +12,6 @@ spec:
       name: wtb-pv
   volumes:
   - name: wtb-pv
-      persistentVolumeClaim:
-        claimName: wtb-pvc
+    persistentVolumeClaim:
+      claimName: wtb-pvc
     restartPolicy: Always
