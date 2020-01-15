@@ -93,6 +93,33 @@ func SelectRunTime(imageNum int, app string, version string, runtime string) (st
 /*
 RunOnEdge runs the task on mini edge cloud with AVX support
 */
+// func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
+// 	var (
+// 		output []byte
+// 		err    error
+// 		cmd    *exec.Cmd
+// 	)
+// 	repoPATH := HomeDir() + "/GPU_Serverless"
+
+// 	// Run WTB image classification task
+// 	FILE := "./kubeless/image_clf/inference/local_version/image_clf_inf.py "
+// 	cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
+// 	cmd = exec.Command("bash", "-c", cmdRun)
+// 	cmd.Dir = repoPATH
+// 	fmt.Printf("Start running task %s version %s on %d images \n", app, version, imageNum)
+// 	output, err = cmd.Output()
+// 	if err != nil {
+// 		fmt.Printf("Error running task. msg: %s \n", err.Error())
+// 		return output, nil
+// 	}
+// 	fmt.Printf("Output of task %s\n", string(output))
+
+// 	return output, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
+// }
+
+/*
+RunOnEdge runs the task on mini edge cloud with AVX support
+*/
 func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 	var (
 		output []byte

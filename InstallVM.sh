@@ -1,4 +1,5 @@
 # /bin/bash
+# Launch a hi1.4xlarge instance 
 
 # Add public key
 # Add hostname
@@ -105,6 +106,18 @@ curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/miniku
 sudo mkdir -p /usr/local/bin/
 sudo install minikube /usr/local/bin/
 
+minikube config set memory 4096
+minikube config set cpus 2
+# minikube config set disk 40000
+minikube config set vm-driver virtualbox
+
+# kubeless namespace 
+
+export RELEASE=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
+kubectl create ns kubeless
+
+kubectl create -f minikube/deploy_edge.yaml
+
 # Docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
@@ -113,6 +126,9 @@ apt-cache policy docker-ce
 
 sudo apt-get install -y docker-ce
 sudo systemctl status docker
+
+# Make docker to interact with minikube
+eval $(minikube docker-env)
 
 
 # Nautilus Credentials
