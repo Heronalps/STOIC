@@ -1,0 +1,13 @@
+spec:
+  template:
+    spec:
+      containers:
+      - name: image-clf-inf
+        volumeMounts:
+        - mountPath: /racelab
+          name: wtb-pv
+      restartPolicy: Always
+      volumes:
+      - name: wtb-pv
+        persistentVolumeClaim:
+          claimName: wtb-pvc
