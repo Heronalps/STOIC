@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: edge-container
-    image: gitlab-registry.nautilus.optiputer.net/prp/jupyterlab:latest
+    image: heronalps/hello:latest
     command: ["sleep", "infinity"]
     volumeMounts:
     - mountPath: /racelab

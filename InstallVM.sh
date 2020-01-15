@@ -138,6 +138,12 @@ export KUBECONFIG=~/.kube/config:~/.kube/nautilus
 kubectx nautilus
 kubectx minikube
 
+# Create pv & pvc & transfer_pod
+kubectl create -f minikube/pvc.yaml
+kubectl create -f minikube/transfer_pod.yaml
+
+# Copy image to persistent volume
+kubectl cp ~/GPU_Serverless/data/* transfer-pod:/racelab/data 
 
 # Initialize DB tables
 cd STOIC
