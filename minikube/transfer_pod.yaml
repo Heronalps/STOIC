@@ -11,7 +11,7 @@ spec:
     - mountPath: /racelab
       name: wtb-pv
   volumes:
-    - name: wtb-pv
+  - name: wtb-pv
       persistentVolumeClaim:
         claimName: wtb-pvc
     restartPolicy: Always
