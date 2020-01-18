@@ -62,6 +62,9 @@ curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeles
 # jq
 sudo apt-get install jq
 
+# bc 
+sudo apt install bc
+
 # Python
 
 sudo add-apt-repository ppa:deadsnakes/ppa
@@ -142,8 +145,13 @@ kubectx minikube
 kubectl create -f minikube/pvc.yaml
 kubectl create -f minikube/transfer_pod.yaml
 
-# Copy image to persistent volume
-kubectl cp ~/GPU_Serverless/data/* transfer-pod:/racelab/data 
+# Copy image & model to persistent volume
+kubectl cp ~/GPU_Serverless/data/SantaCruzIsland_Labeled_5Class default/transfer-pod:/racelab/
+kubectl cp ~/GPU_Serverless/data/SantaCruzIsland_Validation_5Class default/transfer-pod:/racelab/
+kubectl cp ~/GPU_Serverless/checkpoints/ default/transfer-pod:/racelab/checkpoints
+
+# Patch image-clf-inf deployment
+kubectl patch deployment image-clf-inf --patch "$(cat ./scripts/patch_edge.yaml)"
 
 # Initialize DB tables
 cd STOIC
@@ -152,3 +160,12 @@ sh StartDBinit.sh
 
 # Start Client
 sh StartClient.sh
+
+
+# Add the service account to rolebinding for namespace admin and kubeless role
+kubectl edit rolebinding nautilus-admin
+kubectl edit rolebinding kubeless
+
+- kind: ServiceAccount
+  name: admin-user
+  namespace: racelab
