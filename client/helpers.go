@@ -14,7 +14,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/serverhorror/rog-go/reverse"
 )
@@ -176,7 +175,9 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 	transferTimes := GetTransferTime(imageNum)
 	procTimes := GetProcTime(imageNum, app, version, runtime)
 	deploymentTimes := GetDeploymentTime(runtime)
-
+	// fmt.Printf("Transfer Times : %v..\n", transferTimes)
+	// fmt.Printf("Proc Times : %v..\n", procTimes)
+	// fmt.Printf("Deployment Times : %v..\n", deploymentTimes)
 	totalTimes := make(map[float64]string)
 	timeLogs := make(map[string]*TimeLog)
 
@@ -336,11 +337,11 @@ func LogTimes(imageNum int, app string, version string, runtime string, predTime
 UpdateWindowSizes updates optimal window sizes
 */
 func UpdateWindowSizes() {
-	ts1 := time.Now()
+	//ts1 := time.Now()
 	for _, runtime := range NautilusRuntimes {
 		windowSizes[runtime] = GetWindowSize(runtime)
 	}
-	fmt.Println(time.Now().Sub(ts1))
+	//fmt.Println(time.Now().Sub(ts1))
 }
 
 /*

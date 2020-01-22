@@ -31,7 +31,7 @@ func SetupRegression(app string, version string) {
 			}
 		}
 	} else {
-		fmt.Printf("Current version %s equals to DB version %s .. \n", version, dbVersion)
+		fmt.Printf("Current version %s equals to / is less than DB version %s .. \n", version, dbVersion)
 		fmt.Println("Checking if at least two data points exist for each runtime...")
 		for _, runtime := range runtimes {
 			var (

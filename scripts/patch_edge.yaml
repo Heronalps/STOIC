@@ -3,6 +3,11 @@ spec:
     spec:
       containers:
       - name: image-clf-inf
+        resources:
+          requests: 
+            cpu: 8
+          limits:
+            cpu: 8
         volumeMounts:
         - mountPath: /racelab
           name: wtb-pv
