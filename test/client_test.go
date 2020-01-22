@@ -54,3 +54,8 @@ func TestLogTimes(t *testing.T) {
 	}
 	client.LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
 }
+
+func TestMedian(t *testing.T) {
+	assert.Equal(t, 0.2, client.Median([]float64{0.1, 0.2, 0.3}))
+	assert.Equal(t, 0.25, client.Median([]float64{0.1, 0.2, 0.3, 0.4}))
+}

@@ -40,7 +40,7 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	if actTimeLog != nil {
 		actTimeLog.Transfer = transferTimes[selectedRuntime]
 	}
-
+	fmt.Printf("Selected Runtime: %s..\n", selectedRuntime)
 	if actTimeLog.Processing != 0.0 {
 		AppendRecordProcessing(dbName, selectedRuntime, imageNum, actTimeLog.Processing, app, version)
 		//For setup regressions, the prediction is based on preset coef & intercept

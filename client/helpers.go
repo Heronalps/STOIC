@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"os/user"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -219,6 +220,18 @@ func Average(arr []float64) float64 {
 		total += value
 	}
 	return total / float64(len(arr))
+}
+
+/*
+Median returns the median of an array of float numbers
+*/
+func Median(arr []float64) float64 {
+	sort.Float64s(arr)
+	mid := len(arr) / 2
+	if len(arr)%2 == 0 {
+		return (arr[mid-1] + arr[mid]) / 2
+	}
+	return arr[mid]
 }
 
 /*
