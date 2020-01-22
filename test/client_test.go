@@ -35,7 +35,13 @@ func TestCompareVersion(t *testing.T) {
 
 func TestRunOnNautilus(t *testing.T) {
 	output, timeLog := client.RunOnNautilus(runtime, imageNum, app, version)
-	fmt.Printf("Output : %v..\n", output)
+	fmt.Printf("Output : %v..\n", string(output))
+	assert.NotNil(t, timeLog)
+}
+
+func TestRunOnEdge(t *testing.T) {
+	output, timeLog := client.RunOnEdge(imageNum, app, version)
+	fmt.Printf("Output : %v..\n", string(output))
 	assert.NotNil(t, timeLog)
 }
 
@@ -67,5 +73,4 @@ func TestGetWindowSize(t *testing.T) {
 
 func TestUpdateWindowSizes(t *testing.T) {
 	client.UpdateWindowSizes()
-	fmt.Println(client.WindowSizes)
 }

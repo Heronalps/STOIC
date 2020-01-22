@@ -5,9 +5,9 @@ spec:
       - name: image-clf-inf
         resources:
           requests: 
-            cpu: 8
+            cpu: 6
           limits:
-            cpu: 8
+            cpu: 6
         volumeMounts:
         - mountPath: /racelab
           name: wtb-pv
