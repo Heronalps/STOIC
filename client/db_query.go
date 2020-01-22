@@ -81,8 +81,11 @@ func QueryDeploymentTime(runtime string) float64 {
 		}
 		deploymentTimes = append(deploymentTimes, deploymentTime)
 	}
+	if len(deploymentTimes) == 0 {
+		return defaultDeplyTimes[runtime]
+	}
 	//fmt.Printf("deployment time : %f \n", deploymentTime)
-	return Average(deploymentTimes)
+	return Median(deploymentTimes)
 }
 
 /*

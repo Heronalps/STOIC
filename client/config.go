@@ -19,6 +19,7 @@ var (
 	serviceAccountConfig string = "KUBECONFIG=~/.kube/service-account"
 	minikubeConfig       string = "KUBECONFIG=~/.kube/config"
 	invokeFile           string = "./scripts/invoke_inf.sh"
+	defaultDeplyTimes           = map[string]float64{"cpu": 18.0, "gpu1": 46.0, "gpu2": 65.0}
 )
 
 /*

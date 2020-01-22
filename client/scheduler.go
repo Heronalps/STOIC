@@ -45,9 +45,9 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	if actTimeLog != nil && actTimeLog.Processing != 0.0 {
 		AppendRecordProcessing(dbName, selectedRuntime, imageNum, actTimeLog.Processing, app, version)
 		//For setup regressions, the prediction is based on preset coef & intercept
-		if predTimeLog != nil {
-			LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
-		}
+		fmt.Printf("Pred Time log %v..\n", predTimeLog)
+		fmt.Printf("Actual Time log %v..\n", actTimeLog)
+		LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
 	}
 
 	return output
