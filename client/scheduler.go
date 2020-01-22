@@ -7,7 +7,6 @@ package client
 import (
 	"fmt"
 	"math"
-	"os"
 	exec "os/exec"
 	"sort"
 )
@@ -45,8 +44,6 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	if actTimeLog != nil && actTimeLog.Processing != 0.0 {
 		AppendRecordProcessing(dbName, selectedRuntime, imageNum, actTimeLog.Processing, app, version)
 		//For setup regressions, the prediction is based on preset coef & intercept
-		fmt.Printf("Pred Time log %v..\n", predTimeLog)
-		fmt.Printf("Actual Time log %v..\n", actTimeLog)
 		LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
 	}
 
@@ -137,9 +134,8 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 
 	// Run WTB image classification task
 
-	cmdRun := fmt.Sprintf("%s %d", invokeFile, imageNum)
+	cmdRun := fmt.Sprintf("%s %s %d", minikubeConfig, invokeFile, imageNum)
 	cmd = exec.Command("bash", "-c", cmdRun)
-	cmd.Env = append(os.Environ(), minikubeConfig)
 	fmt.Printf("Start running task %s version %s on %d images on Edge.. \n", app, version, imageNum)
 	if output, err = cmd.Output(); err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
