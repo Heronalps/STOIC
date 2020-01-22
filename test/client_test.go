@@ -34,9 +34,9 @@ func TestCompareVersion(t *testing.T) {
 }
 
 func TestRunOnNautilus(t *testing.T) {
-	output, elapsed, _ := client.RunOnNautilus(runtime, imageNum, app, version)
+	output, timeLog := client.RunOnNautilus(runtime, imageNum, app, version)
 	fmt.Printf("Output : %v..\n", output)
-	fmt.Printf("Elapsed : %v..\n", elapsed)
+	assert.NotNil(t, timeLog)
 }
 
 func TestLogTimes(t *testing.T) {
