@@ -150,7 +150,8 @@ kubectl cp ~/GPU_Serverless/data/SantaCruzIsland_Labeled_5Class default/transfer
 kubectl cp ~/GPU_Serverless/data/SantaCruzIsland_Validation_5Class default/transfer-pod:/racelab/
 kubectl cp ~/GPU_Serverless/checkpoints/ default/transfer-pod:/racelab/checkpoints
 
-# Patch image-clf-inf deployment
+# Create and Patch image-clf-inf deployment
+sh scripts/deploy.sh image-clf-inf 3.6 0 _edge
 kubectl patch deployment image-clf-inf --patch "$(cat ./scripts/patch_edge.yaml)"
 
 # Initialize DB tables

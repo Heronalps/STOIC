@@ -134,8 +134,9 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 
 	// Run WTB image classification task
 
-	cmdRun := fmt.Sprintf("%s %s %d", minikubeConfig, invokeFile, imageNum)
+	cmdRun := fmt.Sprintf("%s sh %s %d", minikubeConfig, invokeFile, imageNum)
 	cmd = exec.Command("bash", "-c", cmdRun)
+	fmt.Printf(cmdRun)
 	fmt.Printf("Start running task %s version %s on %d images on Edge.. \n", app, version, imageNum)
 	if output, err = cmd.Output(); err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
