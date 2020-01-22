@@ -7,12 +7,14 @@ package client
 import (
 	"fmt"
 	"log"
+	"math"
 	"os/exec"
 	"os/user"
 	"regexp"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/serverhorror/rog-go/reverse"
 )
@@ -235,6 +237,33 @@ func Median(arr []float64) float64 {
 }
 
 /*
+GetWindowSize calculates the optimal window size for median of deployment time
+*/
+func GetWindowSize(runtime string) int {
+	deploymentTimes := QueryDeploymentTimeSeries(runtime)
+
+	// The minimum of maxWinSize and length of deploymentTimes is the length of MAE array
+	minWin := 0
+	minMAE := math.MaxFloat64
+	for winSize := 1; winSize < Min(maxWinSize, len(deploymentTimes)); winSize++ {
+		// Guard deploymentTimes length is less than maxWinSize
+		length := len(deploymentTimes) - winSize
+		totalAbsErr := 0.0
+		for idx := 0; idx < length; idx++ {
+			pred := Median(deploymentTimes[idx : idx+winSize])
+			totalAbsErr += math.Abs(pred - deploymentTimes[idx+winSize])
+
+		}
+		currMAE := totalAbsErr / float64(length)
+		if currMAE < minMAE {
+			minMAE = currMAE
+			minWin = winSize
+		}
+	}
+	return minWin
+}
+
+/*
 CompareVersion compares two version strings
 Return 1 if first > second
 Return -1 if first < second
@@ -301,4 +330,25 @@ func LogTimes(imageNum int, app string, version string, runtime string, predTime
 			predTimeLog.Total, predTimeLog.Transfer, predTimeLog.Deployment, predTimeLog.Processing,
 			actTimeLog.Total, actTimeLog.Transfer, actTimeLog.Deployment, actTimeLog.Processing)
 	}
+}
+
+/*
+UpdateWindowSizes updates optimal window sizes
+*/
+func UpdateWindowSizes() {
+	ts1 := time.Now()
+	for _, runtime := range NautilusRuntimes {
+		windowSizes[runtime] = GetWindowSize(runtime)
+	}
+	fmt.Println(time.Now().Sub(ts1))
+}
+
+/*
+Min function returns the minimum between two integers
+*/
+func Min(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

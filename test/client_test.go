@@ -59,3 +59,13 @@ func TestMedian(t *testing.T) {
 	assert.Equal(t, 0.2, client.Median([]float64{0.1, 0.2, 0.3}))
 	assert.Equal(t, 0.25, client.Median([]float64{0.1, 0.2, 0.3, 0.4}))
 }
+
+func TestGetWindowSize(t *testing.T) {
+	optWinSize := client.GetWindowSize(runtime)
+	fmt.Println(optWinSize)
+}
+
+func TestUpdateWindowSizes(t *testing.T) {
+	client.UpdateWindowSizes()
+	fmt.Println(client.WindowSizes)
+}

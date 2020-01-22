@@ -225,3 +225,30 @@ func CreateLogTimeTable(dbName string) error {
 	fmt.Println("LogTime table is created successfully...")
 	return err
 }
+
+// /*
+// CreateWindowSizeTable create optimal window size table
+// */
+// func CreateWindowSizeTable(dbName string) error {
+// 	db := connectDB(username, password, dbIP, dbPort)
+// 	useDB(db, dbName)
+// 	defer db.Close()
+
+// 	stmt, err := db.Prepare(`CREATE TABLE WindowSize (
+// 		cpu INT NOT NULL,
+// 		gpu1 INT NOT NULL,
+// 		gpu2 INT NOT NULL);`)
+// 	if err != nil {
+// 		fmt.Println(err.Error())
+// 		return err
+// 	}
+// 	defer stmt.Close()
+
+// 	_, err = stmt.Exec()
+// 	if err != nil {
+// 		fmt.Println(err.Error())
+// 		return err
+// 	}
+// 	fmt.Println("Window Size table is created successfully...")
+// 	return err
+// }
