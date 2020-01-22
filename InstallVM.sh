@@ -152,7 +152,7 @@ kubectl cp ~/GPU_Serverless/checkpoints/ default/transfer-pod:/racelab/checkpoin
 
 # Create and Patch image-clf-inf deployment
 sh scripts/deploy.sh image-clf-inf 3.6 0 _edge
-kubectl patch deployment image-clf-inf --patch "$(cat ./scripts/patch_edge.yaml)"
+# kubectl patch deployment image-clf-inf --patch "$(cat ./scripts/patch_edge.yaml)"
 
 # Initialize DB tables
 cd STOIC

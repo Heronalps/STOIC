@@ -40,7 +40,7 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	if actTimeLog != nil {
 		actTimeLog.Transfer = transferTimes[selectedRuntime]
 	}
-	fmt.Printf("Selected Runtime: %s..\n", selectedRuntime)
+	// fmt.Printf("Selected Runtime: %s..\n", selectedRuntime)
 	if actTimeLog != nil && actTimeLog.Processing != 0.0 {
 		AppendRecordProcessing(dbName, selectedRuntime, imageNum, actTimeLog.Processing, app, version)
 		//For setup regressions, the prediction is based on preset coef & intercept
@@ -136,7 +136,6 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 
 	cmdRun := fmt.Sprintf("%s sh %s %d", minikubeConfig, invokeFile, imageNum)
 	cmd = exec.Command("bash", "-c", cmdRun)
-	fmt.Printf(cmdRun)
 	fmt.Printf("Start running task %s version %s on %d images on Edge.. \n", app, version, imageNum)
 	if output, err = cmd.Output(); err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
