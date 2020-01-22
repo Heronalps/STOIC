@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -63,9 +62,8 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 			// Add true condition to always probe
 			if true || !isGPUSame {
 				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
-				cmd = fmt.Sprintf("sh ./scripts/invoke_inf.sh %d", 1)
+				cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh %d", serviceAccountConfig, 1)
 				cmdRun = exec.Command("bash", "-c", cmd)
-				cmdRun.Env = append(os.Environ(), serviceAccountConfig)
 
 				if output, err = cmdRun.Output(); err != nil {
 					fmt.Println("Error msg : ", err.Error())
@@ -78,9 +76,8 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 			}
 
 			//make kubeless call to deployed function
-			cmd = fmt.Sprintf("sh ./scripts/invoke_inf.sh %d", imageNum)
+			cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh %d", serviceAccountConfig, imageNum)
 			cmdRun = exec.Command("bash", "-c", cmd)
-			cmdRun.Env = append(os.Environ(), serviceAccountConfig)
 			if output, err = cmdRun.Output(); err != nil {
 				fmt.Println("Error msg : ", err.Error())
 				return err
@@ -269,7 +266,7 @@ func CreateDeployment(app string, NumGPU int64) error {
 		pythonVersion = "3.7"
 	}
 	// Create new deployment
-	cmdRun := fmt.Sprintf("sh ./scripts/deploy.sh %s %s %d", app, pythonVersion, NumGPU)
+	cmdRun := fmt.Sprintf("%s sh ./scripts/deploy.sh %s %s %d", serviceAccountConfig, app, pythonVersion, NumGPU)
 	cmd = exec.Command("bash", "-c", cmdRun)
 	fmt.Printf("Creating new deployment of app %s \n", app)
 
