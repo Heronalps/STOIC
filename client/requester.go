@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -35,6 +35,7 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 		result         []byte
 		procTime       float64
 		deploymentTime float64
+		cmdRun         *exec.Cmd
 	)
 	//resultChannel := make(chan []byte)
 
@@ -63,8 +64,10 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 			if true || !isGPUSame {
 				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
 				cmd = fmt.Sprintf("sh ./scripts/invoke_inf.sh %d", 1)
-				output, err = exec.Command("bash", "-c", cmd).Output()
-				if err != nil {
+				cmdRun = exec.Command("bash", "-c", cmd)
+				cmdRun.Env = append(os.Environ(), serviceAccountConfig)
+
+				if output, err = cmdRun.Output(); err != nil {
 					fmt.Println("Error msg : ", err.Error())
 					return err
 				}
@@ -75,9 +78,10 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 			}
 
 			//make kubeless call to deployed function
-			cmd = "sh ./scripts/invoke_inf.sh " + strconv.Itoa(imageNum)
-			output, err = exec.Command("bash", "-c", cmd).Output()
-			if err != nil {
+			cmd = fmt.Sprintf("sh ./scripts/invoke_inf.sh %d", imageNum)
+			cmdRun = exec.Command("bash", "-c", cmd)
+			cmdRun.Env = append(os.Environ(), serviceAccountConfig)
+			if output, err = cmdRun.Output(); err != nil {
 				fmt.Println("Error msg : ", err.Error())
 				return err
 			}
@@ -268,7 +272,7 @@ func CreateDeployment(app string, NumGPU int64) error {
 	cmdRun := fmt.Sprintf("sh ./scripts/deploy.sh %s %s %d", app, pythonVersion, NumGPU)
 	//fmt.Println(cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
-	//cmd.Dir = repoPATH
+	cmd.Env = append(os.Environ(), serviceAccountConfig)
 	fmt.Printf("Creating new deployment of app %s \n", app)
 	_, err = cmd.Output()
 

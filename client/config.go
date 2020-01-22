@@ -14,11 +14,11 @@ var (
 	// NautilusRuntimes    map[string]struct{}
 	setupImageNums []int = []int{33, 10}
 	// currentRuntime      string = "cpu" // cpu / gpu1 / gpu2
-	procTimeNumDP       int = 10
-	deploymentTimeNumDP int = 10
-	serviceAccountConfig string = "~/.kube/service-account"
-	minikubeConfig string = "~/.kube/config"
-	invokeFile string = "./scripts/invoke_inf.sh"
+	procTimeNumDP        int    = 10
+	deploymentTimeNumDP  int    = 10
+	serviceAccountConfig string = "KUBECONFIG=~/.kube/service-account"
+	minikubeConfig       string = "KUBECONFIG=~/.kube/config"
+	invokeFile           string = "./scripts/invoke_inf.sh"
 )
 
 /*

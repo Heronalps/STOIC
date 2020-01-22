@@ -42,7 +42,7 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 		actTimeLog.Transfer = transferTimes[selectedRuntime]
 	}
 	fmt.Printf("Selected Runtime: %s..\n", selectedRuntime)
-	if actTimeLog.Processing != 0.0 {
+	if actTimeLog != nil && actTimeLog.Processing != 0.0 {
 		AppendRecordProcessing(dbName, selectedRuntime, imageNum, actTimeLog.Processing, app, version)
 		//For setup regressions, the prediction is based on preset coef & intercept
 		LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
@@ -62,7 +62,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		output, actTimeLog = RunOnEdge(imageNum, app, version)
+		//output, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Println("Running on Nautilus...")
 		output, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
@@ -128,18 +128,16 @@ RunOnEdge runs the task on mini edge cloud with AVX support
 */
 func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 	var (
-		output    []byte
-		err       error
-		cmd       *exec.Cmd
-		configEnv string
+		output []byte
+		err    error
+		cmd    *exec.Cmd
 	)
 
 	// Run WTB image classification task
 
 	cmdRun := fmt.Sprintf("%s %d", invokeFile, imageNum)
 	cmd = exec.Command("bash", "-c", cmdRun)
-	configEnv = fmt.Sprintf("KUBECONFIG=%s", minikubeConfig)
-	cmd.Env = append(os.Environ(), configEnv)
+	cmd.Env = append(os.Environ(), minikubeConfig)
 	fmt.Printf("Start running task %s version %s on %d images on Edge.. \n", app, version, imageNum)
 	if output, err = cmd.Output(); err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
