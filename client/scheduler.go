@@ -6,6 +6,7 @@ package client
 
 import (
 	"fmt"
+	"math"
 	"os"
 	exec "os/exec"
 	"sort"
@@ -74,7 +75,9 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 SelectRunTime select the runtime among four scenarios
 */
 func SelectRunTime(imageNum int, app string, version string, runtime string) (string, *TimeLog) {
-
+	var (
+		selectedRuntime string = runtime
+	)
 	// If the runtime is manually set, the results only have preset runtime
 	totalTimes, predTimeLogMap := GetTotalTime(imageNum, app, version, runtime)
 	fmt.Println(totalTimes)
@@ -85,7 +88,10 @@ func SelectRunTime(imageNum int, app string, version string, runtime string) (st
 		keys = append(keys, k)
 	}
 	sort.Float64s(keys)
-	selectedRuntime := totalTimes[keys[0]]
+	if !math.IsNaN(keys[0]) {
+		selectedRuntime = totalTimes[keys[0]]
+	}
+
 	fmt.Printf("The task is scheduled at %s for %f seconds\n", selectedRuntime, keys[0])
 	return selectedRuntime, predTimeLogMap[selectedRuntime]
 }
