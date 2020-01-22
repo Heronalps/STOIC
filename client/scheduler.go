@@ -45,7 +45,9 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	if actTimeLog != nil && actTimeLog.Processing != 0.0 {
 		AppendRecordProcessing(dbName, selectedRuntime, imageNum, actTimeLog.Processing, app, version)
 		//For setup regressions, the prediction is based on preset coef & intercept
-		LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
+		if predTimeLog != nil {
+			LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
+		}
 	}
 
 	return output
@@ -62,7 +64,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		//output, actTimeLog = RunOnEdge(imageNum, app, version)
+		output, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Println("Running on Nautilus...")
 		output, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
