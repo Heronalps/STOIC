@@ -270,13 +270,10 @@ func CreateDeployment(app string, NumGPU int64) error {
 	}
 	// Create new deployment
 	cmdRun := fmt.Sprintf("sh ./scripts/deploy.sh %s %s %d", app, pythonVersion, NumGPU)
-	//fmt.Println(cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
-	cmd.Env = append(os.Environ(), serviceAccountConfig)
 	fmt.Printf("Creating new deployment of app %s \n", app)
-	_, err = cmd.Output()
 
-	if err != nil {
+	if _, err = cmd.Output(); err != nil {
 		fmt.Printf("Error creating deployment. msg: %s \n", err.Error())
 		return err
 	}
