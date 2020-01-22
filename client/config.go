@@ -16,6 +16,9 @@ var (
 	// currentRuntime      string = "cpu" // cpu / gpu1 / gpu2
 	procTimeNumDP       int = 10
 	deploymentTimeNumDP int = 10
+	serviceAccountConfig string = "~/.kube/service-account"
+	minikubeConfig string = "~/.kube/config"
+	invokeFile string = "./scripts/invoke_inf.sh"
 )
 
 /*

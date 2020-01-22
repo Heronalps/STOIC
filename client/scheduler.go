@@ -6,9 +6,9 @@ package client
 
 import (
 	"fmt"
+	"os"
 	exec "os/exec"
 	"sort"
-	"strconv"
 )
 
 /*
@@ -122,20 +122,20 @@ RunOnEdge runs the task on mini edge cloud with AVX support
 */
 func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 	var (
-		output []byte
-		err    error
-		cmd    *exec.Cmd
+		output    []byte
+		err       error
+		cmd       *exec.Cmd
+		configEnv string
 	)
-	repoPATH := HomeDir() + "/GPU_Serverless"
 
 	// Run WTB image classification task
-	FILE := "./kubeless/image_clf/inference/local_version/image_clf_inf.py "
-	cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
+
+	cmdRun := fmt.Sprintf("%s %d", invokeFile, imageNum)
 	cmd = exec.Command("bash", "-c", cmdRun)
-	cmd.Dir = repoPATH
-	fmt.Printf("Start running task %s version %s on %d images \n", app, version, imageNum)
-	output, err = cmd.Output()
-	if err != nil {
+	configEnv = fmt.Sprintf("KUBECONFIG=%s", minikubeConfig)
+	cmd.Env = append(os.Environ(), configEnv)
+	fmt.Printf("Start running task %s version %s on %d images on Edge.. \n", app, version, imageNum)
+	if output, err = cmd.Output(); err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
 		return output, nil
 	}
