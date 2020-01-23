@@ -27,7 +27,7 @@ func SetupRegression(app string, version string) {
 		UpdateAppVersion(app, version)
 		for _, runtime := range runtimes {
 			for _, imageNum := range setupImageNums {
-				Schedule(runtime, imageNum, app, version)
+				Schedule(runtime, imageNum, app, version, false)
 			}
 		}
 	} else {
@@ -45,7 +45,7 @@ func SetupRegression(app string, version string) {
 			}
 			if rows < 2 {
 				for _, imageNum := range setupImageNums {
-					Schedule(runtime, imageNum, app, version)
+					Schedule(runtime, imageNum, app, version, false)
 				}
 			}
 		}

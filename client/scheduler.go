@@ -17,12 +17,13 @@ Schedule is the entry point of Scheduler.
 Parameter: runtime is the preset runtime. If it's empty string, SelectRunTime will select one.
 Return: runtime for appending processing time to corresponding table
 */
-func Schedule(runtime string, imageNum int, app string, version string) []byte {
+func Schedule(runtime string, imageNum int, app string, version string, all bool) []byte {
 	var (
-		output          []byte
-		selectedRuntime string
-		predTimeLog     *TimeLog
-		actTimeLog      *TimeLog
+		output           []byte
+		selectedRuntime  string
+		predTimeLog      *TimeLog
+		actTimeLog       *TimeLog
+		selectedRuntimes []string
 	)
 
 	transferTimes := GetTransferTime(imageNum)
@@ -36,16 +37,23 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 	// if _, found := NautilusRuntimes[selectedRuntime]; found {
 	// 	currentRuntime = selectedRuntime
 	// }
-
-	output, actTimeLog = Request(selectedRuntime, imageNum, app, version)
-	if actTimeLog != nil {
-		actTimeLog.Transfer = transferTimes[selectedRuntime]
+	if all {
+		selectedRuntimes = runtimes
+	} else {
+		selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 	}
-	// fmt.Printf("Selected Runtime: %s..\n", selectedRuntime)
-	if actTimeLog != nil && actTimeLog.Processing != 0.0 {
-		AppendRecordProcessing(dbName, selectedRuntime, imageNum, actTimeLog.Processing, app, version)
-		//For setup regressions, the prediction is based on preset coef & intercept
-		LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
+
+	for _, runtime := range selectedRuntimes {
+		output, actTimeLog = Request(runtime, imageNum, app, version)
+		if actTimeLog != nil {
+			actTimeLog.Transfer = transferTimes[runtime]
+		}
+		// fmt.Printf("Selected Runtime: %s..\n", selectedRuntime)
+		if actTimeLog != nil && actTimeLog.Processing != 0.0 {
+			AppendRecordProcessing(dbName, runtime, imageNum, actTimeLog.Processing, app, version)
+			//For setup regressions, the prediction is based on preset coef & intercept
+			LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
+		}
 	}
 
 	return output
@@ -64,7 +72,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 		fmt.Println("Running on edge...")
 		output, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
-		fmt.Println("Running on Nautilus...")
+		fmt.Printf("Running on Nautilus...%s\n", runtime)
 		output, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
 	}
 	// The transfer time field is 0.0 in actTimeLog at this point

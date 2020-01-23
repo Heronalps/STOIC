@@ -27,3 +27,14 @@ func ImageCache() int {
 	stdev := 39.5
 	return int(math.Ceil(math.Abs(RandNum(mean, stdev))))
 }
+
+/*
+GenerateWorkLoad generates constant work load
+*/
+func GenerateWorkLoad(length int) []int {
+	arr := make([]int, length)
+	for i := 0; i < length; i++ {
+		arr[i] = ImageCache()
+	}
+	return arr
+}

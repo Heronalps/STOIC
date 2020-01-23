@@ -3,8 +3,10 @@ package test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/heronalps/STOIC/client"
+	"github.com/heronalps/STOIC/server"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -73,4 +75,16 @@ func TestGetWindowSize(t *testing.T) {
 
 func TestUpdateWindowSizes(t *testing.T) {
 	client.UpdateWindowSizes()
+}
+
+func TestImageCache(t *testing.T) {
+	num := server.ImageCache()
+	fmt.Println(time.Now().UnixNano())
+	fmt.Println(time.Now())
+	fmt.Println(num)
+}
+
+func TestGenerateWorkLoad(t *testing.T) {
+	workload := server.GenerateWorkLoad(6700)
+	fmt.Println(workload)
 }

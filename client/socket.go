@@ -17,7 +17,7 @@ import (
 /*
 SocketClient listens to the task request from the server
 */
-func SocketClient(port int, runtime string, app string, version string) {
+func SocketClient(port int, runtime string, app string, version string, all bool) {
 	listen, err := net.Listen("tcp4", ":"+strconv.Itoa(port))
 	if err != nil {
 		log.Fatalf("Socket listen port %d failed,%s", port, err)
@@ -32,11 +32,11 @@ func SocketClient(port int, runtime string, app string, version string) {
 			log.Fatalln(err)
 			continue
 		}
-		go handler(conn, runtime, app, version)
+		go handler(conn, runtime, app, version, all)
 	}
 }
 
-func handler(conn net.Conn, runtime string, app string, version string) {
+func handler(conn net.Conn, runtime string, app string, version string, all bool) {
 	defer conn.Close()
 	var (
 		reader   = bufio.NewReader(conn)
@@ -75,7 +75,7 @@ ILOOP:
 	// It requires checking kubeless process and
 	// write back to server socket if the kubeless function is available
 
-	output := Schedule(runtime, imageNum, app, version)
+	output := Schedule(runtime, imageNum, app, version, all)
 
 	writer.Write(output)
 	writer.Flush()
