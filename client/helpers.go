@@ -199,7 +199,7 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 ParseElapsed capture time in output
 */
 func ParseElapsed(output []byte) float64 {
-	re := regexp.MustCompile(`Time without model loading (\d*\.\d*)`)
+	re := regexp.MustCompile(`Time with model loading (\d*\.\d*)`)
 	// []byte - elapsed time of task
 	elapsed := re.FindSubmatch(output)
 	if len(elapsed) == 0 {

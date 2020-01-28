@@ -127,7 +127,7 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
 	}
 	fmt.Printf("Output of task %s\n", string(output))
-	re := regexp.MustCompile(`Time without model.*`)
+	re := regexp.MustCompile(`Time with model.*`)
 	lastline := re.Find(output)
 	fmt.Printf("lastline : %s..\n", lastline)
 	return lastline, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
