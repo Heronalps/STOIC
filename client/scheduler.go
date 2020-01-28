@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"os/exec"
+	"regexp"
 	"sort"
 	"strconv"
 )
@@ -124,11 +125,12 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 	output, err = cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
-		return output, nil
 	}
 	fmt.Printf("Output of task %s\n", string(output))
-
-	return output, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
+	re := regexp.MustCompile(`Time without model.*`)
+	lastline := re.Find(output)
+	fmt.Printf("lastline : %s..\n", lastline)
+	return lastline, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
 }
 
 /*

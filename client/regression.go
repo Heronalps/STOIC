@@ -61,6 +61,9 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 		intercept float64
 	)
 	X, Y := QueryDataSet(runtime, app, version, numDP)
+	// fmt.Println(runtime)
+	// fmt.Println(X)
+	// fmt.Println(Y)
 
 	if X == nil && Y == nil {
 		fmt.Printf("No data point of %s in DB...\n", runtime)
