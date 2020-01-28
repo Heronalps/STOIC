@@ -10,9 +10,10 @@ var (
 	namespace           string = "racelab"
 	RunDeployment       string = "image-clf-inf"
 	timeQueryDeployment string = "image-clf-inf37"
-	runtimes                   = []string{"edge", "cpu", "gpu1", "gpu2"}
-	NautilusRuntimes           = []string{"cpu", "gpu1", "gpu2"}
-	setupImageNums      []int  = []int{33, 10}
+	// runtimes                   = []string{"edge", "cpu", "gpu1", "gpu2"}
+	runtimes               = []string{"gpu1", "gpu2"}
+	NautilusRuntimes       = []string{"cpu", "gpu1", "gpu2"}
+	setupImageNums   []int = []int{33, 10}
 	// currentRuntime      string = "cpu" // cpu / gpu1 / gpu2
 	procTimeNumDP        int    = 10
 	serviceAccountConfig string = "KUBECONFIG=~/.kube/service-account"
