@@ -64,7 +64,7 @@ class Worker(Process):
             x = preprocess_input(x)
             y_prob = trained_model.predict(x)
             index = y_prob.argmax()
-            print ("image : {0}, index : {1}".format(img_path, index))
+            print ("GPU {0} image : {1}, index : {2}".format(self._gpuid, img_path, index))
         
         print("GPU {} has done inferencing...".format(self._gpuid))
 

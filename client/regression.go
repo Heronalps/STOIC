@@ -3,8 +3,10 @@ package client
 import (
 	"fmt"
 	"math"
+	"os/exec"
+	"regexp"
+	"strconv"
 
-	linearmodel "github.com/pa-m/sklearn/linear_model"
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -52,6 +54,41 @@ func SetupRegression(app string, version string) {
 	}
 }
 
+// /*
+// Regress function leveraging Bayesian Ridge Regression
+// */
+// func Regress(runtime string, app string, version string, numDP int) (float64, float64) {
+// 	var (
+// 		coef      float64
+// 		intercept float64
+// 	)
+// 	X, Y := QueryDataSet(runtime, app, version, numDP)
+
+// 	if X == nil && Y == nil {
+// 		fmt.Printf("No data point of %s in DB...\n", runtime)
+// 		return 0.0, 0.0
+// 	}
+// 	nSamples, nOutputs := X.Dims()
+// 	if nSamples <= nOutputs {
+// 		fmt.Printf("Single data point of %s in DB...\n", runtime)
+// 		return Y.At(0, 0) / X.At(0, 0), 0
+// 	}
+// 	YPred := mat.NewDense(nSamples, nOutputs, nil)
+// 	model := linearmodel.NewBayesianRidge()
+// 	model.Fit(X, Y)
+// 	model.Predict(X, YPred)
+// 	coef = model.LinearModel.Coef.At(0, 0)
+// 	intercept = model.LinearModel.Intercept.At(0, 0)
+// 	if math.IsNaN(coef) || math.IsNaN(intercept) {
+// 		return 0.0, 0.0
+// 	}
+// 	// r2score := metrics.R2Score(Y, YPred, nil, "variance_weighted").At(0, 0)
+// 	// if r2score > .999 {
+// 	// 	fmt.Println("BayesianRidge ok")
+// 	// }
+// 	return coef, intercept
+// }
+
 /*
 Regress function leveraging Bayesian Ridge Regression
 */
@@ -59,33 +96,34 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 	var (
 		coef      float64
 		intercept float64
+		match     [][]byte
+		output    []byte
+		err       error
+		cmd       *exec.Cmd
 	)
-	X, Y := QueryDataSet(runtime, app, version, numDP)
-	// fmt.Println(runtime)
-	// fmt.Println(X)
-	// fmt.Println(Y)
+	repoPATH := HomeDir() + "/go/src/github.com/heronalps/STOIC"
 
-	if X == nil && Y == nil {
-		fmt.Printf("No data point of %s in DB...\n", runtime)
-		return 0.0, 0.0
+	// Run WTB image classification task
+	FILE := "./scripts/robust_regression.py "
+	cmdRun := fmt.Sprintf("python3 %s %s %s %s %d", FILE, runtime, app, version, numDP)
+	cmd = exec.Command("bash", "-c", cmdRun)
+	cmd.Dir = repoPATH
+	output, err = cmd.Output()
+	if err != nil {
+		fmt.Printf("Error running regression. msg: %s \n", err.Error())
 	}
-	nSamples, nOutputs := X.Dims()
-	if nSamples <= nOutputs {
-		fmt.Printf("Single data point of %s in DB...\n", runtime)
-		return Y.At(0, 0) / X.At(0, 0), 0
-	}
-	YPred := mat.NewDense(nSamples, nOutputs, nil)
-	model := linearmodel.NewBayesianRidge()
-	model.Fit(X, Y)
-	model.Predict(X, YPred)
-	coef = model.LinearModel.Coef.At(0, 0)
-	intercept = model.LinearModel.Intercept.At(0, 0)
+	fmt.Println(string(output))
+	reCoef := regexp.MustCompile(`Coefficient: (\d*\.\d*)`)
+	match = reCoef.FindSubmatch(output)
+	coef, err = strconv.ParseFloat(string(match[1]), 64)
+
+	reInt := regexp.MustCompile(`Intercept: (\d*\.\d*)`)
+	match = reInt.FindSubmatch(output)
+	intercept, err = strconv.ParseFloat(string(match[1]), 64)
+
 	if math.IsNaN(coef) || math.IsNaN(intercept) {
 		return 0.0, 0.0
 	}
-	// r2score := metrics.R2Score(Y, YPred, nil, "variance_weighted").At(0, 0)
-	// if r2score > .999 {
-	// 	fmt.Println("BayesianRidge ok")
-	// }
+
 	return coef, intercept
 }

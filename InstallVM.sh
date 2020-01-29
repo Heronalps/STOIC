@@ -170,3 +170,5 @@ kubectl edit rolebinding kubeless
 - kind: ServiceAccount
   name: admin-user
   namespace: racelab
+
+pip install pymysql sklearn
