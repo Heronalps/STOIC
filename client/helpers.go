@@ -162,6 +162,7 @@ func GetProcTime(imageNum int, app string, version string, runtime string) map[s
 	for i := 0; i < len(selectedRuntimes); i++ {
 		procTimes[selectedRuntimes[i]] = Extrapolate(selectedRuntimes[i], imageNum, app, version)
 	}
+	fmt.Printf("ProcTime: %v..\n", procTimes)
 	return procTimes
 }
 
