@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"math"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -127,15 +126,19 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 	//fmt.Println(string(output))
 	reCoef := regexp.MustCompile(`Coefficient: (\d*\.\d*)`)
 	match = reCoef.FindSubmatch(output)
-	coef, err = strconv.ParseFloat(string(match[1]), 64)
+	if len(match) > 0 {
+		coef, _ = strconv.ParseFloat(string(match[1]), 64)
+	}
 
 	reInt := regexp.MustCompile(`Intercept: (\d*\.\d*)`)
 	match = reInt.FindSubmatch(output)
-	intercept, err = strconv.ParseFloat(string(match[1]), 64)
-
-	if math.IsNaN(coef) || math.IsNaN(intercept) {
-		return 0.0, 0.0
+	if len(match) > 0 {
+		intercept, _ = strconv.ParseFloat(string(match[1]), 64)
 	}
+
+	// if math.IsNaN(coef) || math.IsNaN(intercept) {
+	// 	return 0.0, 0.0
+	// }
 
 	return coef, intercept
 }

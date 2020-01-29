@@ -89,7 +89,7 @@ func SelectRunTime(imageNum int, app string, version string, runtime string) (st
 	)
 	// If the runtime is manually set, the results only have preset runtime
 	totalTimes, predTimeLogMap := GetTotalTime(imageNum, app, version, runtime)
-	fmt.Println(totalTimes)
+	fmt.Printf("totalTime: %v..\n", totalTimes)
 
 	// Sort the totalTimes map by key
 	keys := make([]float64, 0, len(totalTimes))

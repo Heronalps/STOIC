@@ -22,4 +22,4 @@ select * from LogTime where task_id >= 512 and task_id < 1343;
 select * from LogTime where task_id > 1350;
 
 --step-up experiment
-select * from LogTime where task_id > 1870;
+select * from LogTime where task_id > 3265;
