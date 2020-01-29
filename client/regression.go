@@ -124,7 +124,7 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 	if err != nil {
 		fmt.Printf("Error running regression. msg: %s \n", err.Error())
 	}
-	fmt.Println(string(output))
+	//fmt.Println(string(output))
 	reCoef := regexp.MustCompile(`Coefficient: (\d*\.\d*)`)
 	match = reCoef.FindSubmatch(output)
 	coef, err = strconv.ParseFloat(string(match[1]), 64)
