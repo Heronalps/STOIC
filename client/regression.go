@@ -102,10 +102,22 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 		cmd       *exec.Cmd
 	)
 	repoPATH := HomeDir() + "/go/src/github.com/heronalps/STOIC"
+	X, Y := QueryDataSet(runtime, app, version, numDP)
 
-	// Run WTB image classification task
+	if X == nil && Y == nil {
+		fmt.Printf("No data point of %s in DB...\n", runtime)
+		return 0.0, 0.0
+	}
+	nSamples, nOutputs := X.Dims()
+	if nSamples <= nOutputs {
+		fmt.Printf("Single data point of %s in DB...\n", runtime)
+		return Y.At(0, 0) / X.At(0, 0), 0
+	}
+
+	// Run RANSAC regression
 	FILE := "./scripts/robust_regression.py "
 	cmdRun := fmt.Sprintf("python3 %s %s %s %s %d", FILE, runtime, app, version, numDP)
+	// fmt.Println(cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
 	cmd.Dir = repoPATH
 	output, err = cmd.Output()
