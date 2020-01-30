@@ -254,7 +254,7 @@ CreateDeployment creates new deployment
 */
 func CreateDeployment(app string, NumGPU int64) error {
 	var (
-		pythonVersion string
+		pythonVersion string = "3.6"
 		err           error
 		cmd           *exec.Cmd
 	)
