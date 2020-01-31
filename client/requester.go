@@ -285,10 +285,18 @@ func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface)
 	r := make(chan bool)
 	go func() {
 		result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
-		time.Sleep(3 * time.Second)
-		for !strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.") {
+		for len(result.Status.Conditions) < 1 {
+			time.Sleep(3 * time.Second)
+		}
+		for true {
 			time.Sleep(3 * time.Second)
 			result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
+			for len(result.Status.Conditions) < 2 {
+				continue
+			}
+			if strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.") {
+				break
+			}
 			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
 		}
 		if getErr != nil {

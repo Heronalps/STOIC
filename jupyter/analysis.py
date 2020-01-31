@@ -3,7 +3,7 @@ import pandas as pd
 import sys, os
 
 df_logtime4 = pd.read_csv("./logTime_4runtimes.csv")
-df_stoic = pd.read_csv("./logTime_stoic.csv")
+df_stoic = pd.read_csv("./logTime_stoic_2.csv")
 
 df_edge = df_logtime4[df_logtime4["runtime"]=="edge"]
 for index, row in df_edge.iterrows():
@@ -28,6 +28,8 @@ for index in range(0, len(df_logtime4), 4):
 
 groundtruth_runtimes = pd.Series(runtimes)
 stoic_runtimes = df_stoic_front["runtime"]
+print (stoic_runtimes[stoic_runtimes != groundtruth_runtimes])
+
 positive = stoic_runtimes[stoic_runtimes == groundtruth_runtimes]
 
 print("STOIC True Positive Rate: {0}".format(len(positive) / len(stoic_runtimes)))
