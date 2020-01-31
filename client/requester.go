@@ -157,6 +157,7 @@ Deploy function deploys new deployment and patches kubeless function on Nautilus
 func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool, float64, error) {
 	var (
 		retryErr error
+		ready    bool
 	)
 
 	kubeconfig := getKubeConfig()
@@ -178,13 +179,15 @@ func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool
 	fmt.Println("Updating deployment...")
 	// Create Deployment Start Timestamp
 	tsCreateStart := time.Now()
-
-	err = CreateDeployment(app, NumGPU)
-	if err != nil {
-		fmt.Println(err.Error())
+	for ready == false {
+		err = CreateDeployment(app, NumGPU)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		//Async call using channel await to join
+		ready = <-IsPodReady(deployment, deploymentsClient)
 	}
-	//Async call using channel await to join
-	_ = <-IsPodReady(deployment, deploymentsClient)
+
 	// Create Deployment End Timestamp
 	tsCreateEnd := time.Now()
 
@@ -285,17 +288,21 @@ IsPodReady makes judgement about if a deployment is ready
 func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface) <-chan bool {
 	r := make(chan bool)
 	var (
-		result *v1.Deployment
-		getErr error
+		result     *v1.Deployment
+		getErr     error
+		progressed bool
+		timeout    bool
 	)
 	go func() {
 		for true {
-			time.Sleep(3 * time.Second)
 			result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
+			time.Sleep(3 * time.Second)
 			for len(result.Status.Conditions) < 2 {
 				continue
 			}
-			if strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.") {
+			progressed = strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.")
+			timeout = strings.HasSuffix(result.Status.Conditions[1].Message, "has timed out progressing.")
+			if progressed || timeout {
 				break
 			}
 			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
@@ -303,7 +310,7 @@ func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface)
 		if getErr != nil {
 			fmt.Println(getErr.Error())
 		}
-		r <- true
+		r <- progressed
 	}()
 
 	return r
