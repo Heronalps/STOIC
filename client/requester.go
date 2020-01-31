@@ -10,6 +10,7 @@ import (
 	"time"
 
 	retrygo "github.com/avast/retry-go"
+	v1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -283,11 +284,11 @@ IsPodReady makes judgement about if a deployment is ready
 */
 func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface) <-chan bool {
 	r := make(chan bool)
+	var (
+		result *v1.Deployment
+		getErr error
+	)
 	go func() {
-		result, getErr := deploymentsClient.Get(deployment, metav1.GetOptions{})
-		for len(result.Status.Conditions) < 1 {
-			time.Sleep(3 * time.Second)
-		}
 		for true {
 			time.Sleep(3 * time.Second)
 			result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
