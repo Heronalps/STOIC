@@ -297,12 +297,12 @@ func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface)
 		for true {
 			result, getErr = deploymentsClient.Get(deployment, metav1.GetOptions{})
 			time.Sleep(3 * time.Second)
-			for len(result.Status.Conditions) < 2 {
-				continue
+			if len(result.Status.Conditions) > 1 {
+				progressed = strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.")
+				timeout = strings.HasSuffix(result.Status.Conditions[1].Message, "has timed out progressing.")
+				fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
 			}
-			progressed = strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.")
-			timeout = strings.HasSuffix(result.Status.Conditions[1].Message, "has timed out progressing.")
-			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
+
 			fmt.Printf("progressed : %v..\n", progressed)
 			fmt.Printf("timeout : %v..\n", timeout)
 			if progressed || timeout {
