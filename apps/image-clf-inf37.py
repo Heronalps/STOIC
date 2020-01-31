@@ -1,7 +1,7 @@
 from multiprocessing import Process, Queue
 import numpy as np
 import time, math, os, argparse
-from gpuinfo import GPUInfo
+# from gpuinfo import GPUInfo
 
 
 class_list = ["Birds", "Empty", "Fox", "Humans", "Rodents"]
@@ -92,10 +92,10 @@ def handler(event, context):
     
     # Get GPU counts
     NUM_GPU = 0
-    available_devices = GPUInfo.check_empty()
-    if available_devices != None:
-        NUM_GPU = len(available_devices)
-    print ("Current GPU num is {0}".format(NUM_GPU))
+    # available_devices = GPUInfo.check_empty()
+    # if available_devices != None:
+    #     NUM_GPU = len(available_devices)
+    # print ("Current GPU num is {0}".format(NUM_GPU))
     
     counter = 0
     image_list = list()
