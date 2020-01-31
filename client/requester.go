@@ -302,10 +302,12 @@ func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface)
 			}
 			progressed = strings.HasSuffix(result.Status.Conditions[1].Message, "has successfully progressed.")
 			timeout = strings.HasSuffix(result.Status.Conditions[1].Message, "has timed out progressing.")
+			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
+			fmt.Printf("progressed : %v..\n", progressed)
+			fmt.Printf("timeout : %v..\n", timeout)
 			if progressed || timeout {
 				break
 			}
-			fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
 		}
 		if getErr != nil {
 			fmt.Println(getErr.Error())
