@@ -38,11 +38,18 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 	// if _, found := NautilusRuntimes[selectedRuntime]; found {
 	// 	currentRuntime = selectedRuntime
 	// }
+
+	// if all {
+	// 	selectedRuntimes = runtimes
+	// } else {
+	// 	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
+	// }
 	if all {
-		selectedRuntimes = runtimes
-	} else {
-		selectedRuntimes = append(selectedRuntimes, selectedRuntime)
+		for _, runtime := range runtimes {
+			selectedRuntimes = append(selectedRuntimes, runtime)
+		}
 	}
+	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
 	for _, runtime := range selectedRuntimes {
 		output, actTimeLog = Request(runtime, imageNum, app, version)
