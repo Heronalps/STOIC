@@ -20,15 +20,15 @@ Return: runtime for appending processing time to corresponding table
 */
 func Schedule(runtime string, imageNum int, app string, version string, all bool) []byte {
 	var (
-		output           []byte
-		actTimeLog       *TimeLog
-		selectedRuntimes []string
-		isDeployed       bool
+		output     []byte
+		actTimeLog *TimeLog
+		isDeployed bool
 	)
 	for !isDeployed {
 		transferTimes := GetTransferTime(imageNum)
 
 		// Redefine the selected runtime every selection
+		selectedRuntimes := []string{}
 		selectedRuntime, predTimeLog := SelectRunTime(imageNum, app, version, runtime)
 		fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
 		fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
