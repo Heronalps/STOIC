@@ -249,7 +249,8 @@ func GetWindowSize(runtime string) int {
 		length := len(deploymentTimes) - winSize
 		totalAbsErr := 0.0
 		for idx := 0; idx < length; idx++ {
-			pred := Median(deploymentTimes[idx : idx+winSize])
+			// pred := Median(deploymentTimes[idx : idx+winSize])
+			pred := Average(deploymentTimes[idx : idx+winSize])
 			totalAbsErr += math.Abs(pred - deploymentTimes[idx+winSize])
 
 		}
