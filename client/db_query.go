@@ -69,7 +69,7 @@ func QueryDeploymentTime(runtime string) float64 {
 	// LIMIT numDP => median on 10 latest deployment time
 	queryStr := fmt.Sprintf("SELECT %s from DeploymentTime ORDER BY deployment_id DESC LIMIT ?", runtime)
 	rows, err := db.Query(queryStr, windowSizes[runtime])
-	fmt.Printf("WindowSizes: %v..\n", windowSizes)
+
 	if err != nil {
 		fmt.Println(err.Error())
 	}

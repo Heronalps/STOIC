@@ -15,7 +15,7 @@ var (
 	imageNum       int
 	batch          int
 	preset         bool
-	index          int
+	index          int = 222
 	// randomSize     []int = []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93,
 	// 	20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
 
@@ -37,9 +37,9 @@ var (
 						fmt.Printf("index : %v ..\n", index)
 						imageNum = server.Workload[index]
 						index++
-						if index >= len(server.Workload)/30 {
-							os.Exit(0)
-						}
+						// if index >= len(server.Workload)/30 {
+						// 	os.Exit(0)
+						// }
 					} else {
 						imageNum = server.ImageCache()
 					}

@@ -36,13 +36,13 @@ func TestCompareVersion(t *testing.T) {
 }
 
 func TestRunOnNautilus(t *testing.T) {
-	output, timeLog := client.RunOnNautilus(runtime, imageNum, app, version)
+	output, _, timeLog := client.RunOnNautilus(runtime, imageNum, app, version)
 	fmt.Printf("Output : %v..\n", string(output))
 	assert.NotNil(t, timeLog)
 }
 
 func TestRunOnEdge(t *testing.T) {
-	output, timeLog := client.RunOnEdge(imageNum, app, version)
+	output, _, timeLog := client.RunOnEdge(imageNum, app, version)
 	fmt.Printf("Output : %v..\n", string(output))
 	assert.NotNil(t, timeLog)
 }
@@ -87,4 +87,8 @@ func TestImageCache(t *testing.T) {
 func TestGenerateWorkLoad(t *testing.T) {
 	workload := server.GenerateWorkLoad(6700)
 	fmt.Println(workload)
+}
+
+func TestServerWorkload(t *testing.T) {
+	fmt.Println(server.Workload[223])
 }
