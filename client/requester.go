@@ -26,7 +26,7 @@ import (
 RunOnNautilus sends request to Nautilus based on runtime and image number
 return output & processing time
 */
-func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]byte, *TimeLog) {
+func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
 	var (
 		output         []byte
 		isGPUSame      bool
@@ -40,19 +40,22 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 	//resultChannel := make(chan []byte)
 
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
-	for !isDeployed {
-		switch runtime {
-		case "cpu":
-			isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 0, app)
-		case "gpu1":
-			isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 1, app)
-		case "gpu2":
-			isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 2, app)
-		}
-		if err != nil {
-			log.Println(err.Error())
-			return output, nil
-		}
+
+	switch runtime {
+	case "cpu":
+		isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 0, app)
+	case "gpu1":
+		isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 1, app)
+	case "gpu2":
+		isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 2, app)
+	}
+	if err != nil {
+		log.Println(err.Error())
+		return output, isDeployed, nil
+	}
+	if !isDeployed {
+		log.Println("Runtime cannot be deployed. Reschedule workload...")
+		return output, isDeployed, nil
 	}
 
 	// Wait 3 second for deployment to complete
@@ -98,7 +101,7 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 	//result = <-resultChannel
 	//return result, duration
 	// Transfer time is not available at this point in Nautilus
-	return output, CreateTimeLog(0.0, deploymentTime, procTime)
+	return output, true, CreateTimeLog(0.0, deploymentTime, procTime)
 }
 
 /*

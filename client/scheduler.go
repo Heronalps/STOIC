@@ -21,46 +21,39 @@ Return: runtime for appending processing time to corresponding table
 func Schedule(runtime string, imageNum int, app string, version string, all bool) []byte {
 	var (
 		output           []byte
-		selectedRuntime  string
-		predTimeLog      *TimeLog
 		actTimeLog       *TimeLog
 		selectedRuntimes []string
+		isDeployed       bool
 	)
+	for !isDeployed {
+		transferTimes := GetTransferTime(imageNum)
 
-	transferTimes := GetTransferTime(imageNum)
+		// Redefine the selected runtime every selection
+		selectedRuntime, predTimeLog := SelectRunTime(imageNum, app, version, runtime)
+		fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
+		fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
+			imageNum, transferTimes[selectedRuntime], selectedRuntime)
 
-	selectedRuntime, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
-	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
-	fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
-		imageNum, transferTimes[selectedRuntime], selectedRuntime)
-
-	// Update current runtime to accurately estimate deployment time
-	// if _, found := NautilusRuntimes[selectedRuntime]; found {
-	// 	currentRuntime = selectedRuntime
-	// }
-
-	// if all {
-	// 	selectedRuntimes = runtimes
-	// } else {
-	// 	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
-	// }
-	if all {
-		for _, runtime := range runtimes {
-			selectedRuntimes = append(selectedRuntimes, runtime)
+		if all {
+			for _, runtime := range runtimes {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
 		}
-	}
-	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
+		selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
-	for _, runtime := range selectedRuntimes {
-		output, actTimeLog = Request(runtime, imageNum, app, version)
-		if actTimeLog != nil {
-			actTimeLog.Transfer = transferTimes[runtime]
-		}
-		// fmt.Printf("Selected Runtime: %s..\n", selectedRuntime)
-		if actTimeLog != nil && actTimeLog.Processing != 0.0 {
-			AppendRecordProcessing(dbName, runtime, imageNum, actTimeLog.Processing, app, version)
-			//For setup regressions, the prediction is based on preset coef & intercept
-			LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
+		for _, runtime := range selectedRuntimes {
+			output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version)
+			if !isDeployed {
+				break
+			}
+			if actTimeLog != nil {
+				actTimeLog.Transfer = transferTimes[runtime]
+			}
+			if actTimeLog != nil && actTimeLog.Processing != 0.0 {
+				AppendRecordProcessing(dbName, runtime, imageNum, actTimeLog.Processing, app, version)
+				//For setup regressions, the prediction is based on preset coef & intercept
+				LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
+			}
 		}
 	}
 
@@ -70,9 +63,10 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 /*
 Request is a wrap function both for executing jobs and setting up processing time table for regression
 */
-func Request(runtime string, imageNum int, app string, version string) ([]byte, *TimeLog) {
+func Request(runtime string, imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
 	var (
 		output     []byte
+		isDeployed bool
 		actTimeLog *TimeLog
 	)
 	switch runtime {
@@ -81,10 +75,10 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 		output, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Printf("Running on Nautilus...%s\n", runtime)
-		output, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
+		output, isDeployed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
 	}
 	// The transfer time field is 0.0 in actTimeLog at this point
-	return output, actTimeLog
+	return output, isDeployed, actTimeLog
 }
 
 /*
