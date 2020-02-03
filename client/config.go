@@ -35,3 +35,11 @@ type TimeLog struct {
 	Deployment float64
 	Processing float64
 }
+
+/*
+Deploy contains progressed and timeout boolean values
+*/
+type DeployResult struct {
+	Progressed bool
+	Timeout    bool
+}

@@ -56,7 +56,7 @@ func QueryDeploymentTimeNautilus(numGPU int64, app string) float64 {
 		err      error
 	)
 
-	_, duration, err = Deploy(namespace, timeQueryDeployment, numGPU, app)
+	_, _, duration, err = Deploy(namespace, timeQueryDeployment, numGPU, app)
 
 	if err != nil {
 		fmt.Println(err.Error())

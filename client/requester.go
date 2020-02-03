@@ -30,9 +30,9 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 	var (
 		output         []byte
 		isGPUSame      bool
+		isDeployed     bool
 		cmd            string
 		err            error
-		result         []byte
 		procTime       float64
 		deploymentTime float64
 		cmdRun         *exec.Cmd
@@ -40,17 +40,19 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 	//resultChannel := make(chan []byte)
 
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
-	switch runtime {
-	case "cpu":
-		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 0, app)
-	case "gpu1":
-		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 1, app)
-	case "gpu2":
-		isGPUSame, deploymentTime, err = Deploy(namespace, RunDeployment, 2, app)
-	}
-	if err != nil {
-		log.Println(err.Error())
-		return result, nil
+	for !isDeployed {
+		switch runtime {
+		case "cpu":
+			isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 0, app)
+		case "gpu1":
+			isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 1, app)
+		case "gpu2":
+			isGPUSame, isDeployed, deploymentTime, err = Deploy(namespace, RunDeployment, 2, app)
+		}
+		if err != nil {
+			log.Println(err.Error())
+			return output, nil
+		}
 	}
 
 	// Wait 3 second for deployment to complete
@@ -154,10 +156,13 @@ func QueryGPUNum(namespace string, deployment string) int64 {
 /*
 Deploy function deploys new deployment and patches kubeless function on Nautilus based on number of GPU
 */
-func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool, float64, error) {
+func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool, bool, float64, error) {
 	var (
-		retryErr error
-		ready    bool
+		retryErr     error
+		deployResult DeployResult
+		duration     float64
+		prevNumGPU   int64
+		currNumGPU   int64
 	)
 
 	kubeconfig := getKubeConfig()
@@ -179,25 +184,21 @@ func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool
 	fmt.Println("Updating deployment...")
 	// Create Deployment Start Timestamp
 	tsCreateStart := time.Now()
-	for ready == false {
+	for !deployResult.Progressed {
 		err = CreateDeployment(app, NumGPU)
 		if err != nil {
 			fmt.Println(err.Error())
 		}
 		//Async call using channel await to join
-		ready = <-IsPodReady(deployment, deploymentsClient)
+		deployResult = <-IsPodReady(deployment, deploymentsClient)
+		if deployResult.Timeout {
+			break
+		}
 	}
 
 	// Create Deployment End Timestamp
 	tsCreateEnd := time.Now()
 
-	var (
-		prevNumGPU int64
-		currNumGPU int64
-		// tsUpdateStart time.Time
-		// tsUpdateEnd   time.Time
-		duration float64
-	)
 	// Change GPU number is executed in the deploy.sh
 
 	// retryErr = retry.RetryOnConflict(retry.DefaultRetry, func() error {
@@ -249,8 +250,8 @@ func Deploy(namespace string, deployment string, NumGPU int64, app string) (bool
 
 	// Convert nanoseconds to seconds; Substract 3 seconds of waiting time
 	// duration = (float64(tsCreateEnd.Sub(tsCreateStart))+float64(tsUpdateEnd.Sub(tsUpdateStart)))*1e-9 - 3.0
-	duration = (float64(tsCreateEnd.Sub(tsCreateStart)))*1e-9 - 3.0
-	return prevNumGPU == currNumGPU, duration, retryErr
+	duration = (float64(tsCreateEnd.Sub(tsCreateStart))) * 1e-9
+	return prevNumGPU == currNumGPU, deployResult.Progressed, duration, retryErr
 }
 
 /*
@@ -285,13 +286,14 @@ func CreateDeployment(app string, NumGPU int64) error {
 /*
 IsPodReady makes judgement about if a deployment is ready
 */
-func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface) <-chan bool {
-	r := make(chan bool)
+func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface) <-chan DeployResult {
+	r := make(chan DeployResult)
 	var (
-		result     *v1.Deployment
-		getErr     error
-		progressed bool
-		timeout    bool
+		result       *v1.Deployment
+		getErr       error
+		progressed   bool
+		timeout      bool
+		deployResult DeployResult
 	)
 	go func() {
 		for true {
@@ -312,7 +314,9 @@ func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface)
 		if getErr != nil {
 			fmt.Println(getErr.Error())
 		}
-		r <- progressed
+		deployResult.Progressed = progressed
+		deployResult.Timeout = timeout
+		r <- deployResult
 	}()
 
 	return r
