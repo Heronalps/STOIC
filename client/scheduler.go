@@ -72,7 +72,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		output, actTimeLog = RunOnEdge(imageNum, app, version)
+		output, isDeployed, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Printf("Running on Nautilus...%s\n", runtime)
 		output, isDeployed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
@@ -109,11 +109,12 @@ func SelectRunTime(imageNum int, app string, version string, runtime string) (st
 /*
 RunOnEdge runs the task on mini edge cloud with AVX support
 */
-func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
+func RunOnEdge(imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
 	var (
-		output []byte
-		err    error
-		cmd    *exec.Cmd
+		output     []byte
+		err        error
+		cmd        *exec.Cmd
+		isDeployed bool
 	)
 	repoPATH := HomeDir() + "/GPU_Serverless"
 
@@ -126,12 +127,13 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
 	output, err = cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
+		return output, isDeployed, nil
 	}
 	//fmt.Printf("Output of task %s\n", string(output))
 	re := regexp.MustCompile(`Time with model.*`)
 	lastline := re.Find(output)
 	// fmt.Printf("lastline : %s..\n", lastline)
-	return lastline, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
+	return lastline, true, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
 }
 
 /*

@@ -176,9 +176,6 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 	transferTimes := GetTransferTime(imageNum)
 	procTimes := GetProcTime(imageNum, app, version, runtime)
 	deploymentTimes := GetDeploymentTime(runtime)
-	// fmt.Printf("Transfer Times : %v..\n", transferTimes)
-	// fmt.Printf("Proc Times : %v..\n", procTimes)
-	// fmt.Printf("Deployment Times : %v..\n", deploymentTimes)
 	totalTimes := make(map[float64]string)
 	timeLogs := make(map[string]*TimeLog)
 

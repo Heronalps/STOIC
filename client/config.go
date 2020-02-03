@@ -37,7 +37,7 @@ type TimeLog struct {
 }
 
 /*
-Deploy contains progressed and timeout boolean values
+DeployResult contains progressed and timeout boolean values
 */
 type DeployResult struct {
 	Progressed bool

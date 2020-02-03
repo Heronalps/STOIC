@@ -98,9 +98,6 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 		fmt.Printf("Request failed: %v ...", retryErr.Error())
 	}
 
-	//result = <-resultChannel
-	//return result, duration
-	// Transfer time is not available at this point in Nautilus
 	return output, true, CreateTimeLog(0.0, deploymentTime, procTime)
 }
 
