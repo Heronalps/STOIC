@@ -5,12 +5,15 @@ Scheduler decides where to run WTB inferencing job given Pi bandwidth, number of
 package client
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"os/exec"
 	"regexp"
 	"sort"
 	"strconv"
+
+	retrygo "github.com/avast/retry-go"
 )
 
 /*
@@ -24,36 +27,44 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 		actTimeLog *TimeLog
 		isDeployed bool
 	)
-	for !isDeployed {
-		transferTimes := GetTransferTime(imageNum)
+	transferTimes := GetTransferTime(imageNum)
 
-		// Redefine the selected runtime every selection
-		selectedRuntimes := []string{}
-		selectedRuntime, predTimeLog := SelectRunTime(imageNum, app, version, runtime)
-		fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
-		fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
-			imageNum, transferTimes[selectedRuntime], selectedRuntime)
+	// Redefine the selected runtime every selection
+	selectedRuntimes := []string{}
+	selectedRuntime, predTimeLog := SelectRunTime(imageNum, app, version, runtime)
+	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
+	fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
+		imageNum, transferTimes[selectedRuntime], selectedRuntime)
 
-		if all {
-			for _, runtime := range runtimes {
-				selectedRuntimes = append(selectedRuntimes, runtime)
-			}
+	if all {
+		for _, runtime := range runtimes {
+			selectedRuntimes = append(selectedRuntimes, runtime)
 		}
-		selectedRuntimes = append(selectedRuntimes, selectedRuntime)
+	}
+	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
-		for _, runtime := range selectedRuntimes {
-			output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version)
-			if !isDeployed {
-				break
-			}
-			if actTimeLog != nil {
-				actTimeLog.Transfer = transferTimes[runtime]
-			}
-			if actTimeLog != nil && actTimeLog.Processing != 0.0 {
-				AppendRecordProcessing(dbName, runtime, imageNum, actTimeLog.Processing, app, version)
-				//For setup regressions, the prediction is based on preset coef & intercept
-				LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
-			}
+	for _, runtime := range selectedRuntimes {
+		_, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
+
+		retryErr := retrygo.Do(
+			func() error {
+				output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version)
+				if !isDeployed {
+					return errors.New("request was not deployed")
+				}
+				return nil
+			},
+		)
+		if retryErr != nil {
+			fmt.Printf("Request failed: %v ...", retryErr.Error())
+		}
+		if actTimeLog != nil {
+			actTimeLog.Transfer = transferTimes[runtime]
+		}
+		if actTimeLog != nil && actTimeLog.Processing != 0.0 {
+			AppendRecordProcessing(dbName, runtime, imageNum, actTimeLog.Processing, app, version)
+			//For setup regressions, the prediction is based on preset coef & intercept
+			LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
 		}
 	}
 

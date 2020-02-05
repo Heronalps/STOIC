@@ -34,8 +34,8 @@ var (
 				// image flag has high precedence than preset
 				if presetImageNum == 0 {
 					if preset {
-						fmt.Printf("index : %v ..\n", index)
 						imageNum = server.Workload[index]
+						fmt.Printf("index : %v ..\n", index)
 						index++
 						// if index >= len(server.Workload)/30 {
 						// 	os.Exit(0)
