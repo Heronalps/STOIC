@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/serverhorror/rog-go/reverse"
 )
@@ -341,6 +342,21 @@ func UpdateWindowSizes() {
 		windowSizes[runtime] = GetWindowSize(runtime)
 	}
 	//fmt.Println(time.Now().Sub(ts1))
+}
+
+/*
+StartInquisitor starts inquisitor
+*/
+func StartInquisitor(winSizeInterval int, app string, interval int) {
+	for {
+		// Update window size first to overwrite the default window size
+		UpdateWindowSizes()
+		for i := 0; i < winSizeInterval; i++ {
+			UpdateDeploymentTimeTable(app)
+			fmt.Println("Waiting for next round ...")
+			time.Sleep(time.Second * time.Duration(interval))
+		}
+	}
 }
 
 /*

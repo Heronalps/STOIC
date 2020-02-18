@@ -305,8 +305,6 @@ func IsPodReady(deployment string, deploymentsClient appsv1.DeploymentInterface)
 				fmt.Printf("Message : %s \n", result.Status.Conditions[1].Message)
 			}
 
-			fmt.Printf("progressed : %v..\n", progressed)
-			fmt.Printf("timeout : %v..\n", timeout)
 			if progressed || timeout {
 				break
 			}

@@ -2,6 +2,7 @@
 # $1 - App: image-clf-inf
 # $2 - Python version: 3.6 / 3.7
 # $3 - Patched GPU number: 0-8
+# $4 - patch minikube in racelab: _edge
 
 kubeless function delete $1
 sleep 3

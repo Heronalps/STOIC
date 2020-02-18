@@ -18,6 +18,7 @@ import (
 SocketClient listens to the task request from the server
 */
 func SocketClient(port int, runtime string, app string, version string, all bool) {
+	fmt.Printf("Window Size : %v..\n", windowSizes)
 	listen, err := net.Listen("tcp4", ":"+strconv.Itoa(port))
 	if err != nil {
 		log.Fatalf("Socket listen port %d failed,%s", port, err)
