@@ -52,6 +52,7 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 		retryErr := retrygo.Do(
 			func() error {
 				output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version)
+				runtimes[runtime] = isDeployed
 				if !isDeployed {
 					return errors.New("request was not deployed")
 				}
