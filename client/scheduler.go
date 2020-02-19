@@ -37,8 +37,10 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 		imageNum, transferTimes[selectedRuntime], selectedRuntime)
 
 	if all {
-		for _, runtime := range runtimes {
-			selectedRuntimes = append(selectedRuntimes, runtime)
+		for runtime, isAvail := range runtimes {
+			if isAvail {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
 		}
 	}
 	selectedRuntimes = append(selectedRuntimes, selectedRuntime)

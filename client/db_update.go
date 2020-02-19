@@ -1,6 +1,7 @@
 package client
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -32,6 +33,10 @@ func AppendRecordProcessing(dbName string, runtime string, imageNum int,
 AppendRecordDeployment appends a record of (image num, duration) to Processing Time table of specific runtime
 */
 func AppendRecordDeployment(dbName string, cpu string, gpu1 string, gpu2 string) error {
+	if cpu == "null" || gpu1 == "null" || gpu2 == "null" {
+		return errors.New("unable to deploy runtime")
+	}
+
 	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
@@ -85,6 +90,14 @@ func UpdateDeploymentTimeTable(app string) error {
 			deploymentTimes[numGPU] = fmt.Sprintf("%f", elasped)
 		} else {
 			deploymentTimes[numGPU] = "null"
+		}
+		switch numGPU {
+		case 0:
+			runtimes["cpu"] = isDeployed
+		case 1:
+			runtimes["gpu1"] = isDeployed
+		case 2:
+			runtimes["gpu2"] = isDeployed
 		}
 	}
 	err = AppendRecordDeployment(dbName, deploymentTimes[0], deploymentTimes[1], deploymentTimes[2])

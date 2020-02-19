@@ -26,7 +26,7 @@ func SetupRegression(app string, version string) {
 	if result == 1 {
 		fmt.Printf("Current version %s is greater than DB version %s ..\n", version, dbVersion)
 		UpdateAppVersion(app, version)
-		for _, runtime := range runtimes {
+		for runtime := range runtimes {
 			for _, imageNum := range setupImageNums {
 				Schedule(runtime, imageNum, app, version, false)
 			}
@@ -34,7 +34,7 @@ func SetupRegression(app string, version string) {
 	} else {
 		fmt.Printf("Current version %s equals to / is less than DB version %s .. \n", version, dbVersion)
 		fmt.Println("Checking if at least two data points exist for each runtime...")
-		for _, runtime := range runtimes {
+		for runtime := range runtimes {
 			var (
 				X    mat.Matrix
 				rows int = 0

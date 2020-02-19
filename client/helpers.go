@@ -111,11 +111,11 @@ func GetTransferTime(imageNum int) map[string]float64 {
 	JPGSize := 212 * 1e-3
 
 	transferTime := float64(imageNum) * JPGSize / bandwidth
-	for i := 0; i < len(runtimes); i++ {
-		if runtimes[i] == "edge" {
-			transferTimes[runtimes[i]] = 0.0
+	for runtime := range runtimes {
+		if runtime == "edge" {
+			transferTimes[runtime] = 0.0
 		} else {
-			transferTimes[runtimes[i]] = transferTime
+			transferTimes[runtime] = transferTime
 		}
 	}
 	return transferTimes
@@ -132,7 +132,11 @@ func GetDeploymentTime(runtime string) map[string]float64 {
 	if runtime != "" {
 		selectedRuntimes = []string{runtime}
 	} else {
-		selectedRuntimes = runtimes
+		for runtime, isAvail := range runtimes {
+			if isAvail {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
+		}
 	}
 
 	for _, runtime := range selectedRuntimes {
@@ -159,7 +163,11 @@ func GetProcTime(imageNum int, app string, version string, runtime string) map[s
 	if runtime != "" {
 		selectedRuntimes = []string{runtime}
 	} else {
-		selectedRuntimes = runtimes
+		for runtime, isAvail := range runtimes {
+			if isAvail {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
+		}
 	}
 	for i := 0; i < len(selectedRuntimes); i++ {
 		procTimes[selectedRuntimes[i]] = Extrapolate(selectedRuntimes[i], imageNum, app, version)
@@ -185,7 +193,11 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 	if runtime != "" {
 		selectedRuntimes = []string{runtime}
 	} else {
-		selectedRuntimes = runtimes
+		for runtime, isAvail := range runtimes {
+			if isAvail {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
+		}
 	}
 	for i := 0; i < len(selectedRuntimes); i++ {
 		currRuntime := selectedRuntimes[i]
@@ -339,8 +351,10 @@ UpdateWindowSizes updates optimal window sizes
 */
 func UpdateWindowSizes() {
 	//ts1 := time.Now()
-	for runtime := range NautilusRuntimes {
-		windowSizes[runtime] = GetWindowSize(runtime)
+	for runtime := range runtimes {
+		if runtime != "edge" {
+			windowSizes[runtime] = GetWindowSize(runtime)
+		}
 	}
 	//fmt.Println(time.Now().Sub(ts1))
 }

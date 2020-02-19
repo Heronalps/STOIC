@@ -32,7 +32,7 @@ InitDB initializes DB and all necessary tables
 */
 func InitDB() {
 	CreateDatabase(dbName)
-	for _, runtime := range runtimes {
+	for runtime := range runtimes {
 		CreateProcessingTimeTable(dbName, runtime)
 	}
 	CreateDeploymentTimeTable(dbName)
