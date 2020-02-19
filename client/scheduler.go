@@ -32,6 +32,7 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 	// Redefine the selected runtime every selection
 	selectedRuntimes := []string{}
 	selectedRuntime, predTimeLog := SelectRunTime(imageNum, app, version, runtime)
+	fmt.Printf("The task is scheduled at %s \n", selectedRuntime)
 	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
 	fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
 		imageNum, transferTimes[selectedRuntime], selectedRuntime)
@@ -43,7 +44,7 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 			}
 		}
 	}
-	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
+	// selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
 	for _, runtime := range selectedRuntimes {
 		_, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
@@ -115,7 +116,7 @@ func SelectRunTime(imageNum int, app string, version string, runtime string) (st
 		selectedRuntime = totalTimes[keys[0]]
 	}
 
-	fmt.Printf("The task is scheduled at %s for %f seconds\n", selectedRuntime, keys[0])
+	// fmt.Printf("The task is scheduled at %s for %f seconds\n", selectedRuntime, keys[0])
 	return selectedRuntime, predTimeLogMap[selectedRuntime]
 }
 
