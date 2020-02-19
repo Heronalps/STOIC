@@ -5,6 +5,7 @@ This module contains all helper functions.
 package client
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"math"
@@ -250,8 +251,8 @@ func GetWindowSize(runtime string) int {
 		length := len(deploymentTimes) - winSize
 		totalAbsErr := 0.0
 		for idx := 0; idx < length; idx++ {
-			// pred := Median(deploymentTimes[idx : idx+winSize])
-			pred := Average(deploymentTimes[idx : idx+winSize])
+			pred := Median(deploymentTimes[idx : idx+winSize])
+			// pred := Average(deploymentTimes[idx : idx+winSize])
 			totalAbsErr += math.Abs(pred - deploymentTimes[idx+winSize])
 
 		}
@@ -338,7 +339,7 @@ UpdateWindowSizes updates optimal window sizes
 */
 func UpdateWindowSizes() {
 	//ts1 := time.Now()
-	for _, runtime := range NautilusRuntimes {
+	for runtime := range NautilusRuntimes {
 		windowSizes[runtime] = GetWindowSize(runtime)
 	}
 	//fmt.Println(time.Now().Sub(ts1))
@@ -367,4 +368,17 @@ func Min(a int, b int) int {
 		return a
 	}
 	return b
+}
+
+/*
+NullString returns sql NullString if the input is null
+*/
+func NullString(str string) sql.NullString {
+	if strings.ToLower(str) == "null" {
+		return sql.NullString{}
+	}
+	return sql.NullString{
+		String: str,
+		Valid:  true,
+	}
 }

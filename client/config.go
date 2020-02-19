@@ -12,7 +12,7 @@ var (
 	timeQueryDeployment string = "image-clf-inf37"
 	runtimes                   = []string{"edge", "cpu", "gpu1", "gpu2"}
 	// runtimes               = []string{"gpu1", "gpu2"}
-	NautilusRuntimes       = []string{"cpu", "gpu1", "gpu2"}
+	NautilusRuntimes       = map[string]bool{"cpu": true, "gpu1": true, "gpu2": true}
 	setupImageNums   []int = []int{33, 10}
 	// currentRuntime      string = "cpu" // cpu / gpu1 / gpu2
 	procTimeNumDP        int    = 10

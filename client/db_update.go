@@ -31,7 +31,7 @@ func AppendRecordProcessing(dbName string, runtime string, imageNum int,
 /*
 AppendRecordDeployment appends a record of (image num, duration) to Processing Time table of specific runtime
 */
-func AppendRecordDeployment(dbName string, cpu float64, gpu1 float64, gpu2 float64) error {
+func AppendRecordDeployment(dbName string, cpu string, gpu1 string, gpu2 string) error {
 	db := connectDB(username, password, dbIP, dbPort)
 	useDB(db, dbName)
 	defer db.Close()
@@ -39,7 +39,7 @@ func AppendRecordDeployment(dbName string, cpu float64, gpu1 float64, gpu2 float
 	stmt, err := db.Prepare(stmtStr)
 	defer stmt.Close()
 
-	_, err = stmt.Exec(cpu, gpu1, gpu2)
+	_, err = stmt.Exec(NullString(cpu), NullString(gpu1), NullString(gpu2))
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
@@ -50,18 +50,19 @@ func AppendRecordDeployment(dbName string, cpu float64, gpu1 float64, gpu2 float
 /*
 QueryDeploymentTimeNautilus queries the current deployment time on Nautilus for runtimes
 */
-func QueryDeploymentTimeNautilus(numGPU int64, app string) float64 {
+func QueryDeploymentTimeNautilus(numGPU int64, app string) (bool, float64) {
 	var (
-		duration float64
-		err      error
+		duration   float64
+		isDeployed bool
+		err        error
 	)
 
-	_, _, duration, err = Deploy(namespace, timeQueryDeployment, numGPU, app)
+	_, isDeployed, duration, err = Deploy(namespace, timeQueryDeployment, numGPU, app)
 
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	return duration
+	return isDeployed, duration
 }
 
 /*
@@ -71,7 +72,7 @@ func UpdateDeploymentTimeTable(app string) error {
 	var (
 		numGPU int64
 		// 0 - cpu, 1 - gpu1, 2 - gpu2
-		deploymentTimes [3]float64
+		deploymentTimes [3]string
 		err             error
 	)
 
@@ -79,7 +80,12 @@ func UpdateDeploymentTimeTable(app string) error {
 	numGPU = QueryGPUNum(namespace, timeQueryDeployment)
 	for i := 0; i < 3; i++ {
 		numGPU = (numGPU + 1) % 3
-		deploymentTimes[numGPU] = QueryDeploymentTimeNautilus(numGPU, app)
+		isDeployed, elasped := QueryDeploymentTimeNautilus(numGPU, app)
+		if isDeployed {
+			deploymentTimes[numGPU] = fmt.Sprintf("%f", elasped)
+		} else {
+			deploymentTimes[numGPU] = "null"
+		}
 	}
 	err = AppendRecordDeployment(dbName, deploymentTimes[0], deploymentTimes[1], deploymentTimes[2])
 	if err != nil {
