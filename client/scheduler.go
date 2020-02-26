@@ -5,12 +5,15 @@ Scheduler decides where to run WTB inferencing job given Pi bandwidth, number of
 package client
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"os/exec"
 	"regexp"
 	"sort"
 	"strconv"
+
+	retrygo "github.com/avast/retry-go"
 )
 
 /*
@@ -46,10 +49,18 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 	for _, runtime := range selectedRuntimes {
 		_, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
 
-		output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version)
-		runtimes[runtime] = isDeployed
-		if !isDeployed {
-			fmt.Printf("Runtime %s request was not deployed..\n", runtime)
+		retryErr := retrygo.Do(
+			func() error {
+				output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version)
+				runtimes[runtime] = isDeployed
+				if !isDeployed {
+					return errors.New("request was not deployed")
+				}
+				return nil
+			},
+		)
+		if retryErr != nil {
+			fmt.Printf("Request failed: %v ...", retryErr.Error())
 		}
 		if actTimeLog != nil {
 			actTimeLog.Transfer = transferTimes[runtime]
