@@ -26,7 +26,7 @@ import (
 RunOnNautilus sends request to Nautilus based on runtime and image number
 return output & processing time
 */
-func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
+func RunOnNautilus(runtime string, imageNum int, app string, version string, transferTime float64) ([]byte, bool, *TimeLog) {
 	var (
 		output         []byte
 		isGPUSame      bool
@@ -98,7 +98,7 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string) ([]
 		fmt.Printf("Request failed: %v ...", retryErr.Error())
 	}
 
-	return output, true, CreateTimeLog(0.0, deploymentTime, procTime)
+	return output, true, CreateTimeLog(transferTime, deploymentTime, procTime)
 }
 
 /*

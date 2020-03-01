@@ -44,14 +44,14 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 			}
 		}
 	}
-	// selectedRuntimes = append(selectedRuntimes, selectedRuntime)
+	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
 	for _, runtime := range selectedRuntimes {
 		_, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
 
 		retryErr := retrygo.Do(
 			func() error {
-				output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version)
+				output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version, transferTimes[runtime])
 				runtimes[runtime] = isDeployed
 				if !isDeployed {
 					return errors.New("request was not deployed")
@@ -78,7 +78,7 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 /*
 Request is a wrap function both for executing jobs and setting up processing time table for regression
 */
-func Request(runtime string, imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
+func Request(runtime string, imageNum int, app string, version string, transferTime float64) ([]byte, bool, *TimeLog) {
 	var (
 		output     []byte
 		isDeployed bool
@@ -90,7 +90,7 @@ func Request(runtime string, imageNum int, app string, version string) ([]byte, 
 		output, isDeployed, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
 		fmt.Printf("Running on Nautilus...%s\n", runtime)
-		output, isDeployed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
+		output, isDeployed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version, transferTime)
 	}
 	// The transfer time field is 0.0 in actTimeLog at this point
 	return output, isDeployed, actTimeLog
