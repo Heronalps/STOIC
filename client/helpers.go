@@ -5,13 +5,17 @@ This module contains all helper functions.
 package client
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
+	"math"
 	"os/exec"
 	"os/user"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/serverhorror/rog-go/reverse"
 )
@@ -99,14 +103,22 @@ func Extrapolate(runtime string, imageNum int, app string, version string) float
 /*
 GetTransferTime calculates the transfer time from Sedgwick reserve to Mayhem cloud to Nautilus
 */
-func GetTransferTime(imageNum int) float64 {
+func GetTransferTime(imageNum int) map[string]float64 {
+	transferTimes := make(map[string]float64)
 	// Convert megabits to megabytes
 	bandwidth := GetBandWidth() / 8.0
 	// Average JPG image size of 1920 * 1080 = 0.212 MB
 	JPGSize := 212 * 1e-3
 
 	transferTime := float64(imageNum) * JPGSize / bandwidth
-	return transferTime
+	for runtime := range runtimes {
+		if runtime == "edge" {
+			transferTimes[runtime] = 0.0
+		} else {
+			transferTimes[runtime] = transferTime
+		}
+	}
+	return transferTimes
 }
 
 /*
@@ -120,7 +132,11 @@ func GetDeploymentTime(runtime string) map[string]float64 {
 	if runtime != "" {
 		selectedRuntimes = []string{runtime}
 	} else {
-		selectedRuntimes = runtimes
+		for runtime, isAvail := range runtimes {
+			if isAvail {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
+		}
 	}
 
 	for _, runtime := range selectedRuntimes {
@@ -147,11 +163,16 @@ func GetProcTime(imageNum int, app string, version string, runtime string) map[s
 	if runtime != "" {
 		selectedRuntimes = []string{runtime}
 	} else {
-		selectedRuntimes = runtimes
+		for runtime, isAvail := range runtimes {
+			if isAvail {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
+		}
 	}
 	for i := 0; i < len(selectedRuntimes); i++ {
 		procTimes[selectedRuntimes[i]] = Extrapolate(selectedRuntimes[i], imageNum, app, version)
 	}
+	fmt.Printf("ProcTime: %v..\n", procTimes)
 	return procTimes
 }
 
@@ -162,10 +183,9 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 	var (
 		selectedRuntimes []string
 	)
-	transferTime := GetTransferTime(imageNum)
+	transferTimes := GetTransferTime(imageNum)
 	procTimes := GetProcTime(imageNum, app, version, runtime)
 	deploymentTimes := GetDeploymentTime(runtime)
-
 	totalTimes := make(map[float64]string)
 	timeLogs := make(map[string]*TimeLog)
 
@@ -173,12 +193,16 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 	if runtime != "" {
 		selectedRuntimes = []string{runtime}
 	} else {
-		selectedRuntimes = runtimes
+		for runtime, isAvail := range runtimes {
+			if isAvail {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
+		}
 	}
 	for i := 0; i < len(selectedRuntimes); i++ {
-		runtime := selectedRuntimes[i]
-		totalTimes[procTimes[runtime]+transferTime+deploymentTimes[runtime]] = runtime
-		timeLogs[runtime] = CreateTimeLog(transferTime, deploymentTimes[runtime], procTimes[runtime])
+		currRuntime := selectedRuntimes[i]
+		totalTimes[transferTimes[currRuntime]+deploymentTimes[currRuntime]+procTimes[currRuntime]] = currRuntime
+		timeLogs[currRuntime] = CreateTimeLog(transferTimes[currRuntime], deploymentTimes[currRuntime], procTimes[currRuntime])
 	}
 	return totalTimes, timeLogs
 }
@@ -187,7 +211,7 @@ func GetTotalTime(imageNum int, app string, version string, runtime string) (map
 ParseElapsed capture time in output
 */
 func ParseElapsed(output []byte) float64 {
-	re := regexp.MustCompile(`Time without model loading (\d*\.\d*)`)
+	re := regexp.MustCompile(`Time with model loading (\d*\.\d*)`)
 	// []byte - elapsed time of task
 	elapsed := re.FindSubmatch(output)
 	if len(elapsed) == 0 {
@@ -211,6 +235,46 @@ func Average(arr []float64) float64 {
 		total += value
 	}
 	return total / float64(len(arr))
+}
+
+/*
+Median returns the median of an array of float numbers
+*/
+func Median(arr []float64) float64 {
+	sort.Float64s(arr)
+	mid := len(arr) / 2
+	if len(arr)%2 == 0 {
+		return (arr[mid-1] + arr[mid]) / 2
+	}
+	return arr[mid]
+}
+
+/*
+GetWindowSize calculates the optimal window size for median of deployment time
+*/
+func GetWindowSize(runtime string) int {
+	deploymentTimes := QueryDeploymentTimeSeries(runtime)
+
+	// The minimum of maxWinSize and length of deploymentTimes is the length of MAE array
+	minWin := 0
+	minMAE := math.MaxFloat64
+	for winSize := 1; winSize < Min(maxWinSize, len(deploymentTimes)); winSize++ {
+		// Guard deploymentTimes length is less than maxWinSize
+		length := len(deploymentTimes) - winSize
+		totalAbsErr := 0.0
+		for idx := 0; idx < length; idx++ {
+			pred := Median(deploymentTimes[idx : idx+winSize])
+			// pred := Average(deploymentTimes[idx : idx+winSize])
+			totalAbsErr += math.Abs(pred - deploymentTimes[idx+winSize])
+
+		}
+		currMAE := totalAbsErr / float64(length)
+		if currMAE < minMAE {
+			minMAE = currMAE
+			minWin = winSize
+		}
+	}
+	return minWin
 }
 
 /*
@@ -279,5 +343,56 @@ func LogTimes(imageNum int, app string, version string, runtime string, predTime
 		AppendRecordLogTime(imageNum, app, version, runtime,
 			predTimeLog.Total, predTimeLog.Transfer, predTimeLog.Deployment, predTimeLog.Processing,
 			actTimeLog.Total, actTimeLog.Transfer, actTimeLog.Deployment, actTimeLog.Processing)
+	}
+}
+
+/*
+UpdateWindowSizes updates optimal window sizes
+*/
+func UpdateWindowSizes() {
+	//ts1 := time.Now()
+	for runtime := range runtimes {
+		if runtime != "edge" {
+			windowSizes[runtime] = GetWindowSize(runtime)
+		}
+	}
+	//fmt.Println(time.Now().Sub(ts1))
+}
+
+/*
+StartInquisitor starts inquisitor
+*/
+func StartInquisitor(winSizeInterval int, app string, interval int) {
+	for {
+		// Update window size first to overwrite the default window size
+		UpdateWindowSizes()
+		for i := 0; i < winSizeInterval; i++ {
+			UpdateDeploymentTimeTable(app)
+			fmt.Println("Waiting for next round ...")
+			time.Sleep(time.Second * time.Duration(interval))
+		}
+	}
+}
+
+/*
+Min function returns the minimum between two integers
+*/
+func Min(a int, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+/*
+NullString returns sql NullString if the input is null
+*/
+func NullString(str string) sql.NullString {
+	if strings.ToLower(str) == "null" {
+		return sql.NullString{}
+	}
+	return sql.NullString{
+		String: str,
+		Valid:  true,
 	}
 }

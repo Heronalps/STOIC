@@ -3,8 +3,10 @@ package test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/heronalps/STOIC/client"
+	"github.com/heronalps/STOIC/server"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -34,9 +36,15 @@ func TestCompareVersion(t *testing.T) {
 }
 
 func TestRunOnNautilus(t *testing.T) {
-	output, elapsed, _ := client.RunOnNautilus(runtime, imageNum, app, version)
-	fmt.Printf("Output : %v..\n", output)
-	fmt.Printf("Elapsed : %v..\n", elapsed)
+	output, _, timeLog := client.RunOnNautilus(runtime, imageNum, app, version)
+	fmt.Printf("Output : %v..\n", string(output))
+	assert.NotNil(t, timeLog)
+}
+
+func TestRunOnEdge(t *testing.T) {
+	output, _, timeLog := client.RunOnEdge(imageNum, app, version)
+	fmt.Printf("Output : %v..\n", string(output))
+	assert.NotNil(t, timeLog)
 }
 
 func TestLogTimes(t *testing.T) {
@@ -53,4 +61,34 @@ func TestLogTimes(t *testing.T) {
 		Processing: 2.0,
 	}
 	client.LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
+}
+
+func TestMedian(t *testing.T) {
+	assert.Equal(t, 0.2, client.Median([]float64{0.1, 0.2, 0.3}))
+	assert.Equal(t, 0.25, client.Median([]float64{0.1, 0.2, 0.3, 0.4}))
+}
+
+func TestGetWindowSize(t *testing.T) {
+	optWinSize := client.GetWindowSize(runtime)
+	fmt.Println(optWinSize)
+}
+
+func TestUpdateWindowSizes(t *testing.T) {
+	client.UpdateWindowSizes()
+}
+
+func TestImageCache(t *testing.T) {
+	num := server.ImageCache()
+	fmt.Println(time.Now().UnixNano())
+	fmt.Println(time.Now())
+	fmt.Println(num)
+}
+
+func TestGenerateWorkLoad(t *testing.T) {
+	workload := server.GenerateWorkLoad(6700)
+	fmt.Println(workload)
+}
+
+func TestServerWorkload(t *testing.T) {
+	fmt.Println(server.Workload[223])
 }

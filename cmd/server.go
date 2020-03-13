@@ -15,9 +15,9 @@ var (
 	imageNum       int
 	batch          int
 	preset         bool
-	index          int
-	randomSize     []int = []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93,
-		20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
+	index          int = 222
+	// randomSize     []int = []int{33, 20, 59, 10, 75, 17, 37, 132, 26, 49, 10, 93,
+	// 	20, 47, 66, 62, 23, 35, 63, 18, 132, 24, 75, 22}
 
 	serverCmd = &cobra.Command{
 		Use:   "server",
@@ -34,11 +34,12 @@ var (
 				// image flag has high precedence than preset
 				if presetImageNum == 0 {
 					if preset {
-						imageNum = randomSize[index]
+						imageNum = server.Workload[index]
+						fmt.Printf("index : %v ..\n", index)
 						index++
-						if index >= len(randomSize) {
-							os.Exit(0)
-						}
+						// if index >= len(server.Workload)/30 {
+						// 	os.Exit(0)
+						// }
 					} else {
 						imageNum = server.ImageCache()
 					}

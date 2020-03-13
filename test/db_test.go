@@ -55,7 +55,12 @@ func TestAppendRecordProcessing(t *testing.T) {
 }
 
 func TestAppendRecordDeployment(t *testing.T) {
-	err = client.AppendRecordDeployment(dbName, 1.1, 1.2, 1.3)
+	// err = client.AppendRecordDeployment(dbName, "1.1", "1.2", "1.3")
+	// if err != nil {
+	// 	t.Errorf("TestAppendRecord...\n")
+	// 	t.Errorf("The record was not appended...\n")
+	// }
+	err = client.AppendRecordDeployment(dbName, "null", "1.2", "1.3")
 	if err != nil {
 		t.Errorf("TestAppendRecord...\n")
 		t.Errorf("The record was not appended...\n")
@@ -64,7 +69,7 @@ func TestAppendRecordDeployment(t *testing.T) {
 
 func TestQueryDeploymentTimeNautilus(t *testing.T) {
 	var deploymentTime interface{}
-	deploymentTime = client.QueryDeploymentTimeNautilus(1, app)
+	_, deploymentTime = client.QueryDeploymentTimeNautilus(1, app)
 	defer client.QueryDeploymentTimeNautilus(0, app)
 
 	duration, ok := deploymentTime.(float64)

@@ -5,10 +5,15 @@ Scheduler decides where to run WTB inferencing job given Pi bandwidth, number of
 package client
 
 import (
+	"errors"
 	"fmt"
-	exec "os/exec"
+	"math"
+	"os/exec"
+	"regexp"
 	"sort"
 	"strconv"
+
+	retrygo "github.com/avast/retry-go"
 )
 
 /*
@@ -16,38 +21,55 @@ Schedule is the entry point of Scheduler.
 Parameter: runtime is the preset runtime. If it's empty string, SelectRunTime will select one.
 Return: runtime for appending processing time to corresponding table
 */
-func Schedule(runtime string, imageNum int, app string, version string) []byte {
+func Schedule(runtime string, imageNum int, app string, version string, all bool) []byte {
 	var (
-		elapsed         float64
-		transferTime    float64
-		output          []byte
-		selectedRuntime string
-		predTimeLog     *TimeLog
-		actTimeLog      *TimeLog
+		output     []byte
+		actTimeLog *TimeLog
+		isDeployed bool
 	)
+	transferTimes := GetTransferTime(imageNum)
 
-	transferTime = GetTransferTime(imageNum)
+	// Redefine the selected runtime every selection
+	selectedRuntimes := []string{}
+	selectedRuntime, predTimeLog := SelectRunTime(imageNum, app, version, runtime)
+	fmt.Printf("The task is scheduled at %s \n", selectedRuntime)
 	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
-	fmt.Printf("The batch of %d images needs %f seconds to transfer\n", imageNum, transferTime)
+	fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
+		imageNum, transferTimes[selectedRuntime], selectedRuntime)
 
-	selectedRuntime, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
-	// Update current runtime to accurately estimate deployment time
-	// if _, found := NautilusRuntimes[selectedRuntime]; found {
-	// 	currentRuntime = selectedRuntime
-	// }
-
-	output, elapsed, actTimeLog = Request(selectedRuntime, imageNum, app, version)
-	if predTimeLog != nil {
-		predTimeLog.Transfer = transferTime
+	if all {
+		for runtime, isAvail := range runtimes {
+			if isAvail {
+				selectedRuntimes = append(selectedRuntimes, runtime)
+			}
+		}
 	}
-	if actTimeLog != nil {
-		actTimeLog.Transfer = transferTime
-	}
+	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
-	if elapsed != 0.0 {
-		AppendRecordProcessing(dbName, selectedRuntime, imageNum, elapsed, app, version)
-		//For setup regressions, the prediction is based on preset coef & intercept
-		LogTimes(imageNum, app, version, selectedRuntime, predTimeLog, actTimeLog)
+	for _, runtime := range selectedRuntimes {
+		_, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
+
+		retryErr := retrygo.Do(
+			func() error {
+				output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version, transferTimes[runtime])
+				runtimes[runtime] = isDeployed
+				if !isDeployed {
+					return errors.New("request was not deployed")
+				}
+				return nil
+			},
+		)
+		if retryErr != nil {
+			fmt.Printf("Request failed: %v ...", retryErr.Error())
+		}
+		if actTimeLog != nil {
+			actTimeLog.Transfer = transferTimes[runtime]
+		}
+		if actTimeLog != nil && actTimeLog.Processing != 0.0 {
+			AppendRecordProcessing(dbName, runtime, imageNum, actTimeLog.Processing, app, version)
+			//For setup regressions, the prediction is based on preset coef & intercept
+			LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
+		}
 	}
 
 	return output
@@ -56,31 +78,34 @@ func Schedule(runtime string, imageNum int, app string, version string) []byte {
 /*
 Request is a wrap function both for executing jobs and setting up processing time table for regression
 */
-func Request(runtime string, imageNum int, app string, version string) ([]byte, float64, *TimeLog) {
+func Request(runtime string, imageNum int, app string, version string, transferTime float64) ([]byte, bool, *TimeLog) {
 	var (
 		output     []byte
-		elapsed    float64
+		isDeployed bool
 		actTimeLog *TimeLog
 	)
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		output, elapsed, actTimeLog = RunOnEdge(imageNum, app, version)
+		output, isDeployed, actTimeLog = RunOnEdge(imageNum, app, version)
 	default:
-		fmt.Println("Running on Nautilus...")
-		output, elapsed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version)
+		fmt.Printf("Running on Nautilus...%s\n", runtime)
+		output, isDeployed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version, transferTime)
 	}
-	return output, elapsed, actTimeLog
+	// The transfer time field is 0.0 in actTimeLog at this point
+	return output, isDeployed, actTimeLog
 }
 
 /*
 SelectRunTime select the runtime among four scenarios
 */
 func SelectRunTime(imageNum int, app string, version string, runtime string) (string, *TimeLog) {
-
+	var (
+		selectedRuntime string = runtime
+	)
 	// If the runtime is manually set, the results only have preset runtime
-	totalTimes, predTimeLog := GetTotalTime(imageNum, app, version, runtime)
-	fmt.Println(totalTimes)
+	totalTimes, predTimeLogMap := GetTotalTime(imageNum, app, version, runtime)
+	fmt.Printf("totalTime: %v..\n", totalTimes)
 
 	// Sort the totalTimes map by key
 	keys := make([]float64, 0, len(totalTimes))
@@ -88,19 +113,23 @@ func SelectRunTime(imageNum int, app string, version string, runtime string) (st
 		keys = append(keys, k)
 	}
 	sort.Float64s(keys)
-	selectedRuntime := totalTimes[keys[0]]
-	fmt.Printf("The task is scheduled at %s for %f seconds\n", selectedRuntime, keys[0])
-	return selectedRuntime, predTimeLog[selectedRuntime]
+	if !math.IsNaN(keys[0]) {
+		selectedRuntime = totalTimes[keys[0]]
+	}
+
+	// fmt.Printf("The task is scheduled at %s for %f seconds\n", selectedRuntime, keys[0])
+	return selectedRuntime, predTimeLogMap[selectedRuntime]
 }
 
 /*
 RunOnEdge runs the task on mini edge cloud with AVX support
 */
-func RunOnEdge(imageNum int, app string, version string) ([]byte, float64, *TimeLog) {
+func RunOnEdge(imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
 	var (
-		output []byte
-		err    error
-		cmd    *exec.Cmd
+		output     []byte
+		err        error
+		cmd        *exec.Cmd
+		isDeployed bool
 	)
 	repoPATH := HomeDir() + "/GPU_Serverless"
 
@@ -113,10 +142,35 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, float64, *Time
 	output, err = cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running task. msg: %s \n", err.Error())
-		return output, 0, nil
+		return output, isDeployed, nil
 	}
-	fmt.Printf("Output of task %s\n", string(output))
-	procTime := ParseElapsed(output)
-
-	return output, ParseElapsed(output), CreateTimeLog(0.0, 0.0, procTime)
+	//fmt.Printf("Output of task %s\n", string(output))
+	re := regexp.MustCompile(`Time with model.*`)
+	lastline := re.Find(output)
+	// fmt.Printf("lastline : %s..\n", lastline)
+	return lastline, true, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
 }
+
+/*
+RunOnEdge runs the task on mini edge cloud with AVX support
+*/
+// func RunOnEdge(imageNum int, app string, version string) ([]byte, *TimeLog) {
+// 	var (
+// 		output []byte
+// 		err    error
+// 		cmd    *exec.Cmd
+// 	)
+
+// 	// Run WTB image classification task
+
+// 	cmdRun := fmt.Sprintf("%s sh %s %d", minikubeConfig, invokeFile, imageNum)
+// 	cmd = exec.Command("bash", "-c", cmdRun)
+// 	fmt.Printf("Start running task %s version %s on %d images on Edge.. \n", app, version, imageNum)
+// 	if output, err = cmd.Output(); err != nil {
+// 		fmt.Printf("Error running task. msg: %s \n", err.Error())
+// 		return output, nil
+// 	}
+// 	fmt.Printf("Output of task %s\n", string(output))
+
+// 	return output, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
+// }

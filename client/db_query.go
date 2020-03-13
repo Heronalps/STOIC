@@ -66,7 +66,42 @@ func QueryDeploymentTime(runtime string) float64 {
 	useDB(db, dbName)
 	defer db.Close()
 	// LIMIT 1 => Latest deployment time
-	// LIMIT numDP => average on 10 latest deployment time
+	// LIMIT numDP => median on 10 latest deployment time
+	queryStr := fmt.Sprintf("SELECT %s from DeploymentTime ORDER BY deployment_id DESC LIMIT ?", runtime)
+	rows, err := db.Query(queryStr, windowSizes[runtime])
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var deploymentTime float64
+		if err := rows.Scan(&deploymentTime); err != nil {
+			fmt.Println(err.Error())
+		}
+		deploymentTimes = append(deploymentTimes, deploymentTime)
+	}
+	if len(deploymentTimes) == 0 {
+		return defaultDeployTimes[runtime]
+	}
+	//fmt.Printf("deployment time : %f \n", deploymentTime)
+	//return Average(deploymentTimes)
+	return Median(deploymentTimes)
+
+}
+
+/*
+QueryDeploymentTimeSeries queries a series of deployment time of specific runtime
+*/
+func QueryDeploymentTimeSeries(runtime string) []float64 {
+	var (
+		deploymentTimes []float64
+	)
+
+	db := connectDB(username, password, dbIP, dbPort)
+	useDB(db, dbName)
+	defer db.Close()
 	queryStr := fmt.Sprintf("SELECT %s from DeploymentTime ORDER BY deployment_id DESC LIMIT ?", runtime)
 	rows, err := db.Query(queryStr, deploymentTimeNumDP)
 	if err != nil {
@@ -81,8 +116,7 @@ func QueryDeploymentTime(runtime string) float64 {
 		}
 		deploymentTimes = append(deploymentTimes, deploymentTime)
 	}
-	//fmt.Printf("deployment time : %f \n", deploymentTime)
-	return Average(deploymentTimes)
+	return deploymentTimes
 }
 
 /*
