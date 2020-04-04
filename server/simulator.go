@@ -6,9 +6,12 @@ package server
 
 import (
 	"encoding/gob"
+	"log"
 	"math"
 	"math/rand"
 	"os"
+	"path/filepath"
+	"regexp"
 	"time"
 )
 
@@ -45,11 +48,29 @@ func GenerateWorkLoad(length int) []int {
 RegisterImages persist a map to file system to register the mapping
 from picture sequence number to file name
 */
-func RegisterImages(path string) {
-	registryMap := make(map[string]string)
-	registryMap["abc"] = "def"
+func RegisterImages(rootPath string) {
+	var (
+		seqNo int32 = 1
+	)
+	registryMap := make(map[int32]string)
+	re := regexp.MustCompile(`.*\.jpg`)
+	err := filepath.Walk(rootPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		// fmt.Printf("path : %s \n", path)
+		// fmt.Printf("seqNo : %v \n", seqNo)
+		if match := re.FindString(path); len(match) > 0 {
+			registryMap[seqNo] = path
+			seqNo++
+		}
+		return nil
+	})
+	if err != nil {
+		log.Println(err)
+	}
 
-	registryFile, err := os.Create(path + "/registryMap.gob")
+	registryFile, err := os.Create(rootPath + "/registryMap.gob")
 	if err != nil {
 		panic(err)
 	}

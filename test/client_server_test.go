@@ -96,16 +96,17 @@ func TestServerWorkload(t *testing.T) {
 }
 
 func TestRegisterImages(t *testing.T) {
-	server.RegisterImages(".")
-	decodeFile, err := os.Open("./registryMap.gob")
+	path := "/Users/michaelzhang/Downloads/WTB_samples"
+	server.RegisterImages(path)
+	decodeFile, err := os.Open(path + "/registryMap.gob")
 	if err != nil {
 		panic(err)
 	}
 	defer decodeFile.Close()
 
 	decoder := gob.NewDecoder(decodeFile)
-	registryMap := make(map[string]string)
+	registryMap := make(map[int32]string)
 
 	decoder.Decode(&registryMap)
-	fmt.Println(registryMap)
+	//fmt.Println(registryMap)
 }
