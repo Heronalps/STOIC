@@ -97,7 +97,7 @@ func TestServerWorkload(t *testing.T) {
 
 func TestRegisterImages(t *testing.T) {
 	path := "/Users/michaelzhang/Downloads/WTB_samples"
-	server.RegisterImages(path)
+	//server.RegisterImages(path)
 	decodeFile, err := os.Open(path + "/registryMap.gob")
 	if err != nil {
 		panic(err)

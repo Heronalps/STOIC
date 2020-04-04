@@ -32,6 +32,10 @@ sh StartServer.sh
 ./stoic run server --ip=127.0.0.1 --port=5001 --runtime=gpu2 --batch=3 --image=32 --preset=true
 ```
 
+```bash
+./stoic register -r "root-path-to-images"
+```
+
 * MySQL remove sudo for mysql -u root -p
 
 Login with sudo:
