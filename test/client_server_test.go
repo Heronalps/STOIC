@@ -1,7 +1,9 @@
 package test
 
 import (
+	"encoding/gob"
 	"fmt"
+	"os"
 	"testing"
 	"time"
 
@@ -36,7 +38,7 @@ func TestCompareVersion(t *testing.T) {
 }
 
 func TestRunOnNautilus(t *testing.T) {
-	output, _, timeLog := client.RunOnNautilus(runtime, imageNum, app, version)
+	output, _, timeLog := client.RunOnNautilus(runtime, imageNum, app, version, transferTime)
 	fmt.Printf("Output : %v..\n", string(output))
 	assert.NotNil(t, timeLog)
 }
@@ -91,4 +93,19 @@ func TestGenerateWorkLoad(t *testing.T) {
 
 func TestServerWorkload(t *testing.T) {
 	fmt.Println(server.Workload[223])
+}
+
+func TestRegisterImages(t *testing.T) {
+	server.RegisterImages(".")
+	decodeFile, err := os.Open("./registryMap.gob")
+	if err != nil {
+		panic(err)
+	}
+	defer decodeFile.Close()
+
+	decoder := gob.NewDecoder(decodeFile)
+	registryMap := make(map[string]string)
+
+	decoder.Decode(&registryMap)
+	fmt.Println(registryMap)
 }

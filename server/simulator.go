@@ -5,8 +5,10 @@ Simulator module simulate the camera and Pi zero, and output images periodically
 package server
 
 import (
+	"encoding/gob"
 	"math"
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -37,4 +39,24 @@ func GenerateWorkLoad(length int) []int {
 		arr[i] = ImageCache()
 	}
 	return arr
+}
+
+/*
+RegisterImages persist a map to file system to register the mapping
+from picture sequence number to file name
+*/
+func RegisterImages(path string) {
+	registryMap := make(map[string]string)
+	registryMap["abc"] = "def"
+
+	registryFile, err := os.Create(path + "/registryMap.gob")
+	if err != nil {
+		panic(err)
+	}
+
+	encoder := gob.NewEncoder(registryFile)
+	if err := encoder.Encode(registryMap); err != nil {
+		panic(err)
+	}
+	registryFile.Close()
 }
