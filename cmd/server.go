@@ -41,7 +41,7 @@ var (
 						// 	os.Exit(0)
 						// }
 					} else {
-						imageNum = server.ImageCache()
+						imageNum = server.BatchSize()
 					}
 				} else {
 					imageNum = presetImageNum

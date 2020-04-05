@@ -79,8 +79,8 @@ func TestUpdateWindowSizes(t *testing.T) {
 	client.UpdateWindowSizes()
 }
 
-func TestImageCache(t *testing.T) {
-	num := server.ImageCache()
+func TestBatchSize(t *testing.T) {
+	num := server.BatchSize()
 	fmt.Println(time.Now().UnixNano())
 	fmt.Println(time.Now())
 	fmt.Println(num)
@@ -97,7 +97,7 @@ func TestServerWorkload(t *testing.T) {
 
 func TestRegisterImages(t *testing.T) {
 	path := "/Users/michaelzhang/Downloads/WTB_samples"
-	//server.RegisterImages(path)
+	server.RegisterImages(path)
 	decodeFile, err := os.Open(path + "/registryMap.gob")
 	if err != nil {
 		panic(err)
@@ -105,8 +105,18 @@ func TestRegisterImages(t *testing.T) {
 	defer decodeFile.Close()
 
 	decoder := gob.NewDecoder(decodeFile)
-	registryMap := make(map[int32]string)
+	registryMap := make(map[int]string)
 
 	decoder.Decode(&registryMap)
 	//fmt.Println(registryMap)
+}
+
+func TestGenerateBatch(t *testing.T) {
+	server.GenerateBatch()
+}
+
+func TestCopyFile(t *testing.T) {
+	source := "/Users/michaelzhang/Downloads/WTB_samples/time_lapse/Main_2013-07-30_10:43:56_17411_12-398.jpg"
+	target := "/Users/michaelzhang/Downloads/test.jpg"
+	server.CopyFile(source, target)
 }
