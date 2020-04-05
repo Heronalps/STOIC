@@ -5,6 +5,7 @@ Simulator module simulate the camera and Pi zero, and output images periodically
 package server
 
 import (
+	"archive/zip"
 	"encoding/gob"
 	"io"
 	"log"
@@ -60,8 +61,6 @@ func RegisterImages(rootPath string) {
 		if err != nil {
 			return err
 		}
-		// fmt.Printf("path : %s \n", path)
-		// fmt.Printf("seqNo : %v \n", seqNo)
 		if match := re.FindString(path); len(match) > 0 {
 			registryMap[seqNo] = path
 			seqNo++
@@ -92,18 +91,20 @@ GenerateBatch generates a batch of images randomly selected from 3 volumes /opt 
 */
 func GenerateBatch() string {
 	var (
-		registryPath string
+		rootPath string
+		files    []string
 	)
 	// Select volume
 	switch volumnNo := rand.Intn(3); volumnNo {
 	case 0:
-		registryPath = "/opt/registryMap.gob"
+		rootPath = "/opt"
 	case 1:
-		registryPath = "/opt2/registryMap.gob"
+		rootPath = "/opt2"
 	case 2:
-		registryPath = "/opt3/registryMap.gob"
+		rootPath = "/opt3"
 	}
-	registryPath = "/Users/michaelzhang/Downloads/WTB_samples/registryMap.gob"
+	rootPath = "/Users/michaelzhang/Downloads/WTB_samples"
+	registryPath := rootPath + "/registryMap.gob"
 
 	// Decode registry map
 	decodeFile, err := os.Open(registryPath)
@@ -119,11 +120,18 @@ func GenerateBatch() string {
 	// Subtract the maximum batch size to ensure enough images following seqNo
 	seqNo := rand.Intn(len(registryMap) - 200)
 	batchSize := BatchSize()
-	for idx := seqNo; idx < seqNo+batchSize; idx++ {
 
+	// Copy to local buffer dir
+	for idx := seqNo; idx < seqNo+batchSize; idx++ {
+		files = append(files, registryMap[idx])
+	}
+	zipPath := rootPath + "/image_batch.zip"
+	// package the batch
+	if err := ZipFiles(zipPath, files); err != nil {
+		panic(err)
 	}
 
-	return ""
+	return zipPath
 }
 
 /*
@@ -147,4 +155,63 @@ func CopyFile(source string, target string) bool {
 		return false
 	}
 	return true
+}
+
+/*
+ZipFiles compresses one or many files into one zip archive file
+*/
+func ZipFiles(zipName string, files []string) error {
+	newZipFile, err := os.Create(zipName)
+	if err != nil {
+		return err
+	}
+	defer newZipFile.Close()
+
+	zipWriter := zip.NewWriter(newZipFile)
+	defer zipWriter.Close()
+
+	// Add files to zip
+	for _, file := range files {
+		if err = AddFileToZip(zipWriter, file); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+/*
+AddFileToZip adds seperate files to zip archive package
+*/
+func AddFileToZip(zipWriter *zip.Writer, filename string) error {
+
+	fileToZip, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer fileToZip.Close()
+
+	// Get the file information
+	info, err := fileToZip.Stat()
+	if err != nil {
+		return err
+	}
+
+	header, err := zip.FileInfoHeader(info)
+	if err != nil {
+		return err
+	}
+
+	// Using FileInfoHeader() above only uses the basename of the file. If we want
+	// to preserve the folder structure we can overwrite this with the full path.
+	// header.Name = filename
+
+	// Change to deflate to gain better compression
+	header.Method = zip.Deflate
+
+	writer, err := zipWriter.CreateHeader(header)
+	if err != nil {
+		return err
+	}
+	_, err = io.Copy(writer, fileToZip)
+	return err
 }

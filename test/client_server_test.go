@@ -108,11 +108,12 @@ func TestRegisterImages(t *testing.T) {
 	registryMap := make(map[int]string)
 
 	decoder.Decode(&registryMap)
-	//fmt.Println(registryMap)
+	fmt.Println(registryMap)
 }
 
 func TestGenerateBatch(t *testing.T) {
-	server.GenerateBatch()
+	path := server.GenerateBatch()
+	fmt.Println(path)
 }
 
 func TestCopyFile(t *testing.T) {
