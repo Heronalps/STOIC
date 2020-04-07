@@ -4,7 +4,6 @@ package client
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +12,11 @@ import (
 	"strconv"
 	"strings"
 )
+
+/*
+BUFFERSIZE is the buffer size of the TCP socket
+*/
+const BUFFERSIZE = 1024
 
 /*
 SocketClient listens to the task request from the server
@@ -39,52 +43,46 @@ func SocketClient(port int, runtime string, app string, version string, all bool
 
 func handler(conn net.Conn, runtime string, app string, version string, all bool) {
 	defer conn.Close()
-	var (
-		reader   = bufio.NewReader(conn)
-		writer   = bufio.NewWriter(conn)
-		buf      = make([]byte, 1024)
-		imageNum int
-		data     bytes.Buffer
-	)
-ILOOP:
-	for {
-		n, err := reader.Read(buf)
-		data.Write(buf[:n])
-		switch err {
-		case io.EOF:
-			break ILOOP
-		case nil:
-			if err != nil {
-				log.Println(err.Error())
-				continue
-			}
-			if isTransportOver(data.String()) {
-				// fmt.Printf("data :%sEOF \n", data.String())
-				dataSlice := strings.Split(data.String(), " ")
-				imageNum, err = strconv.Atoi(dataSlice[0])
+	writer := bufio.NewWriter(conn)
 
-				// fmt.Printf("runtime: %s \n", runtime)
-				// fmt.Printf("imageNum: %d \n", imageNum)
-				break ILOOP
-			}
-		default:
-			log.Fatalf("Receive data failed:%s", err)
-			return
-		}
+	bufferFileName := make([]byte, 64)
+	bufferFileSize := make([]byte, 10)
+
+	conn.Read(bufferFileSize)
+	// base 10, bitsize 64 => int64
+	fileSize, _ := strconv.ParseInt(strings.Trim(string(bufferFileSize), ":"), 10, 64)
+
+	conn.Read(bufferFileName)
+	fileName := strings.Trim(string(bufferFileName), ":")
+
+	newFile, err := os.Create(fileName)
+
+	if err != nil {
+		panic(err)
 	}
-	// TODO : Add lock to avoid race condition on kubeless function
-	// It requires checking kubeless process and
-	// write back to server socket if the kubeless function is available
 
-	output := Schedule(runtime, imageNum, app, version, all)
+	defer newFile.Close()
+	var receivedBytes int64
+
+	for {
+		if (fileSize - receivedBytes) < BUFFERSIZE {
+			// Copy the last piece of the file from the connection
+			io.CopyN(newFile, conn, (fileSize - receivedBytes))
+			// Flush the network connection buffer
+			// (receivedBytes + BUFFERSIZE)-fileSize is the total bytes of the file
+			conn.Read(make([]byte, (receivedBytes+BUFFERSIZE)-fileSize))
+			break
+		}
+		io.CopyN(newFile, conn, BUFFERSIZE)
+		receivedBytes += BUFFERSIZE
+	}
+	fmt.Println("Done receiving file...")
+
+	// Parameterize Schedule with zip filename
+
+	output := Schedule(runtime, 50, app, version, all)
 
 	writer.Write(output)
 	writer.Flush()
 	fmt.Println("Sent output to server...")
-}
-
-func isTransportOver(data string) (over bool) {
-	StopCharacter := " #"
-	over = strings.HasSuffix(data, StopCharacter)
-	return
 }

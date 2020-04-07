@@ -112,7 +112,7 @@ func TestRegisterImages(t *testing.T) {
 }
 
 func TestGenerateBatch(t *testing.T) {
-	path := server.GenerateBatch()
+	path := server.GenerateBatch(0, 1)
 	fmt.Println(path)
 }
 

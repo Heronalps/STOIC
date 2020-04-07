@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"time"
 )
 
@@ -89,10 +90,11 @@ GenerateBatch generates a batch of images randomly selected from 3 volumes /opt 
 2. select corresponding pictures, cache at a local dir and package them
 3. Return the path string to the server socket that sends the package to edge server
 */
-func GenerateBatch() string {
+func GenerateBatch(imageNum int, batchNo int) string {
 	var (
-		rootPath string
-		files    []string
+		rootPath  string
+		files     []string
+		batchSize int
 	)
 	// Select volume
 	switch volumnNo := rand.Intn(3); volumnNo {
@@ -118,14 +120,21 @@ func GenerateBatch() string {
 
 	decoder.Decode(&registryMap)
 	// Subtract the maximum batch size to ensure enough images following seqNo
+	rand.Seed(time.Now().UnixNano())
 	seqNo := rand.Intn(len(registryMap) - 200)
-	batchSize := BatchSize()
+
+	// Override batchSize if image number is set
+	if imageNum == 0 {
+		batchSize = BatchSize()
+	} else {
+		batchSize = imageNum
+	}
 
 	// Copy to local buffer dir
 	for idx := seqNo; idx < seqNo+batchSize; idx++ {
 		files = append(files, registryMap[idx])
 	}
-	zipPath := rootPath + "/image_batch.zip"
+	zipPath := rootPath + "/image_batch_" + strconv.Itoa(batchNo) + ".zip"
 	// package the batch
 	if err := ZipFiles(zipPath, files); err != nil {
 		panic(err)

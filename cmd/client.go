@@ -9,7 +9,6 @@ import (
 var (
 	runtime    string
 	app        string
-	inqApp     string
 	version    string
 	allRuntime bool
 	clientCmd  = &cobra.Command{
@@ -30,7 +29,4 @@ func init() {
 	clientCmd.Flags().StringVar(&app, "app", "image-clf-inf", "The ML application")
 	clientCmd.Flags().StringVar(&version, "version", "1.0", "The version of application")
 	clientCmd.Flags().BoolVar(&allRuntime, "all", false, "Send request to all runtime for experiment")
-	clientCmd.Flags().StringVar(&inqApp, "inqApp", "image-clf-inf37", "The ML application")
-	clientCmd.Flags().IntVarP(&interval, "interval", "i", 120, "The interval of inquire deployment time on Nautilus")
-	clientCmd.Flags().IntVarP(&winSizeInterval, "winInt", "w", 100, "The number of deployments between every two window size calibrations")
 }
