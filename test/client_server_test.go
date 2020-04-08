@@ -96,19 +96,24 @@ func TestServerWorkload(t *testing.T) {
 }
 
 func TestRegisterImages(t *testing.T) {
-	path := "/Users/michaelzhang/Downloads/WTB_samples"
-	server.RegisterImages(path)
-	decodeFile, err := os.Open(path + "/registryMap.gob")
-	if err != nil {
-		panic(err)
+	var paths [3]string
+	paths[0] = "/opt"
+	paths[1] = "/opt2"
+	paths[2] = "/opt3"
+	for _, path := range paths {
+		server.RegisterImages(path)
+		decodeFile, err := os.Open(path + "/registryMap.gob")
+		if err != nil {
+			panic(err)
+		}
+		defer decodeFile.Close()
+
+		decoder := gob.NewDecoder(decodeFile)
+		registryMap := make(map[int]string)
+
+		decoder.Decode(&registryMap)
+		// fmt.Println(registryMap)
 	}
-	defer decodeFile.Close()
-
-	decoder := gob.NewDecoder(decodeFile)
-	registryMap := make(map[int]string)
-
-	decoder.Decode(&registryMap)
-	fmt.Println(registryMap)
 }
 
 func TestGenerateBatch(t *testing.T) {
