@@ -7,6 +7,7 @@ package server
 import (
 	"archive/zip"
 	"encoding/gob"
+	"fmt"
 	"io"
 	"log"
 	"math"
@@ -119,6 +120,8 @@ func GenerateBatch(imageNum int, batchNo int) string {
 	registryMap := make(map[int]string)
 
 	decoder.Decode(&registryMap)
+	fmt.Println("Done decoding registry map..")
+
 	// Subtract the maximum batch size to ensure enough images following seqNo
 	rand.Seed(time.Now().UnixNano())
 	seqNo := rand.Intn(len(registryMap) - 200)
@@ -134,12 +137,13 @@ func GenerateBatch(imageNum int, batchNo int) string {
 	for idx := seqNo; idx < seqNo+batchSize; idx++ {
 		files = append(files, registryMap[idx])
 	}
+	fmt.Println("Done appending file paths..")
 	zipPath := rootPath + "/image_batch_" + strconv.Itoa(batchNo) + ".zip"
 	// package the batch
 	if err := ZipFiles(zipPath, files); err != nil {
 		panic(err)
 	}
-
+	fmt.Println("Done zipping files...")
 	return zipPath
 }
 

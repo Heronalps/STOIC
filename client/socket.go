@@ -42,7 +42,9 @@ func SocketClient(port int, runtime string, app string, version string, all bool
 }
 
 func handler(conn net.Conn, runtime string, app string, version string, all bool) {
+	fmt.Println("Set up connection...")
 	defer conn.Close()
+
 	writer := bufio.NewWriter(conn)
 
 	bufferFileName := make([]byte, 64)
@@ -63,7 +65,7 @@ func handler(conn net.Conn, runtime string, app string, version string, all bool
 
 	defer newFile.Close()
 	var receivedBytes int64
-
+	fmt.Println("Start transmitting zip archive..")
 	for {
 		if (fileSize - receivedBytes) < BUFFERSIZE {
 			// Copy the last piece of the file from the connection
