@@ -4,7 +4,7 @@ package client
 var (
 	dbName              string = "test"
 	username            string = "root"
-	password            string = "123456"
+	password            string = "Stoic!@#$%^123456"
 	dbIP                string = "127.0.0.1"
 	dbPort              int    = 3306
 	namespace           string = "racelab"
