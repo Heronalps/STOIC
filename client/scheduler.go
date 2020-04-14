@@ -21,17 +21,17 @@ Schedule is the entry point of Scheduler.
 Parameter: runtime is the preset runtime. If it's empty string, SelectRunTime will select one.
 Return: runtime for appending processing time to corresponding table
 */
-func Schedule(runtime string, imageNum int, app string, version string, all bool) []byte {
+func Schedule(runtime string, imageNum int, zipPath string, app string, version string, all bool) []byte {
 	var (
 		output     []byte
 		actTimeLog *TimeLog
 		isDeployed bool
 	)
-	transferTimes := GetTransferTime(imageNum)
+	transferTimes := GetTransferTime(zipPath)
 
 	// Redefine the selected runtime every selection
 	selectedRuntimes := []string{}
-	selectedRuntime, predTimeLog := SelectRunTime(imageNum, app, version, runtime)
+	selectedRuntime, predTimeLog := SelectRunTime(imageNum, zipPath, app, version, runtime)
 	fmt.Printf("The task is scheduled at %s \n", selectedRuntime)
 	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
 	fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
@@ -47,7 +47,7 @@ func Schedule(runtime string, imageNum int, app string, version string, all bool
 	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
 	for _, runtime := range selectedRuntimes {
-		_, predTimeLog = SelectRunTime(imageNum, app, version, runtime)
+		_, predTimeLog = SelectRunTime(imageNum, zipPath, app, version, runtime)
 
 		retryErr := retrygo.Do(
 			func() error {
@@ -99,12 +99,12 @@ func Request(runtime string, imageNum int, app string, version string, transferT
 /*
 SelectRunTime select the runtime among four scenarios
 */
-func SelectRunTime(imageNum int, app string, version string, runtime string) (string, *TimeLog) {
+func SelectRunTime(imageNum int, zipPath string, app string, version string, runtime string) (string, *TimeLog) {
 	var (
 		selectedRuntime string = runtime
 	)
 	// If the runtime is manually set, the results only have preset runtime
-	totalTimes, predTimeLogMap := GetTotalTime(imageNum, app, version, runtime)
+	totalTimes, predTimeLogMap := GetTotalTime(zipPath, imageNum, app, version, runtime)
 	fmt.Printf("totalTime: %v..\n", totalTimes)
 
 	// Sort the totalTimes map by key

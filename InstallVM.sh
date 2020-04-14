@@ -15,13 +15,20 @@ git clone https://github.com/heronalps/STOIC
 
 
 # MySQL Server installation
-
 sudo apt install mysql-server
 
 # Don't install VALIDATE PASSWORD plugin
 sudo mysql_secure_installation
-
 systemctl status mysql.service
+
+
+# Centos 
+rpm -Uvh https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
+sed -i 's/enabled=1/enabled=0/' /etc/yum.repos.d/mysql-community.repo
+yum --enablerepo=mysql80-community install mysql-community-server
+service mysqld start
+grep "A temporary password" /var/log/mysqld.log
+mysql_secure_installation
 
 
 # kubbectl
@@ -31,6 +38,8 @@ curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s http
 chmod +x ./kubectl
 
 sudo mv ./kubectl /usr/local/bin/kubectl
+
+echo "export PATH=$PATH:$HOME/bin:/usr/local/bin:/usr/local/go/bin" >> .bash_profile & source .bash_profile
 
 # Go
 curl -LO https://dl.google.com/go/go1.13.5.linux-amd64.tar.gz
@@ -44,8 +53,6 @@ COMPDIR=$(pkg-config --variable=completionsdir bash-completion)
 ln -sf ~/.kubectx/completion/kubens.bash $COMPDIR/kubens
 ln -sf ~/.kubectx/completion/kubectx.bash $COMPDIR/kubectx
 cat << FOE >> ~/.bashrc
-
-
 #kubectx and kubens
 export PATH=~/.kubectx:\$PATH
 FOE
@@ -62,11 +69,16 @@ curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeles
 # jq
 sudo apt-get install jq
 
+# Centos
+sudo yum install jq
+
 # bc 
 sudo apt install bc
 
-# Python
+# Centos
+sudo yum install bc
 
+# Python
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
 sudo apt install python3.6
@@ -85,6 +97,13 @@ mkdir data
 scp -r ./checkpoints/ ubuntu@128.111.45.113:~/GPU_Serverless/
 scp -r ./data/SantaCruzIsland_Labeled_5Class/ ubuntu@128.111.45.113:~/GPU_Serverless/data
 scp -r ./data/SantaCruzIsland_Validation_5Class/ ubuntu@128.111.45.113:~/GPU_Serverless/data
+
+# Centos
+git clone https://github.com/heronalps/GPU_Serverless
+cd GPU_Serverless
+python3 -m venv venv
+source venv/bin/activate
+
 
 # yq 
 sudo snap install yq

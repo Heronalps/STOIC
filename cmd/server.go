@@ -33,6 +33,7 @@ var (
 				// Listens for IoT Camera Traps
 
 				// Server is triggered by Camera traps to generate a batch
+				fmt.Printf("Batches : %d \n", batches)
 				zipPath = server.GenerateBatch(presetImageNum, batches)
 
 				elapsed := server.SocketServer(ip, port, zipPath)
@@ -45,6 +46,7 @@ var (
 				totalImage += imageNum
 				totalTime += elapsed
 				batches++
+				fmt.Printf("After Batches : %d", batches)
 				fmt.Printf("%d images has been inferenced...\n", totalImage)
 				fmt.Printf("%d batches has been processed...\n", batches)
 				fmt.Printf("%f seconds for this batch...\n", elapsed)

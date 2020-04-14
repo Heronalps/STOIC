@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -49,6 +50,7 @@ func handler(conn net.Conn, runtime string, app string, version string, all bool
 
 	bufferFileName := make([]byte, 64)
 	bufferFileSize := make([]byte, 10)
+	bufferImageNum := make([]byte, 10)
 
 	conn.Read(bufferFileSize)
 	// base 10, bitsize 64 => int64
@@ -62,6 +64,12 @@ func handler(conn net.Conn, runtime string, app string, version string, all bool
 	if err != nil {
 		panic(err)
 	}
+
+	conn.Read(bufferImageNum)
+	imageNum64, _ := strconv.ParseInt(strings.Trim(string(bufferImageNum), ":"), 10, 64)
+	imageNum := int(imageNum64)
+
+	fmt.Printf("Image Num: %d \n", imageNum)
 
 	defer newFile.Close()
 	var receivedBytes int64
@@ -81,8 +89,13 @@ func handler(conn net.Conn, runtime string, app string, version string, all bool
 	fmt.Println("Done receiving file...")
 
 	// Parameterize Schedule with zip filename
-
-	output := Schedule(runtime, 50, app, version, all)
+	pwd, err := os.Getwd()
+	if err != nil {
+		log.Println(err)
+	}
+	zipPath := filepath.Join(pwd, fileName)
+	fmt.Printf("File path : %s\n", zipPath)
+	output := Schedule(runtime, imageNum, zipPath, app, version, all)
 
 	writer.Write(output)
 	writer.Flush()

@@ -126,3 +126,8 @@ func TestCopyFile(t *testing.T) {
 	target := "/Users/michaelzhang/Downloads/test.jpg"
 	server.CopyFile(source, target)
 }
+
+func TestGetTransferTime(t *testing.T) {
+	zipPath := "/Users/michaelzhang/go/src/github.com/heronalps/STOIC/image_batch_1.zip"
+	helpers.GetTransferTime(zipPath)
+}

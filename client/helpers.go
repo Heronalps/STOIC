@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"os"
 	"os/exec"
 	"os/user"
 	"regexp"
@@ -103,14 +104,21 @@ func Extrapolate(runtime string, imageNum int, app string, version string) float
 /*
 GetTransferTime calculates the transfer time from Sedgwick reserve to Mayhem cloud to Nautilus
 */
-func GetTransferTime(imageNum int) map[string]float64 {
+func GetTransferTime(zipPath string) map[string]float64 {
 	transferTimes := make(map[string]float64)
 	// Convert megabits to megabytes
 	bandwidth := GetBandWidth() / 8.0
 	// Average JPG image size of 1920 * 1080 = 0.212 MB
-	JPGSize := 212 * 1e-3
+	// JPGSize := 212 * 1e-3
 
-	transferTime := float64(imageNum) * JPGSize / bandwidth
+	fi, err := os.Stat(zipPath)
+	if err != nil {
+		log.Println(err.Error())
+	}
+	size := fi.Size()
+	fmt.Println(size)
+
+	transferTime := float64(size) / bandwidth
 	for runtime := range runtimes {
 		if runtime == "edge" {
 			transferTimes[runtime] = 0.0
@@ -179,11 +187,11 @@ func GetProcTime(imageNum int, app string, version string, runtime string) map[s
 /*
 GetTotalTime calculate total time (Addition of transfer and run time) of four scenarios
 */
-func GetTotalTime(imageNum int, app string, version string, runtime string) (map[float64]string, map[string]*TimeLog) {
+func GetTotalTime(zipPath string, imageNum int, app string, version string, runtime string) (map[float64]string, map[string]*TimeLog) {
 	var (
 		selectedRuntimes []string
 	)
-	transferTimes := GetTransferTime(imageNum)
+	transferTimes := GetTransferTime(zipPath)
 	procTimes := GetProcTime(imageNum, app, version, runtime)
 	deploymentTimes := GetDeploymentTime(runtime)
 	totalTimes := make(map[float64]string)
