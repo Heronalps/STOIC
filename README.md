@@ -2,7 +2,7 @@
 
 STOIC - Serverless Teleoperable Hybrid Cloud for Machine Learning Applications on Edge Device
 
-![STOIC Architecture](images/STOIC.png)
+![STOIC Architecture](images/STOIC_2.png)
 
 * Create wtb inference pod on Nautilus
   
