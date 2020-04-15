@@ -112,7 +112,6 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 		fmt.Printf("Single data point of %s in DB...\n", runtime)
 		return Y.At(0, 0) / X.At(0, 0), 0
 	}
-
 	// Run RANSAC regression
 	FILE := "./scripts/robust_regression.py "
 	cmdRun := fmt.Sprintf("python3 %s %s %s %s %d", FILE, runtime, app, version, numDP)

@@ -11,7 +11,6 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
-	"strconv"
 
 	retrygo "github.com/avast/retry-go"
 )
@@ -51,7 +50,7 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 
 		retryErr := retrygo.Do(
 			func() error {
-				output, isDeployed, actTimeLog = Request(runtime, imageNum, app, version, transferTimes[runtime])
+				output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime])
 				runtimes[runtime] = isDeployed
 				if !isDeployed {
 					return errors.New("request was not deployed")
@@ -78,7 +77,7 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 /*
 Request is a wrap function both for executing jobs and setting up processing time table for regression
 */
-func Request(runtime string, imageNum int, app string, version string, transferTime float64) ([]byte, bool, *TimeLog) {
+func Request(runtime string, zipPath string, imageNum int, app string, version string, transferTime float64) ([]byte, bool, *TimeLog) {
 	var (
 		output     []byte
 		isDeployed bool
@@ -87,7 +86,7 @@ func Request(runtime string, imageNum int, app string, version string, transferT
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		output, isDeployed, actTimeLog = RunOnEdge(imageNum, app, version)
+		output, isDeployed, actTimeLog = RunOnEdge(zipPath, imageNum, app, version)
 	default:
 		fmt.Printf("Running on Nautilus...%s\n", runtime)
 		output, isDeployed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version, transferTime)
@@ -124,7 +123,7 @@ func SelectRunTime(imageNum int, zipPath string, app string, version string, run
 /*
 RunOnEdge runs the task on mini edge cloud with AVX support
 */
-func RunOnEdge(imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
+func RunOnEdge(zipPath string, imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
 	var (
 		output     []byte
 		err        error
@@ -135,7 +134,8 @@ func RunOnEdge(imageNum int, app string, version string) ([]byte, bool, *TimeLog
 
 	// Run WTB image classification task
 	FILE := "./kubeless/image_clf/inference/local_version/image_clf_inf.py "
-	cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
+	//cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
+	cmdRun := "source venv/bin/activate && python " + FILE + zipPath
 	cmd = exec.Command("bash", "-c", cmdRun)
 	cmd.Dir = repoPATH
 	fmt.Printf("Start running task %s version %s on %d images \n", app, version, imageNum)

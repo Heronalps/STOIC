@@ -6,7 +6,7 @@ from zipfile import ZipFile
 
 
 class_list = ["Birds", "Empty", "Fox", "Humans", "Rodents"]
-MODEL_DIR = '/racelab/checkpoints/resnet50_model.h5'
+MODEL_DIR = './checkpoints/resnet50_model.h5'
 WIDTH = 1920
 HEIGHT = 1080
 
@@ -88,7 +88,7 @@ def handler(event, context):
         global ZIP_PATH
         ZIP_PATH = event['data']['zip_path']
     
-    TEMP_DIR = os.getcwd() + "/images"
+    TEMP_DIR = os.getcwd() + "/image_buffer"
 
     with ZipFile(ZIP_PATH, 'r') as zipFile:
         zipFile.extractall(TEMP_DIR)
@@ -104,8 +104,9 @@ def handler(event, context):
     num_image = 0
     image_list = list()
     for img in os.listdir(TEMP_DIR):
-        image_list.append(os.path.join(TEMP_DIR, img))
-        num_image += 1
+        if img.endswith(".jpg"):
+            image_list.append(os.path.join(TEMP_DIR, img))
+            num_image += 1
         
     start = time.time()
 

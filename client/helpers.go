@@ -106,7 +106,7 @@ GetTransferTime calculates the transfer time from Sedgwick reserve to Mayhem clo
 */
 func GetTransferTime(zipPath string) map[string]float64 {
 	transferTimes := make(map[string]float64)
-	// Convert megabits to megabytes
+	// Convert megabits to megabytes = Megabytes/second
 	bandwidth := GetBandWidth() / 8.0
 	// Average JPG image size of 1920 * 1080 = 0.212 MB
 	// JPGSize := 212 * 1e-3
@@ -115,8 +115,9 @@ func GetTransferTime(zipPath string) map[string]float64 {
 	if err != nil {
 		log.Println(err.Error())
 	}
-	size := fi.Size()
-	fmt.Printf("size : %d \n", size)
+	// File size in MB
+	size := fi.Size() / 1024 / 1024
+	// fmt.Printf("size : %d \n", size)
 
 	transferTime := float64(size) / bandwidth
 	for runtime := range runtimes {
@@ -194,6 +195,7 @@ func GetTotalTime(zipPath string, imageNum int, app string, version string, runt
 	transferTimes := GetTransferTime(zipPath)
 	procTimes := GetProcTime(imageNum, app, version, runtime)
 	deploymentTimes := GetDeploymentTime(runtime)
+	fmt.Printf("Deployment Time : %v \n", deploymentTimes)
 	totalTimes := make(map[float64]string)
 	timeLogs := make(map[string]*TimeLog)
 
