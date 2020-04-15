@@ -20,7 +20,7 @@ const BUFFERSIZE = 1024
 /*
 SocketServer sends wtb task request to the client socket
 */
-func SocketServer(ip string, port int, zipPath string) float64 {
+func SocketServer(ip string, port int, zipPath string, imageNum int) float64 {
 	addr := strings.Join([]string{ip, strconv.Itoa(port)}, ":")
 	conn, err := net.Dial("tcp", addr)
 
@@ -46,8 +46,10 @@ func SocketServer(ip string, port int, zipPath string) float64 {
 	// base 10, patch to 10 bytes
 	fileSize := fillString(strconv.FormatInt(fileInfo.Size(), 10), 10)
 	fileName := fillString(fileInfo.Name(), 64)
+	fileImageNum := fillString(strconv.FormatInt(int64(imageNum), 10), 10)
 	conn.Write([]byte(fileSize))
 	conn.Write([]byte(fileName))
+	conn.Write([]byte(fileImageNum))
 	sendBuffer := make([]byte, BUFFERSIZE)
 
 	for {

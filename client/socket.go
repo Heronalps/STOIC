@@ -94,7 +94,6 @@ func handler(conn net.Conn, runtime string, app string, version string, all bool
 		log.Println(err)
 	}
 	zipPath := filepath.Join(pwd, fileName)
-	fmt.Printf("File path : %s\n", zipPath)
 	output := Schedule(runtime, imageNum, zipPath, app, version, all)
 
 	writer.Write(output)

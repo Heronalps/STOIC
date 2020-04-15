@@ -116,7 +116,7 @@ func GetTransferTime(zipPath string) map[string]float64 {
 		log.Println(err.Error())
 	}
 	size := fi.Size()
-	fmt.Println(size)
+	fmt.Printf("size : %d \n", size)
 
 	transferTime := float64(size) / bandwidth
 	for runtime := range runtimes {

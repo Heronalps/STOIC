@@ -91,7 +91,7 @@ GenerateBatch generates a batch of images randomly selected from 3 volumes /opt 
 2. select corresponding pictures, cache at a local dir and package them
 3. Return the path string to the server socket that sends the package to edge server
 */
-func GenerateBatch(imageNum int, batchNo int) string {
+func GenerateBatch(imageNum int, batchNo int) (string, int) {
 	var (
 		rootPath  string
 		files     []string
@@ -144,7 +144,7 @@ func GenerateBatch(imageNum int, batchNo int) string {
 		panic(err)
 	}
 	fmt.Println("Done zipping files...")
-	return zipPath
+	return zipPath, batchSize
 }
 
 /*

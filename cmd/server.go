@@ -34,9 +34,9 @@ var (
 
 				// Server is triggered by Camera traps to generate a batch
 				fmt.Printf("Batches : %d \n", batches)
-				zipPath = server.GenerateBatch(presetImageNum, batches)
+				zipPath, imageNum = server.GenerateBatch(presetImageNum, batches)
 
-				elapsed := server.SocketServer(ip, port, zipPath)
+				elapsed := server.SocketServer(ip, port, zipPath, imageNum)
 				if elapsed == 0.0 {
 					fmt.Println("The task was not executed...")
 					fmt.Println("continue...")
