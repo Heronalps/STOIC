@@ -7,3 +7,5 @@ STOIC
 *.gob
 *.zip
 *.h5
+*.json
+/venv
