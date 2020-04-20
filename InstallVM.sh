@@ -7,6 +7,8 @@ sudo -i
 cat /etc/hostname
 vim /etc/hosts
 127.0.0.1 euca-10-11-1-173
+# Exit root. Use plain user account for installation
+exit
 
 # Install essentials
 sudo apt-get update && sudo apt-get install -y build-essential ca-certificates curl git libbz2-1.0 libc6 libffi6 libncurses5 libreadline6-dev libsqlite3-0 libsqlite3-dev libssl-dev libtinfo5 pkg-config unzip vim wget zlib1g
@@ -17,10 +19,17 @@ git clone https://github.com/heronalps/STOIC
 # MySQL Server installation
 sudo apt install mysql-server
 
-# Don't install VALIDATE PASSWORD plugin
+# Don't install VALIDATE PASSWORD plugincd /var
 sudo mysql_secure_installation
 systemctl status mysql.service
 
+# Initialize DB tables
+cd STOIC
+go build
+sh StartDBinit.sh
+
+# Start Client
+sh StartClient.sh
 
 # Centos 
 rpm -Uvh https://repo.mysql.com/mysql80-community-release-el7-3.noarch.rpm
@@ -31,7 +40,7 @@ grep "A temporary password" /var/log/mysqld.log
 mysql_secure_installation
 
 
-# kubbectl
+# kubectl
 
 curl -LO https://storage.googleapis.com/kubernetes-release/release/`curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt`/bin/linux/amd64/kubectl
 
@@ -50,8 +59,8 @@ export PATH=$PATH:/usr/local/go/bin
 
 git clone https://github.com/ahmetb/kubectx.git ~/.kubectx
 COMPDIR=$(pkg-config --variable=completionsdir bash-completion)
-ln -sf ~/.kubectx/completion/kubens.bash $COMPDIR/kubens
-ln -sf ~/.kubectx/completion/kubectx.bash $COMPDIR/kubectx
+sudo ln -sf ~/.kubectx/completion/kubens.bash $COMPDIR/kubens
+sudo ln -sf ~/.kubectx/completion/kubectx.bash $COMPDIR/kubectx
 cat << FOE >> ~/.bashrc
 #kubectx and kubens
 export PATH=~/.kubectx:\$PATH
@@ -68,13 +77,11 @@ curl -OL https://github.com/kubeless/kubeless/releases/download/$RELEASE/kubeles
 
 # jq
 sudo apt-get install jq
-
 # Centos
 sudo yum install jq
 
 # bc 
 sudo apt install bc
-
 # Centos
 sudo yum install bc
 
@@ -82,17 +89,21 @@ sudo yum install bc
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
 sudo apt install python3.6
+rm -rf /usr/bin/python
 sudo ln -s /usr/bin/python3.6 /usr/bin/python
 
 # GPU_Serverless
-git clone https://github.com/heronalps/GPU_Serverless
-cd GPU_Serverless
+# git clone https://github.com/heronalps/GPU_Serverless
+# cd GPU_Serverless
+
+# Python venv
+cd STOIC
 sudo apt install virtualenv
 virtualenv venv --python=python3.6
 source venv/bin/activate
 
 pip install -r requirements.txt
-mkdir data
+mkdir checkpoints
 
 scp -r ./checkpoints/ ubuntu@128.111.45.113:~/GPU_Serverless/
 scp -r ./data/SantaCruzIsland_Labeled_5Class/ ubuntu@128.111.45.113:~/GPU_Serverless/data
@@ -107,6 +118,9 @@ source venv/bin/activate
 
 # yq 
 sudo snap install yq
+
+
+# Sedgwick VM does not have enough resource for minikube. Revert back to binary execution
 
 # Virtualbox
 
@@ -128,10 +142,12 @@ curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/miniku
 sudo mkdir -p /usr/local/bin/
 sudo install minikube /usr/local/bin/
 
-minikube config set memory 4096
+# Set memory to 4G / 2G
+minikube config set memory 4096 / 2048
 minikube config set cpus 2
-# minikube config set disk 40000
+# minikube config set disk-size 40000
 minikube config set vm-driver virtualbox
+minikube start
 
 # kubeless namespace 
 
@@ -173,13 +189,10 @@ kubectl cp ~/GPU_Serverless/checkpoints/ default/transfer-pod:/racelab/checkpoin
 sh scripts/deploy.sh image-clf-inf 3.6 0 _edge
 # kubectl patch deployment image-clf-inf --patch "$(cat ./scripts/patch_edge.yaml)"
 
-# Initialize DB tables
-cd STOIC
-go build
-sh StartDBinit.sh
 
-# Start Client
-sh StartClient.sh
+----------------------------------------------------------------
+
+
 
 
 # Add the service account to rolebinding for namespace admin and kubeless role
