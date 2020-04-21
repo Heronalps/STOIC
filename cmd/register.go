@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/heronalps/STOIC/server"
+	"github.com/heronalps/STOIC/client"
 	"github.com/spf13/cobra"
 )
 
@@ -12,7 +12,7 @@ var (
 		Short: "Register all images",
 		Long:  `Register all image file names recursively from the root dir`,
 		Run: func(cmd *cobra.Command, args []string) {
-			server.RegisterImages(root)
+			client.RegisterImages(root)
 		},
 	}
 )

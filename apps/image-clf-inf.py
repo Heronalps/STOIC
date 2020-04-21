@@ -7,6 +7,9 @@ from zipfile import ZipFile
 
 class_list = ["Birds", "Empty", "Fox", "Humans", "Rodents"]
 MODEL_DIR = '/racelab/checkpoints/resnet50_model.h5'
+IMG_DIR = '/racelab/SantaCruzIsland_Labeled_5Class/Birds'
+PROBE_IMG = '/racelab/SantaCruzIsland_Labeled_5Class/Birds/IMG_0198.JPG'
+TARGET_IMG = '/IMG_0198.JPG'
 WIDTH = 1920
 HEIGHT = 1080
 
@@ -84,14 +87,18 @@ def run_sequential(image_list):
     
 
 def handler(event, context): 
+    TEMP_DIR = os.getcwd() + "/image_buffer"
+    os.mkdir(TEMP_DIR)
+    zip_flag = False
+    
     if isinstance(event['data'], dict) and "zip_path" in event['data']:
         global ZIP_PATH
         ZIP_PATH = event['data']['zip_path']
-    
-    TEMP_DIR = os.getcwd() + "/images"
-
-    with ZipFile(ZIP_PATH, 'r') as zipFile:
-        zipFile.extractall(TEMP_DIR)
+        zip_flag = True
+        with ZipFile(ZIP_PATH, 'r') as zipFile:
+            zipFile.extractall(TEMP_DIR)
+    else:
+        shutil.copyfile(PROBE_IMG, TEMP_DIR + TARGET_IMG)
 
     # Get GPU counts
     NUM_GPU = 0
@@ -121,13 +128,17 @@ def handler(event, context):
 
     # Clean up temp image folder
     shutil.rmtree(TEMP_DIR)
-    os.remove(ZIP_PATH)
+    if (zip_flag):
+        os.remove(ZIP_PATH)
 
     print ("Time with model loading {0} for {1} images.".format(end - start, num_image))
     return ("Time with model loading {0} for {1} images.".format(end - start, num_image))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("zip_path")
+    parser.add_argument('-p', '--zip_path')
     args = parser.parse_args()
-    handler({"data" : {"zip_path" : args.zip_path}}, {})
+    if args.zip_path:
+        handler({"data" : {"zip_path" : args.zip_path}}, {})
+    else:
+        handler({"data" : {}}, {})

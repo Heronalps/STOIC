@@ -2,7 +2,7 @@
 Simulator module simulate the camera and Pi zero, and output images periodically
 */
 
-package server
+package client
 
 import (
 	"archive/zip"

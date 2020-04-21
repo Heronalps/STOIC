@@ -27,8 +27,9 @@ func SetupRegression(app string, version string) {
 		fmt.Printf("Current version %s is greater than DB version %s ..\n", version, dbVersion)
 		UpdateAppVersion(app, version)
 		for runtime := range runtimes {
-			for _, imageNum := range setupImageNums {
-				Schedule(runtime, imageNum, "", app, version, false)
+			for idx, imageNum := range setupImageNums {
+				zipPath, _ := GenerateBatch(imageNum, idx)
+				Schedule(runtime, imageNum, zipPath, app, version, false)
 			}
 		}
 	} else {
@@ -45,8 +46,9 @@ func SetupRegression(app string, version string) {
 				rows, _ = X.Dims()
 			}
 			if rows < 2 {
-				for _, imageNum := range setupImageNums {
-					Schedule(runtime, imageNum, "", app, version, false)
+				for idx, imageNum := range setupImageNums {
+					zipPath, _ := GenerateBatch(imageNum, idx)
+					Schedule(runtime, imageNum, zipPath, app, version, false)
 				}
 			}
 		}

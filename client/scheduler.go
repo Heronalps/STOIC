@@ -133,7 +133,7 @@ func RunOnEdge(zipPath string, imageNum int, app string, version string) ([]byte
 	// repoPATH := HomeDir() + "/GPU_Serverless"
 
 	// Run WTB image classification task
-	FILE := "./image_clf_inf.py "
+	FILE := "./apps/image_clf_inf-local.py "
 	//cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
 	cmdRun := "source venv/bin/activate && python " + FILE + zipPath
 	cmd = exec.Command("bash", "-c", cmdRun)

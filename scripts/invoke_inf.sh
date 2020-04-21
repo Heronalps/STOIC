@@ -1,7 +1,7 @@
 #!bin/bash
 
 # One time
-NUM_IMAGE=$(echo $1 | bc)
-DATA_STRING=$(jq -n --arg ni "$NUM_IMAGE" '{"num_image":$ni}')
+ZIP_PATH=$(echo $1)
+DATA_STRING=$(jq -n --arg ni "$ZIP_PATH" '{"zip_path":$ni}')
 echo $DATA_STRING
 kubeless function call image-clf-inf --data "$DATA_STRING"
