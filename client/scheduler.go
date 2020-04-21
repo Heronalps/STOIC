@@ -5,6 +5,7 @@ Scheduler decides where to run WTB inferencing job given Pi bandwidth, number of
 package client
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"math"
@@ -89,7 +90,7 @@ func Request(runtime string, zipPath string, imageNum int, app string, version s
 		output, isDeployed, actTimeLog = RunOnEdge(zipPath, imageNum, app, version)
 	default:
 		fmt.Printf("Running on Nautilus...%s\n", runtime)
-		output, isDeployed, actTimeLog = RunOnNautilus(runtime, imageNum, app, version, transferTime)
+		output, isDeployed, actTimeLog = RunOnNautilus(runtime, zipPath, imageNum, app, version, transferTime)
 	}
 	// The transfer time field is 0.0 in actTimeLog at this point
 	return output, isDeployed, actTimeLog
@@ -133,15 +134,23 @@ func RunOnEdge(zipPath string, imageNum int, app string, version string) ([]byte
 	// repoPATH := HomeDir() + "/GPU_Serverless"
 
 	// Run WTB image classification task
-	FILE := "./apps/image_clf_inf-local.py "
+	FILE := "./apps/image-clf-inf-local.py "
 	//cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
-	cmdRun := "source venv/bin/activate && python " + FILE + zipPath
-	cmd = exec.Command("bash", "-c", cmdRun)
+	//cmdRun := "source venv/bin/activate && python " + FILE
+	cmdRun := "source venv/bin/activate && python " + FILE
+
+	cmd = exec.Command("bash", "-c", cmdRun, "-p", zipPath)
+	fmt.Println(cmd)
 	// cmd.Dir = repoPATH
 	fmt.Printf("Start running task %s version %s on %d images \n", app, version, imageNum)
-	output, err = cmd.Output()
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	err = cmd.Run()
 	if err != nil {
-		fmt.Printf("Error running task. msg: %s \n", err.Error())
+		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
+		//fmt.Printf("Error running task. msg: %s \n", err.Error())
 		return output, isDeployed, nil
 	}
 	//fmt.Printf("Output of task %s\n", string(output))

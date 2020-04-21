@@ -8,4 +8,5 @@ STOIC
 *.zip
 *.h5
 *.json
+*.jpg
 /venv

@@ -1,6 +1,6 @@
 from multiprocessing import Process, Queue
 import numpy as np
-import time, math, os, argparse, shutil
+import time, math, os, argparse, shutil, pathlib
 from gpuinfo import GPUInfo
 from zipfile import ZipFile
 
@@ -9,6 +9,7 @@ class_list = ["Birds", "Empty", "Fox", "Humans", "Rodents"]
 MODEL_DIR = './checkpoints/resnet50_model.h5'
 PROBE_IMG = '/Users/michaelzhang/GPU_Serverless/data/SantaCruzIsland_Labeled_5Class/Birds/IMG_0198.JPG'
 TARGET_IMG = '/IMG_0198.JPG'
+TEMP_DIR = os.getcwd() + "/image_buffer"
 WIDTH = 1920
 HEIGHT = 1080
 
@@ -86,17 +87,16 @@ def run_sequential(image_list):
     
 
 def handler(event, context): 
-    TEMP_DIR = os.getcwd() + "/image_buffer"
-    os.mkdir(TEMP_DIR)
     zip_flag = False
     
-    if isinstance(event['data'], dict) and "zip_path" in event['data']:
+    if isinstance(event['data'], dict) and "zip_path" in event['data'] and event['data']['zip_path']:
         global ZIP_PATH
         ZIP_PATH = event['data']['zip_path']
         zip_flag = True
         with ZipFile(ZIP_PATH, 'r') as zipFile:
             zipFile.extractall(TEMP_DIR)
     else:
+        pathlib.Path(TEMP_DIR).mkdir(parents=True, exist_ok=True)
         shutil.copyfile(PROBE_IMG, TEMP_DIR + TARGET_IMG)
 
     # Get GPU counts
@@ -141,4 +141,4 @@ if __name__ == "__main__":
     if args.zip_path:
         handler({"data" : {"zip_path" : args.zip_path}}, {})
     else:
-        handler({"data" : {}}, {})
+        handler({"data" : {"zip_paht": ""}}, {})

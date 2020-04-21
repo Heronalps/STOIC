@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/heronalps/STOIC/client"
-	"github.com/heronalps/STOIC/server"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +23,7 @@ func TestQueryGPUNum(t *testing.T) {
 }
 
 func TestSelectRunTime(t *testing.T) {
-	runtime, _ := client.SelectRunTime(56, app, version, "")
+	runtime, _ := client.SelectRunTime(56, zipPath, app, version, "")
 	fmt.Println("runtime : " + runtime)
 }
 
@@ -38,13 +37,13 @@ func TestCompareVersion(t *testing.T) {
 }
 
 func TestRunOnNautilus(t *testing.T) {
-	output, _, timeLog := client.RunOnNautilus(runtime, imageNum, app, version, transferTime)
+	output, _, timeLog := client.RunOnNautilus(runtime, zipPath, imageNum, app, version, transferTime)
 	fmt.Printf("Output : %v..\n", string(output))
 	assert.NotNil(t, timeLog)
 }
 
 func TestRunOnEdge(t *testing.T) {
-	output, _, timeLog := client.RunOnEdge(imageNum, app, version)
+	output, _, timeLog := client.RunOnEdge(zipPath, imageNum, app, version)
 	fmt.Printf("Output : %v..\n", string(output))
 	assert.NotNil(t, timeLog)
 }
@@ -80,19 +79,19 @@ func TestUpdateWindowSizes(t *testing.T) {
 }
 
 func TestBatchSize(t *testing.T) {
-	num := server.BatchSize()
+	num := client.BatchSize()
 	fmt.Println(time.Now().UnixNano())
 	fmt.Println(time.Now())
 	fmt.Println(num)
 }
 
 func TestGenerateWorkLoad(t *testing.T) {
-	workload := server.GenerateWorkLoad(6700)
+	workload := client.GenerateWorkLoad(6700)
 	fmt.Println(workload)
 }
 
 func TestServerWorkload(t *testing.T) {
-	fmt.Println(server.Workload[223])
+	fmt.Println(client.Workload[223])
 }
 
 func TestRegisterImages(t *testing.T) {
@@ -101,7 +100,7 @@ func TestRegisterImages(t *testing.T) {
 	paths[1] = "/opt2"
 	paths[2] = "/opt3"
 	for _, path := range paths {
-		server.RegisterImages(path)
+		client.RegisterImages(path)
 		decodeFile, err := os.Open(path + "/registryMap.gob")
 		if err != nil {
 			panic(err)
@@ -117,17 +116,17 @@ func TestRegisterImages(t *testing.T) {
 }
 
 func TestGenerateBatch(t *testing.T) {
-	path := server.GenerateBatch(0, 1)
+	path, _ := client.GenerateBatch(0, 1)
 	fmt.Println(path)
 }
 
 func TestCopyFile(t *testing.T) {
 	source := "/Users/michaelzhang/Downloads/WTB_samples/time_lapse/Main_2013-07-30_10:43:56_17411_12-398.jpg"
 	target := "/Users/michaelzhang/Downloads/test.jpg"
-	server.CopyFile(source, target)
+	client.CopyFile(source, target)
 }
 
 func TestGetTransferTime(t *testing.T) {
 	zipPath := "/Users/michaelzhang/go/src/github.com/heronalps/STOIC/image_batch_1.zip"
-	helpers.GetTransferTime(zipPath)
+	client.GetTransferTime(zipPath)
 }

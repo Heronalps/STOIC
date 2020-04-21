@@ -26,7 +26,7 @@ import (
 RunOnNautilus sends request to Nautilus based on runtime and image number
 return output & processing time
 */
-func RunOnNautilus(runtime string, imageNum int, app string, version string, transferTime float64) ([]byte, bool, *TimeLog) {
+func RunOnNautilus(runtime string, zipPath string, imageNum int, app string, version string, transferTime float64) ([]byte, bool, *TimeLog) {
 	var (
 		output         []byte
 		isGPUSame      bool
@@ -68,7 +68,7 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string, tra
 			// Add true condition to always probe
 			if true || !isGPUSame {
 				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
-				cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh %d", serviceAccountConfig, 1)
+				cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh ", serviceAccountConfig)
 				cmdRun = exec.Command("bash", "-c", cmd)
 
 				if output, err = cmdRun.Output(); err != nil {
@@ -81,8 +81,9 @@ func RunOnNautilus(runtime string, imageNum int, app string, version string, tra
 				fmt.Println("Using same pod, No probing needed....")
 			}
 
-			//make kubeless call to deployed function
-			cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh %d", serviceAccountConfig, imageNum)
+			// Make kubeless call to deployed function
+			// Put presetZipPath for testing purpose
+			cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh %s", serviceAccountConfig, presetZipPath)
 			cmdRun = exec.Command("bash", "-c", cmd)
 			if output, err = cmdRun.Output(); err != nil {
 				fmt.Println("Error msg : ", err.Error())

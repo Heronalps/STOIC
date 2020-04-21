@@ -1,6 +1,6 @@
 from multiprocessing import Process, Queue
 import numpy as np
-import time, math, os, argparse, shutil
+import time, math, os, argparse, shutil, pathlib
 from gpuinfo import GPUInfo
 from zipfile import ZipFile
 
@@ -9,6 +9,7 @@ class_list = ["Birds", "Empty", "Fox", "Humans", "Rodents"]
 MODEL_DIR = '/racelab/checkpoints/resnet50_model.h5'
 IMG_DIR = '/racelab/SantaCruzIsland_Labeled_5Class/Birds'
 PROBE_IMG = '/racelab/SantaCruzIsland_Labeled_5Class/Birds/IMG_0198.JPG'
+TEMP_DIR = "/racelab/image_buffer"
 TARGET_IMG = '/IMG_0198.JPG'
 WIDTH = 1920
 HEIGHT = 1080
@@ -87,17 +88,16 @@ def run_sequential(image_list):
     
 
 def handler(event, context): 
-    TEMP_DIR = os.getcwd() + "/image_buffer"
-    os.mkdir(TEMP_DIR)
     zip_flag = False
     
-    if isinstance(event['data'], dict) and "zip_path" in event['data']:
+    if isinstance(event['data'], dict) and "zip_path" in event['data'] and event['data']['zip_path']:
         global ZIP_PATH
         ZIP_PATH = event['data']['zip_path']
         zip_flag = True
         with ZipFile(ZIP_PATH, 'r') as zipFile:
             zipFile.extractall(TEMP_DIR)
     else:
+        pathlib.Path(TEMP_DIR).mkdir(parents=True, exist_ok=True)
         shutil.copyfile(PROBE_IMG, TEMP_DIR + TARGET_IMG)
 
     # Get GPU counts
@@ -128,8 +128,8 @@ def handler(event, context):
 
     # Clean up temp image folder
     shutil.rmtree(TEMP_DIR)
-    if (zip_flag):
-        os.remove(ZIP_PATH)
+    # if (zip_flag):
+    #     os.remove(ZIP_PATH)
 
     print ("Time with model loading {0} for {1} images.".format(end - start, num_image))
     return ("Time with model loading {0} for {1} images.".format(end - start, num_image))
