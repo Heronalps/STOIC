@@ -2,7 +2,7 @@
 # Launch a hi1.4xlarge instance 
 
 # Add public key
-# Add hostname
+# Add hostname to avoid "unable to resolve host XX"
 sudo -i
 cat /etc/hostname
 vim /etc/hosts
@@ -15,6 +15,11 @@ sudo apt-get update && sudo apt-get install -y build-essential ca-certificates c
 
 git clone https://github.com/heronalps/STOIC
 
+# Go
+curl -LO https://dl.google.com/go/go1.13.5.linux-amd64.tar.gz
+sudo tar -C /usr/local/ -xzf go1.13.5.linux-amd64.tar.gz
+export PATH=$PATH:/usr/local/go/bin
+
 
 # MySQL Server installation
 sudo apt install mysql-server
@@ -22,6 +27,9 @@ sudo apt install mysql-server
 # Don't install VALIDATE PASSWORD plugincd /var
 sudo mysql_secure_installation
 systemctl status mysql.service
+
+sudo mysql -u root -p
+CREATE USER 'heronalps'@'localhost' IDENTIFIED BY '123456';
 
 # Initialize DB tables
 cd STOIC
@@ -50,10 +58,7 @@ sudo mv ./kubectl /usr/local/bin/kubectl
 
 echo "export PATH=$PATH:$HOME/bin:/usr/local/bin:/usr/local/go/bin" >> .bash_profile & source .bash_profile
 
-# Go
-curl -LO https://dl.google.com/go/go1.13.5.linux-amd64.tar.gz
-sudo tar -C /usr/local/ -xzf go1.13.5.linux-amd64.tar.gz
-export PATH=$PATH:/usr/local/go/bin
+
 
 # kubectx
 

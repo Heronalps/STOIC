@@ -3,7 +3,7 @@ package client
 //Global variable of Configuration
 var (
 	dbName              string = "test"
-	username            string = "root"
+	username            string = "heronalps"
 	password            string = "123456"
 	dbIP                string = "127.0.0.1"
 	dbPort              int    = 3306
