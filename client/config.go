@@ -10,8 +10,8 @@ var (
 	namespace           string = "racelab"
 	RunDeployment       string = "image-clf-inf"
 	timeQueryDeployment string = "image-clf-inf37"
-	// runtimes                   = map[string]bool{"edge": true, "cpu": true, "gpu1": true, "gpu2": true}
-	runtimes = map[string]bool{"edge": true}
+	runtimes                   = map[string]bool{"edge": true, "cpu": true, "gpu1": true, "gpu2": true}
+	// runtimes = map[string]bool{"edge": true}
 	// runtimes               = []string{"gpu1", "gpu2"}
 	// NautilusRuntimes       = map[string]bool{"cpu": true, "gpu1": true, "gpu2": true}
 	setupImageNums []int = []int{33, 10}

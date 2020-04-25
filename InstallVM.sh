@@ -30,6 +30,8 @@ systemctl status mysql.service
 
 sudo mysql -u root -p
 CREATE USER 'heronalps'@'localhost' IDENTIFIED BY '123456';
+GRANT ALL PRIVILEGES ON * . * TO 'heronalps'@'localhost';
+
 
 # Initialize DB tables
 cd STOIC
@@ -56,21 +58,23 @@ chmod +x ./kubectl
 
 sudo mv ./kubectl /usr/local/bin/kubectl
 
-echo "export PATH=$PATH:$HOME/bin:/usr/local/bin:/usr/local/go/bin" >> .bash_profile & source .bash_profile
+touch .bash_profile & \
+echo "export PATH=$PATH:$HOME/bin:/usr/local/bin:/usr/local/go/bin" >> .bash_profile & \
+source .bash_profile
 
 
 
 # kubectx
 
-git clone https://github.com/ahmetb/kubectx.git ~/.kubectx
-COMPDIR=$(pkg-config --variable=completionsdir bash-completion)
-sudo ln -sf ~/.kubectx/completion/kubens.bash $COMPDIR/kubens
-sudo ln -sf ~/.kubectx/completion/kubectx.bash $COMPDIR/kubectx
-cat << FOE >> ~/.bashrc
-#kubectx and kubens
-export PATH=~/.kubectx:\$PATH
-FOE
-source ~/.bashrc
+# git clone https://github.com/ahmetb/kubectx.git ~/.kubectx
+# COMPDIR=$(pkg-config --variable=completionsdir bash-completion)
+# sudo ln -sf ~/.kubectx/completion/kubens.bash $COMPDIR/kubens
+# sudo ln -sf ~/.kubectx/completion/kubectx.bash $COMPDIR/kubectx
+# cat << FOE >> ~/.bash_profile
+# #kubectx and kubens
+# export PATH=~/.kubectx:\$PATH
+# FOE
+# source ~/.bash_profile
 
 
 # Kubeless
@@ -94,7 +98,7 @@ sudo yum install bc
 sudo add-apt-repository ppa:deadsnakes/ppa
 sudo apt update
 sudo apt install python3.6
-rm -rf /usr/bin/python
+sudo rm -rf /usr/bin/python
 sudo ln -s /usr/bin/python3.6 /usr/bin/python
 
 # GPU_Serverless
@@ -107,12 +111,13 @@ sudo apt install virtualenv
 virtualenv venv --python=python3.6
 source venv/bin/activate
 
+touch requirements.txt
 pip install -r requirements.txt
 mkdir checkpoints
 
-scp -r ./checkpoints/ ubuntu@128.111.45.113:~/GPU_Serverless/
-scp -r ./data/SantaCruzIsland_Labeled_5Class/ ubuntu@128.111.45.113:~/GPU_Serverless/data
-scp -r ./data/SantaCruzIsland_Validation_5Class/ ubuntu@128.111.45.113:~/GPU_Serverless/data
+scp -r ./checkpoints/ heronalps@128.111.39.240:~/STOIC/
+# scp -r ./data/SantaCruzIsland_Labeled_5Class/ ubuntu@128.111.45.113:~/GPU_Serverless/data
+# scp -r ./data/SantaCruzIsland_Validation_5Class/ ubuntu@128.111.45.113:~/GPU_Serverless/data
 
 # Centos
 git clone https://github.com/heronalps/GPU_Serverless
@@ -125,74 +130,77 @@ source venv/bin/activate
 sudo snap install yq
 
 
-# Sedgwick VM does not have enough resource for minikube. Revert back to binary execution
+# # Sedgwick VM does not have enough resource for minikube. Revert back to binary execution
 
-# Virtualbox
+# # Virtualbox
 
-wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
-wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
-sudo sh -c 'echo "deb http://download.virtualbox.org/virtualbox/debian $(lsb_release -sc) contrib" >> /etc/apt/sources.list.d/virtualbox.list'
+# wget -q https://www.virtualbox.org/download/oracle_vbox_2016.asc -O- | sudo apt-key add -
+# wget -q https://www.virtualbox.org/download/oracle_vbox.asc -O- | sudo apt-key add -
+# sudo sh -c 'echo "deb http://download.virtualbox.org/virtualbox/debian $(lsb_release -sc) contrib" >> /etc/apt/sources.list.d/virtualbox.list'
 
-sudo apt update
-sudo apt-get -y install gcc make linux-headers-$(uname -r) dkms
+# sudo apt update
+# sudo apt-get -y install gcc make linux-headers-$(uname -r) dkms
 
-sudo apt update
-sudo apt-get install virtualbox-5.2
+# sudo apt update
+# sudo apt-get install virtualbox-5.2
 
-# minkube
+# # Docker
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+# sudo apt-get update
+# apt-cache policy docker-ce
 
-curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
-  && chmod +x minikube
+# sudo apt-get install -y docker-ce
+# sudo systemctl status docker
 
-sudo mkdir -p /usr/local/bin/
-sudo install minikube /usr/local/bin/
+# # minkube
 
-# Set memory to 4G / 2G
-minikube config set memory 4096 / 2048
-minikube config set cpus 2
-# minikube config set disk-size 40000
-minikube config set vm-driver virtualbox
-minikube start
+# curl -Lo minikube https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64 \
+#   && chmod +x minikube
 
-# kubeless namespace 
+# sudo mkdir -p /usr/local/bin/
+# sudo install minikube /usr/local/bin/
 
-export RELEASE=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
-kubectl create ns kubeless
-
-kubectl create -f minikube/deploy_edge.yaml
-
-# Docker
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt-get update
-apt-cache policy docker-ce
-
-sudo apt-get install -y docker-ce
-sudo systemctl status docker
-
-# Make docker to interact with minikube
-eval $(minikube docker-env)
+# # Set memory to 4G
+# minikube config set memory 4096
+# minikube config set cpus 2
+# # minikube config set disk-size 40000
+# minikube config set vm-driver virtualbox
+# minikube start
 
 
-# Nautilus Credentials
-# scp service-account and mv to nautilus in .kube
+# # Make docker to interact with minikube
+# eval $(minikube docker-env)
 
-export KUBECONFIG=~/.kube/config:~/.kube/nautilus
-kubectx nautilus
-kubectx minikube
 
-# Create pv & pvc & transfer_pod
-kubectl create -f minikube/pvc.yaml
-kubectl create -f minikube/transfer_pod.yaml
+# # kubeless namespace 
 
-# Copy image & model to persistent volume
-kubectl cp ~/GPU_Serverless/data/SantaCruzIsland_Labeled_5Class default/transfer-pod:/racelab/
-kubectl cp ~/GPU_Serverless/data/SantaCruzIsland_Validation_5Class default/transfer-pod:/racelab/
-kubectl cp ~/GPU_Serverless/checkpoints/ default/transfer-pod:/racelab/checkpoints
+# export RELEASE=$(curl -s https://api.github.com/repos/kubeless/kubeless/releases/latest | grep tag_name | cut -d '"' -f 4)
+# kubectl create ns kubeless
 
-# Create and Patch image-clf-inf deployment
-sh scripts/deploy.sh image-clf-inf 3.6 0 _edge
-# kubectl patch deployment image-clf-inf --patch "$(cat ./scripts/patch_edge.yaml)"
+# kubectl create -f minikube/deploy_edge.yaml
+
+
+# # Nautilus Credentials
+# # scp service-account and mv to nautilus in .kube and change context:name to nautilus
+
+# export KUBECONFIG=~/.kube/config:~/.kube/nautilus
+
+# kubectx nautilus
+# kubectx minikube
+
+# # Create pv & pvc & transfer_pod
+# kubectl create -f minikube/pvc.yaml
+# kubectl create -f minikube/transfer_pod.yaml
+
+# # Copy image & model to persistent volume
+# # kubectl cp ~/GPU_Serverless/data/SantaCruzIsland_Labeled_5Class default/transfer-pod:/racelab/
+# # kubectl cp ~/GPU_Serverless/data/SantaCruzIsland_Validation_5Class default/transfer-pod:/racelab/
+# # kubectl cp ~/GPU_Serverless/checkpoints/ default/transfer-pod:/racelab/checkpoints
+
+# # Create and Patch image-clf-inf deployment
+# sh scripts/deploy.sh image-clf-inf 3.6 0 _edge
+# # kubectl patch deployment image-clf-inf --patch "$(cat ./scripts/patch_edge.yaml)"
 
 
 ----------------------------------------------------------------
