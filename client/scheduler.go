@@ -5,7 +5,6 @@ Scheduler decides where to run WTB inferencing job given Pi bandwidth, number of
 package client
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"math"
@@ -48,7 +47,6 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 
 	for _, runtime := range selectedRuntimes {
 		_, predTimeLog = SelectRunTime(imageNum, zipPath, app, version, runtime)
-
 		retryErr := retrygo.Do(
 			func() error {
 				output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime])
@@ -70,6 +68,39 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 			//For setup regressions, the prediction is based on preset coef & intercept
 			LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
 		}
+	}
+
+	return output
+}
+
+/*
+ScheduleNoPred schedule task without predictions
+*/
+func ScheduleNoPred(runtime string, imageNum int, zipPath string, app string, version string) []byte {
+	var (
+		actTimeLog *TimeLog
+		output     []byte
+		isDeployed bool
+	)
+	transferTimes := GetTransferTime(zipPath)
+	retryErr := retrygo.Do(
+		func() error {
+			output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime])
+			runtimes[runtime] = isDeployed
+			if !isDeployed {
+				return errors.New("request was not deployed")
+			}
+			return nil
+		},
+	)
+	if retryErr != nil {
+		fmt.Printf("Request failed: %v ...", retryErr.Error())
+	}
+	if actTimeLog != nil {
+		actTimeLog.Transfer = transferTimes[runtime]
+	}
+	if actTimeLog != nil && actTimeLog.Processing != 0.0 {
+		AppendRecordProcessing(dbName, runtime, imageNum, actTimeLog.Processing, app, version)
 	}
 
 	return output
@@ -131,32 +162,25 @@ func RunOnEdge(zipPath string, imageNum int, app string, version string) ([]byte
 		cmd        *exec.Cmd
 		isDeployed bool
 	)
-	// repoPATH := HomeDir() + "/GPU_Serverless"
 
 	// Run WTB image classification task
 	FILE := "./apps/image-clf-inf-local.py "
 	//cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
-	//cmdRun := "source venv/bin/activate && python " + FILE
-	cmdRun := "source venv/bin/activate && python " + FILE
+	cmdRun := "source venv/bin/activate && python " + FILE + zipPath
 
-	cmd = exec.Command("bash", "-c", cmdRun, "-p", zipPath)
+	cmd = exec.Command("bash", "-c", cmdRun)
 	fmt.Printf("cmd : %s \n", cmd)
-	// cmd.Dir = repoPATH
+
 	fmt.Printf("Start running task %s version %s on %d images \n", app, version, imageNum)
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	err = cmd.Run()
+	output, err = cmd.Output()
 	if err != nil {
-		fmt.Println(fmt.Sprint(err) + ": " + stderr.String())
-		//fmt.Printf("Error running task. msg: %s \n", err.Error())
+		fmt.Printf("Error running task. msg: %s \n", err.Error())
 		return output, isDeployed, nil
 	}
-	//fmt.Printf("Output of task %s\n", string(output))
+	fmt.Printf("Output of task %s\n", string(output))
+
 	re := regexp.MustCompile(`Time with model.*`)
 	lastline := re.Find(output)
-	// fmt.Printf("lastline : %s..\n", lastline)
 	return lastline, true, CreateTimeLog(0.0, 0.0, ParseElapsed(output))
 }
 

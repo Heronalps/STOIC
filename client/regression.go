@@ -25,13 +25,13 @@ func SetupRegression(app string, version string) {
 	result := CompareVersion(version, dbVersion)
 	if result == 1 {
 		fmt.Printf("Current version %s is greater than DB version %s ..\n", version, dbVersion)
-		UpdateAppVersion(app, version)
 		for runtime := range runtimes {
 			for idx, imageNum := range setupImageNums {
-				zipPath, _ := GenerateBatch(imageNum, idx)
-				Schedule(runtime, imageNum, zipPath, app, version, false)
+				zipPath, batchSize := GenerateBatch(imageNum, idx)
+				ScheduleNoPred(runtime, batchSize, zipPath, app, version)
 			}
 		}
+		UpdateAppVersion(app, version)
 	} else {
 		fmt.Printf("Current version %s equals to / is less than DB version %s .. \n", version, dbVersion)
 		fmt.Println("Checking if at least two data points exist for each runtime...")
@@ -47,8 +47,8 @@ func SetupRegression(app string, version string) {
 			}
 			if rows < 2 {
 				for idx, imageNum := range setupImageNums {
-					zipPath, _ := GenerateBatch(imageNum, idx)
-					Schedule(runtime, imageNum, zipPath, app, version, false)
+					zipPath, batchSize := GenerateBatch(imageNum, idx)
+					ScheduleNoPred(runtime, batchSize, zipPath, app, version)
 				}
 			}
 		}
@@ -117,7 +117,7 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 	// Run RANSAC regression
 	FILE := "./scripts/robust_regression.py "
 	cmdRun := fmt.Sprintf("python3 %s %s %s %s %d", FILE, runtime, app, version, numDP)
-	// fmt.Println(cmdRun)
+	fmt.Println(cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
 	cmd.Dir = repoPATH
 	output, err = cmd.Output()

@@ -136,9 +136,6 @@ def handler(event, context):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--zip_path')
+    parser.add_argument('zip_path')
     args = parser.parse_args()
-    if args.zip_path:
-        handler({"data" : {"zip_path" : args.zip_path}}, {})
-    else:
-        handler({"data" : {}}, {})
+    handler({"data" : {"zip_path" : args.zip_path}}, {})

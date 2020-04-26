@@ -21,7 +21,7 @@ func SocketClient(port int, runtime string, app string, version string, all bool
 		output := Schedule(runtime, imageNum, zipPath, app, version, all)
 
 		fmt.Printf("Batch %d has been processed...\n", batch)
-		fmt.Printf("Output: %v \n", output)
+		fmt.Printf("Output: %v \n", string(output))
 		batch++
 		if batch == batches {
 			break

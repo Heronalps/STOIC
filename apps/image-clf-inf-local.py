@@ -7,9 +7,10 @@ from zipfile import ZipFile
 
 class_list = ["Birds", "Empty", "Fox", "Humans", "Rodents"]
 MODEL_DIR = './checkpoints/resnet50_model.h5'
-PROBE_IMG = '/Users/michaelzhang/GPU_Serverless/data/SantaCruzIsland_Labeled_5Class/Birds/IMG_0198.JPG'
+PROBE_IMG = os.getcwd() + '/data/IMG_0198.PNG'
 TARGET_IMG = '/IMG_0198.JPG'
 TEMP_DIR = os.getcwd() + "/image_buffer"
+
 WIDTH = 1920
 HEIGHT = 1080
 
@@ -65,7 +66,7 @@ class Worker(Process):
             x = preprocess_input(x)
             y_prob = trained_model.predict(x)
             index = y_prob.argmax()
-            print ("image : {0}, index : {1}".format(img_path, index))
+            # print ("image : {0}, index : {1}".format(img_path, index))
         
         print("GPU {} has done inferencing...".format(self._gpuid))
 
@@ -83,13 +84,13 @@ def run_sequential(image_list):
         x = preprocess_input(x)
         y_prob = trained_model.predict(x)
         index = y_prob.argmax()
-        print ("image : {0}, index : {1}".format(img_path, index))
+        # print ("image : {0}, index : {1}".format(img_path, index))
     
 
 def handler(event, context): 
     zip_flag = False
     
-    if isinstance(event['data'], dict) and "zip_path" in event['data'] and event['data']['zip_path']:
+    if isinstance(event['data'], dict) and "zip_path" in event['data'] and len(event['data']['zip_path']) > 10:
         global ZIP_PATH
         ZIP_PATH = event['data']['zip_path']
         zip_flag = True
@@ -136,9 +137,6 @@ def handler(event, context):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--zip_path')
+    parser.add_argument('zip_path')
     args = parser.parse_args()
-    if args.zip_path:
-        handler({"data" : {"zip_path" : args.zip_path}}, {})
-    else:
-        handler({"data" : {"zip_paht": ""}}, {})
+    handler({"data" : {"zip_path" : args.zip_path}}, {})
