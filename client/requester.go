@@ -68,7 +68,9 @@ func RunOnNautilus(runtime string, zipPath string, imageNum int, app string, ver
 			// Add true condition to always probe
 			if true || !isGPUSame {
 				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
-				cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh ", serviceAccountConfig)
+
+				// The pseudoPath is a workaround of golang exec incompotence option
+				cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh pseudoPath", serviceAccountConfig)
 				cmdRun = exec.Command("bash", "-c", cmd)
 
 				if output, err = cmdRun.Output(); err != nil {

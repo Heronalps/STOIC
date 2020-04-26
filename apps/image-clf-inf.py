@@ -90,7 +90,7 @@ def run_sequential(image_list):
 def handler(event, context): 
     zip_flag = False
     
-    if isinstance(event['data'], dict) and "zip_path" in event['data'] and event['data']['zip_path']:
+    if isinstance(event['data'], dict) and "zip_path" in event['data'] and event['data']['zip_path'].lower() != "pseudopath":
         global ZIP_PATH
         ZIP_PATH = event['data']['zip_path']
         zip_flag = True
@@ -111,8 +111,9 @@ def handler(event, context):
     num_image = 0
     image_list = list()
     for img in os.listdir(TEMP_DIR):
-        image_list.append(os.path.join(TEMP_DIR, img))
-        num_image += 1
+        if img.lower().endswith(".jpg") or img.lower().endswith(".png"):
+            image_list.append(os.path.join(TEMP_DIR, img))
+            num_image += 1
         
     start = time.time()
 

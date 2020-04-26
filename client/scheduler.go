@@ -169,7 +169,7 @@ func RunOnEdge(zipPath string, imageNum int, app string, version string) ([]byte
 	cmdRun := "source venv/bin/activate && python " + FILE + zipPath
 
 	cmd = exec.Command("bash", "-c", cmdRun)
-	fmt.Printf("cmd : %s \n", cmd)
+	// fmt.Printf("cmd : %s \n", cmd)
 
 	fmt.Printf("Start running task %s version %s on %d images \n", app, version, imageNum)
 	output, err = cmd.Output()
