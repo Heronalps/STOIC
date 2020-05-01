@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -14,6 +15,9 @@ import (
 
 // TransferBatch transfer an image batch to ceph S3
 func TransferBatch(path string) {
+	var (
+		fileName string
+	)
 	// Open the file for use
 	file, err := os.Open(path)
 	if err != nil {
@@ -29,11 +33,16 @@ func TransferBatch(path string) {
 
 	s3Client := s3.New(session.New(s3Config))
 	// Regex gets batch name
+	re := regexp.MustCompile("image.*\\.zip")
+	match := re.FindSubmatch([]byte(path))
+	if len(match) > 0 {
+		fileName = string(match[0])
+	}
 
 	input := &s3.PutObjectInput{
 		Body:               bytes.NewReader(buffer),
 		Bucket:             aws.String("test-bucket"),
-		Key:                aws.String("image_batch_1"),
+		Key:                aws.String(fileName),
 		ContentLength:      aws.Int64(size),
 		ContentType:        aws.String(http.DetectContentType(buffer)),
 		ContentDisposition: aws.String("image-batch"),
