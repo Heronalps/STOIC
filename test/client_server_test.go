@@ -141,3 +141,8 @@ func TestTransferBatch(t *testing.T) {
 	path := "/Users/michaelzhang/go/src/github.com/heronalps/STOIC/image_batch_2.zip"
 	client.TransferBatch(path)
 }
+
+func TestListObject(t *testing.T) {
+	bucket := "test-bucket"
+	client.ListObject(bucket)
+}
