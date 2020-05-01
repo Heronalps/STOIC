@@ -81,9 +81,15 @@ func ScheduleNoPred(runtime string, imageNum int, zipPath string, app string, ve
 		actTimeLog *TimeLog
 		output     []byte
 		isDeployed bool
+		retryErr   error
 	)
 	transferTimes := GetTransferTime(zipPath)
-	retryErr := retrygo.Do(
+	// retryErr = retrygo.Do(
+	// 	func() error {
+
+	// 	}
+	// )
+	retryErr = retrygo.Do(
 		func() error {
 			output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime])
 			runtimes[runtime] = isDeployed

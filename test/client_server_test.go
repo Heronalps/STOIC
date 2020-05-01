@@ -129,6 +129,15 @@ func TestCopyFile(t *testing.T) {
 }
 
 func TestGetTransferTime(t *testing.T) {
-	zipPath := "/Users/michaelzhang/go/src/github.com/heronalps/STOIC/image_batch_1.zip"
+	zipPath := "/Users/michaelzhang/go/src/github.com/heronalps/STOIC/image_batch_2.zip"
 	client.GetTransferTime(zipPath)
+}
+
+func TestListBucket(t *testing.T) {
+	client.ListBucket()
+}
+
+func TestTransferBatch(t *testing.T) {
+	path := "/Users/michaelzhang/go/src/github.com/heronalps/STOIC/image_batch_2.zip"
+	client.TransferBatch(path)
 }
