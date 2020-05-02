@@ -36,8 +36,17 @@ func RunOnNautilus(runtime string, zipPath string, imageNum int, app string, ver
 		procTime       float64
 		deploymentTime float64
 		cmdRun         *exec.Cmd
+		retryErr       error
 	)
-	//resultChannel := make(chan []byte)
+	retryErr = retrygo.Do(
+		func() error {
+			TransferBatch(zipPath)
+			return nil
+		},
+	)
+	if retryErr != nil {
+		fmt.Printf("Transfer zip to S3 failed: %v \n", retryErr.Error())
+	}
 
 	fmt.Printf("Making request to Nautilus %s %d \n", runtime, imageNum)
 
@@ -60,7 +69,7 @@ func RunOnNautilus(runtime string, zipPath string, imageNum int, app string, ver
 
 	// Wait 3 second for deployment to complete
 	time.Sleep(3 * time.Second)
-	retryErr := retrygo.Do(
+	retryErr = retrygo.Do(
 		func() error {
 			// If the pod is re-deployed,
 			// make initial kubeless call to depolyed function to avoid cold start

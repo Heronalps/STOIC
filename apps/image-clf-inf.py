@@ -1,6 +1,6 @@
 from multiprocessing import Process, Queue
 import numpy as np
-import time, math, os, argparse, shutil, pathlib
+import time, math, os, argparse, shutil, pathlib, boto3
 from gpuinfo import GPUInfo
 from zipfile import ZipFile
 
@@ -13,6 +13,9 @@ TEMP_DIR = "/racelab/image_buffer"
 TARGET_IMG = '/IMG_0198.JPG'
 WIDTH = 1920
 HEIGHT = 1080
+
+BUCKET = "test-bucket"
+FILENAME = "temp.zip"
 
 class Scheduler:
     def __init__(self, gpu_num):
@@ -87,15 +90,27 @@ def run_sequential(image_list):
         print ("image : {0}, index : {1}".format(img_path, index))
     
 
+def download_and_decompress_zip(key):
+    s3 = boto3.resource('s3',
+                        endpoint_url="http://rook-ceph-rgw-nautiluss3.rook",
+                        aws_access_key_id="Y2WY7EJAPSVBC0PBP5IZ",
+                        aws_secret_access_key= "MkNuKhdyoXPMsF3dHljnnLHOPp6KgGGxlurVwiMO")
+    bucket = s3.Bucket(BUCKET)
+
+    bucket.download_file(Key=key, Filename=FILENAME)
+    file_dir = os.getcwd() + "/" + FILENAME
+
+    with ZipFile(file_dir, 'r') as zipFile:
+        zipFile.extractall(TEMP_DIR)
+
 def handler(event, context): 
     zip_flag = False
     
-    if isinstance(event['data'], dict) and "zip_path" in event['data'] and event['data']['zip_path'].lower() != "pseudopath":
-        global ZIP_PATH
-        ZIP_PATH = event['data']['zip_path']
+    if isinstance(event['data'], dict) and "key_name" in event['data'] and event['data']['key_name'].lower() != "pseudopath":
+        global KEY_NAME
+        KEY_NAME = event['data']['key_name']
         zip_flag = True
-        with ZipFile(ZIP_PATH, 'r') as zipFile:
-            zipFile.extractall(TEMP_DIR)
+        download_and_decompress_zip(KEY_NAME)
     else:
         pathlib.Path(TEMP_DIR).mkdir(parents=True, exist_ok=True)
         shutil.copyfile(PROBE_IMG, TEMP_DIR + TARGET_IMG)
@@ -137,6 +152,6 @@ def handler(event, context):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('zip_path')
+    parser.add_argument('key_name')
     args = parser.parse_args()
-    handler({"data" : {"zip_path" : args.zip_path}}, {})
+    handler({"data" : {"key_name" : args.key_name}}, {})

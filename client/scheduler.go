@@ -84,11 +84,6 @@ func ScheduleNoPred(runtime string, imageNum int, zipPath string, app string, ve
 		retryErr   error
 	)
 	transferTimes := GetTransferTime(zipPath)
-	// retryErr = retrygo.Do(
-	// 	func() error {
-
-	// 	}
-	// )
 	retryErr = retrygo.Do(
 		func() error {
 			output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime])
@@ -100,7 +95,7 @@ func ScheduleNoPred(runtime string, imageNum int, zipPath string, app string, ve
 		},
 	)
 	if retryErr != nil {
-		fmt.Printf("Request failed: %v ...", retryErr.Error())
+		fmt.Printf("Request failed: %v ...\n", retryErr.Error())
 	}
 	if actTimeLog != nil {
 		actTimeLog.Transfer = transferTimes[runtime]
