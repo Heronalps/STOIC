@@ -7,6 +7,7 @@ package client
 import (
 	"archive/zip"
 	"encoding/gob"
+	"fmt"
 	"io"
 	"log"
 	"math"
@@ -16,6 +17,8 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+
+	retrygo "github.com/avast/retry-go"
 )
 
 /*
@@ -95,6 +98,7 @@ func GenerateBatch(imageNum int, batchNo int) (string, int) {
 		rootPath  string
 		files     []string
 		batchSize int
+		zipPath   string
 	)
 	// Select volume
 	switch volumnNo := rand.Intn(3); volumnNo {
@@ -105,7 +109,7 @@ func GenerateBatch(imageNum int, batchNo int) (string, int) {
 	case 2:
 		rootPath = "/opt3"
 	}
-	rootPath = "/Users/michaelzhang/Downloads/WTB_samples"
+	// rootPath = "/Users/michaelzhang/Downloads/WTB_samples"
 	registryPath := rootPath + "/registryMap.gob"
 
 	// Decode registry map
@@ -135,11 +139,20 @@ func GenerateBatch(imageNum int, batchNo int) (string, int) {
 	for idx := seqNo; idx < seqNo+batchSize; idx++ {
 		files = append(files, registryMap[idx])
 	}
-	zipPath := rootPath + "/image_batch_" + strconv.Itoa(batchNo) + ".zip"
-	// package the batch
-	if err := ZipFiles(zipPath, files); err != nil {
-		panic(err)
+	retryErr := retrygo.Do(
+		func() error {
+			zipPath = rootPath + "/image_batch_" + strconv.Itoa(batchNo) + ".zip"
+			// package the batch
+			if err := ZipFiles(zipPath, files); err != nil {
+				batchNo++
+			}
+			return nil
+		},
+	)
+	if retryErr != nil {
+		fmt.Printf("Zip image batch failed: %v ...\n", retryErr.Error())
 	}
+
 	return zipPath, batchSize
 }
 

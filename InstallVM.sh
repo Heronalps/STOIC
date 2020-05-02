@@ -63,6 +63,13 @@ echo "export PATH=$PATH:$HOME/bin:/usr/local/bin:/usr/local/go/bin" >> .bash_pro
 source .bash_profile
 
 
+# Nautilus Credentials
+# scp service-account and mv to nautilus in .kube and change context:name to nautilus
+
+export KUBECONFIG=~/.kube/config:~/.kube/nautilus
+
+# Add .aws and aws credentials
+
 
 # kubectx
 
@@ -179,12 +186,6 @@ sudo snap install yq
 # kubectl create ns kubeless
 
 # kubectl create -f minikube/deploy_edge.yaml
-
-
-# # Nautilus Credentials
-# # scp service-account and mv to nautilus in .kube and change context:name to nautilus
-
-# export KUBECONFIG=~/.kube/config:~/.kube/nautilus
 
 # kubectx nautilus
 # kubectx minikube
