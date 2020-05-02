@@ -15,7 +15,7 @@ WIDTH = 1920
 HEIGHT = 1080
 
 BUCKET = "test-bucket"
-FILENAME = "temp.zip"
+FILE_PATH = "/racelab/temp.zip"
 
 class Scheduler:
     def __init__(self, gpu_num):
@@ -97,20 +97,16 @@ def download_and_decompress_zip(key):
                         aws_secret_access_key= "MkNuKhdyoXPMsF3dHljnnLHOPp6KgGGxlurVwiMO")
     bucket = s3.Bucket(BUCKET)
 
-    bucket.download_file(Key=key, Filename=FILENAME)
-    file_dir = os.getcwd() + "/" + FILENAME
+    bucket.download_file(Key=key, Filename=FILE_PATH)
 
-    with ZipFile(file_dir, 'r') as zipFile:
+    with ZipFile(FILE_PATH, 'r') as zipFile:
         zipFile.extractall(TEMP_DIR)
 
 def handler(event, context): 
-    zip_flag = False
     
-    if isinstance(event['data'], dict) and "key_name" in event['data'] and event['data']['key_name'].lower() != "pseudopath":
-        global KEY_NAME
-        KEY_NAME = event['data']['key_name']
-        zip_flag = True
-        download_and_decompress_zip(KEY_NAME)
+    if event['data']['key_name'].lower() != "pseudo_key":
+        key_name = event['data']['key_name']
+        download_and_decompress_zip(key_name)
     else:
         pathlib.Path(TEMP_DIR).mkdir(parents=True, exist_ok=True)
         shutil.copyfile(PROBE_IMG, TEMP_DIR + TARGET_IMG)
@@ -144,8 +140,7 @@ def handler(event, context):
 
     # Clean up temp image folder
     shutil.rmtree(TEMP_DIR)
-    # if (zip_flag):
-    #     os.remove(ZIP_PATH)
+    
 
     print ("Time with model loading {0} for {1} images.".format(end - start, num_image))
     return ("Time with model loading {0} for {1} images.".format(end - start, num_image))

@@ -14,9 +14,9 @@ import (
 )
 
 // TransferBatch transfer an image batch to ceph S3
-func TransferBatch(path string) {
+func TransferBatch(path string) string {
 	var (
-		fileName string
+		s3Key string
 	)
 	// Open the file for use
 	file, err := os.Open(path)
@@ -36,13 +36,13 @@ func TransferBatch(path string) {
 	re := regexp.MustCompile("image.*\\.zip")
 	match := re.FindSubmatch([]byte(path))
 	if len(match) > 0 {
-		fileName = string(match[0])
+		s3Key = string(match[0])
 	}
 
 	input := &s3.PutObjectInput{
 		Body:               bytes.NewReader(buffer),
 		Bucket:             aws.String("test-bucket"),
-		Key:                aws.String(fileName),
+		Key:                aws.String(s3Key),
 		ContentLength:      aws.Int64(size),
 		ContentType:        aws.String(http.DetectContentType(buffer)),
 		ContentDisposition: aws.String("image-batch"),
@@ -57,9 +57,9 @@ func TransferBatch(path string) {
 		} else {
 			fmt.Println(err.Error())
 		}
-		return
 	}
-	fmt.Println(result)
+	fmt.Printf("S3 Put Object Result : %s \n", result)
+	return s3Key
 }
 
 // ListBucket lists ceph s3 bucket

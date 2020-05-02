@@ -37,10 +37,11 @@ func RunOnNautilus(runtime string, zipPath string, imageNum int, app string, ver
 		deploymentTime float64
 		cmdRun         *exec.Cmd
 		retryErr       error
+		s3Key          string
 	)
 	retryErr = retrygo.Do(
 		func() error {
-			TransferBatch(zipPath)
+			s3Key = TransferBatch(zipPath)
 			return nil
 		},
 	)
@@ -79,14 +80,14 @@ func RunOnNautilus(runtime string, zipPath string, imageNum int, app string, ver
 				fmt.Println("Probing deployed kubeless function to avoid cold start ...")
 
 				// The pseudoPath is a workaround of golang exec incompotence option
-				cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh pseudoPath", serviceAccountConfig)
+				cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh pseudo_key", serviceAccountConfig)
 				cmdRun = exec.Command("bash", "-c", cmd)
 
 				if output, err = cmdRun.Output(); err != nil {
 					fmt.Println("Error msg : ", err.Error())
 					return err
 				}
-				fmt.Println(string(output))
+				fmt.Printf("output : %s \n", string(output))
 				fmt.Println("Finish Probing ...")
 			} else {
 				fmt.Println("Using same pod, No probing needed....")
@@ -94,7 +95,7 @@ func RunOnNautilus(runtime string, zipPath string, imageNum int, app string, ver
 
 			// Make kubeless call to deployed function
 			// Put presetZipPath for testing purpose
-			cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh %s", serviceAccountConfig, presetZipPath)
+			cmd = fmt.Sprintf("%s sh ./scripts/invoke_inf.sh %s", serviceAccountConfig, s3Key)
 			cmdRun = exec.Command("bash", "-c", cmd)
 			if output, err = cmdRun.Output(); err != nil {
 				fmt.Println("Error msg : ", err.Error())
