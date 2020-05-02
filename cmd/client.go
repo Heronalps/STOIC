@@ -20,7 +20,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			// go client.StartInquisitor(winSizeInterval, inqApp, interval)
 			client.SetupRegression(app, version)
-			// client.SocketClient(port, runtime, app, version, allRuntime, imageNum, batches)
+			client.SocketClient(port, runtime, app, version, allRuntime, imageNum, batches)
 		},
 	}
 )
