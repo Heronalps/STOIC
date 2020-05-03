@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"os"
 	"os/exec"
 	"regexp"
 	"sort"
@@ -67,6 +68,10 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 			AppendRecordProcessing(dbName, runtime, imageNum, actTimeLog.Processing, app, version)
 			//For setup regressions, the prediction is based on preset coef & intercept
 			LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
+		}
+		err := os.Remove(zipPath)
+		if err != nil {
+			fmt.Println("Image batch zip file was not deleted...")
 		}
 	}
 
