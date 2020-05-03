@@ -116,7 +116,7 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 	}
 	// Run RANSAC regression
 	FILE := "./scripts/robust_regression.py "
-	cmdRun := fmt.Sprintf("python3 %s %s %s %s %d", FILE, runtime, app, version, numDP)
+	cmdRun := fmt.Sprintf("source venv/bin/activate && python %s %s %s %s %d", FILE, runtime, app, version, numDP)
 	// fmt.Printf("Regression cmd : %s \n", cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
 	cmd.Dir = repoPATH

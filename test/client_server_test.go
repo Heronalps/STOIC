@@ -146,3 +146,7 @@ func TestListObject(t *testing.T) {
 	bucket := "test-bucket"
 	client.ListObject(bucket)
 }
+
+func TestHomeDir(t *testing.T) {
+	fmt.Println(client.HomeDir())
+}
