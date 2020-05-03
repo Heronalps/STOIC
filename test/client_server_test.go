@@ -95,12 +95,12 @@ func TestServerWorkload(t *testing.T) {
 }
 
 func TestRegisterImages(t *testing.T) {
-	var paths [3]string
-	paths[0] = "/opt"
-	paths[1] = "/opt2"
-	paths[2] = "/opt3"
-	// var paths [1]string
-	// paths[0] = "/Users/michaelzhang/Downloads/WTB_samples"
+	// var paths [3]string
+	// paths[0] = "/opt"
+	// paths[1] = "/opt2"
+	// paths[2] = "/opt3"
+	var paths [1]string
+	paths[0] = "/Users/michaelzhang/Downloads/WTB_samples/2015-11-01"
 	for _, path := range paths {
 		client.RegisterImages(path)
 		decodeFile, err := os.Open(path + "/registryMap.gob")
@@ -113,7 +113,7 @@ func TestRegisterImages(t *testing.T) {
 		registryMap := make(map[int]string)
 
 		decoder.Decode(&registryMap)
-		// fmt.Println(registryMap)
+		fmt.Println(registryMap)
 	}
 }
 
@@ -149,4 +149,8 @@ func TestListObject(t *testing.T) {
 
 func TestHomeDir(t *testing.T) {
 	fmt.Println(client.HomeDir())
+}
+
+func TestParseImageFileName(t *testing.T) {
+	fmt.Println(client.ParseImageFileName("Main_2015-11-01_04/46/14_0300.jpg"))
 }

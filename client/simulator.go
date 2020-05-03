@@ -88,6 +88,63 @@ func RegisterImages(rootPath string) {
 }
 
 /*
+DecodeImageRegistry decodes .gob file and output a CSV file with parsed fields
+File Name | Date | Timestamp | Sequence No |
+*/
+func DecodeImageRegistry(path string) {
+
+	decodeFile, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	defer decodeFile.Close()
+
+	decoder := gob.NewDecoder(decodeFile)
+	registryMap := make(map[int]string)
+
+	decoder.Decode(&registryMap)
+
+	fmt.Println(registryMap)
+}
+
+/*
+ParseImageFileName parses the filename string and returns 3 fields: date, time, epoch second, sequence number
+*/
+func ParseImageFileName(filename string) (string, string, int64, string) {
+
+	re := regexp.MustCompile(`(?P<Year>\d{4})-(?P<Month>\d{2})-(?P<Day>\d{2})`)
+	date := string(re.FindSubmatch([]byte(filename))[0])
+
+	fmt.Printf("date : %s \n", date)
+
+	re = regexp.MustCompile(`\d{2}\/\d{2}\/\d{2}`)
+	tsWithSlash := re.FindSubmatch([]byte(filename))[0]
+
+	re = regexp.MustCompile(`/`)
+	timePoint := string(re.ReplaceAll(tsWithSlash, []byte(":")))
+
+	fmt.Printf("Timestamp : %s \n", timePoint)
+
+	timeStamp := date + "T" + timePoint + "+00:00"
+
+	thetime, err := time.Parse(time.RFC3339, timeStamp)
+
+	if err != nil {
+		fmt.Println("Can't parse time format")
+	}
+	epoch := thetime.Unix()
+
+	fmt.Printf("Epoch : %d \n", epoch)
+
+	re = regexp.MustCompile(`(\d*)\.jpg`)
+	seqNo := string(re.FindSubmatch([]byte(filename))[1])
+
+	fmt.Printf("Sequence Number : %s \n", seqNo)
+
+	return date, timePoint, epoch, seqNo
+}
+
+/*
 GenerateBatch generates a batch of images randomly selected from 3 volumes /opt /opt2 /opt3
 1. generate 3 random numbers, volumnNo, seqNo, batch size
 2. select corresponding pictures, cache at a local dir and package them
