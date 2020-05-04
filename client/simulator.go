@@ -139,16 +139,16 @@ ParseImageFileName parses the filename string and returns 3 fields: date, time, 
 func ParseImageFileName(filename string) *CSVRecord {
 
 	// Last occurrence of / and following chars
-	re := regexp.MustCompile(`Main(.*)`)
-	match := re.FindSubmatch([]byte(filename))
+	// re := regexp.MustCompile(`Main(.*)`)
+	// match := re.FindSubmatch([]byte(filename))
 
-	if len(match) == 0 {
-		re := regexp.MustCompile(`BoneH(.*)`)
-		match = re.FindSubmatch([]byte(filename))
-	}
-	truncatedFilename := string(match[0])
+	// if len(match) == 0 {
+	// 	re := regexp.MustCompile(`BoneH(.*)`)
+	// 	match = re.FindSubmatch([]byte(filename))
+	// }
+	// truncatedFilename := string(match[0])
 
-	re = regexp.MustCompile(`(?P<Year>\d{4})-(?P<Month>\d{2})-(?P<Day>\d{2})`)
+	re := regexp.MustCompile(`(?P<Year>\d{4})-(?P<Month>\d{2})-(?P<Day>\d{2})`)
 	date := string(re.FindSubmatch([]byte(filename))[0])
 
 	// fmt.Printf("date : %s \n", date)
@@ -182,7 +182,7 @@ func ParseImageFileName(filename string) *CSVRecord {
 	// fmt.Printf("Sequence Number : %s \n", seqNo)
 
 	csvRecord := &CSVRecord{
-		FileName:  truncatedFilename,
+		FileName:  filename,
 		Date:      date,
 		TimePoint: timePoint,
 		Epoch:     epoch,
