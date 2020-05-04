@@ -152,5 +152,9 @@ func TestHomeDir(t *testing.T) {
 }
 
 func TestParseImageFileName(t *testing.T) {
-	fmt.Println(client.ParseImageFileName("Main_2015-11-01_04/46/14_0300.jpg"))
+	fmt.Println(client.ParseImageFileName("/Users/michaelzhang/Downloads/WTB_samples/time_lapse/Main_2013-08-03_13:20:10_5192_16-407.jpg"))
+}
+
+func TestDecodeImageRegistry(t *testing.T) {
+	client.DecodeImageRegistry("/Users/michaelzhang/Downloads/WTB_samples/registryMap.gob")
 }

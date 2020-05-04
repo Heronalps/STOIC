@@ -6,6 +6,7 @@ package client
 
 import (
 	"archive/zip"
+	"encoding/csv"
 	"encoding/gob"
 	"fmt"
 	"io"
@@ -92,7 +93,6 @@ DecodeImageRegistry decodes .gob file and output a CSV file with parsed fields
 File Name | Date | Timestamp | Sequence No |
 */
 func DecodeImageRegistry(path string) {
-
 	decodeFile, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -104,26 +104,66 @@ func DecodeImageRegistry(path string) {
 
 	decoder.Decode(&registryMap)
 
-	fmt.Println(registryMap)
+	// Traverse the map to output csv : File name, date, timestamp, epoch, sequence number
+	// 1. Create a file
+	csvFile, err := os.Create("./time_stamp.csv")
+	if err != nil {
+		fmt.Println("Failed creating file : ", err.Error())
+	}
+	// 2. Initialize the writer
+	writer := csv.NewWriter(csvFile)
+
+	for idx := 1; idx < len(registryMap); idx++ {
+		// fmt.Printf("FileName : %s \n", registryMap[idx])
+		csvRecord := ParseImageFileName(registryMap[idx])
+		record := []string{
+			csvRecord.FileName,
+			csvRecord.Date,
+			csvRecord.TimePoint,
+			csvRecord.Epoch,
+			csvRecord.SeqNo}
+		if err = writer.Write(record); err != nil {
+			fmt.Println("Failed writing to CSV : ", err.Error())
+		}
+	}
+	writer.Flush()
+
+	if err = writer.Error(); err != nil {
+		fmt.Println("Failed flushing csv writer : ", err.Error())
+	}
 }
 
 /*
 ParseImageFileName parses the filename string and returns 3 fields: date, time, epoch second, sequence number
 */
-func ParseImageFileName(filename string) (string, string, int64, string) {
+func ParseImageFileName(filename string) *CSVRecord {
 
-	re := regexp.MustCompile(`(?P<Year>\d{4})-(?P<Month>\d{2})-(?P<Day>\d{2})`)
+	// Last occurrence of / and following chars
+	re := regexp.MustCompile(`Main(.*)`)
+	match := re.FindSubmatch([]byte(filename))
+
+	if len(match) == 0 {
+		re := regexp.MustCompile(`BoneH(.*)`)
+		match = re.FindSubmatch([]byte(filename))
+	}
+	truncatedFilename := string(match[0])
+
+	re = regexp.MustCompile(`(?P<Year>\d{4})-(?P<Month>\d{2})-(?P<Day>\d{2})`)
 	date := string(re.FindSubmatch([]byte(filename))[0])
 
-	fmt.Printf("date : %s \n", date)
+	// fmt.Printf("date : %s \n", date)
 
 	re = regexp.MustCompile(`\d{2}\/\d{2}\/\d{2}`)
-	tsWithSlash := re.FindSubmatch([]byte(filename))[0]
+	ts := re.FindSubmatch([]byte(filename))
+	if len(ts) == 0 {
+		re = regexp.MustCompile(`\d{2}:\d{2}:\d{2}`)
+		ts = re.FindSubmatch([]byte(filename))
+	}
 
 	re = regexp.MustCompile(`/`)
-	timePoint := string(re.ReplaceAll(tsWithSlash, []byte(":")))
+	timePoint := string(re.ReplaceAll(ts[0], []byte(":")))
 
-	fmt.Printf("Timestamp : %s \n", timePoint)
+	// fmt.Printf("Timestamp : %s \n", timePoint)
 
 	timeStamp := date + "T" + timePoint + "+00:00"
 
@@ -132,16 +172,23 @@ func ParseImageFileName(filename string) (string, string, int64, string) {
 	if err != nil {
 		fmt.Println("Can't parse time format")
 	}
-	epoch := thetime.Unix()
-
-	fmt.Printf("Epoch : %d \n", epoch)
+	epochInt64 := thetime.Unix()
+	epoch := strconv.FormatInt(epochInt64, 10)
+	// fmt.Printf("Epoch : %s \n", epoch)
 
 	re = regexp.MustCompile(`(\d*)\.jpg`)
 	seqNo := string(re.FindSubmatch([]byte(filename))[1])
 
-	fmt.Printf("Sequence Number : %s \n", seqNo)
+	// fmt.Printf("Sequence Number : %s \n", seqNo)
 
-	return date, timePoint, epoch, seqNo
+	csvRecord := &CSVRecord{
+		FileName:  truncatedFilename,
+		Date:      date,
+		TimePoint: timePoint,
+		Epoch:     epoch,
+		SeqNo:     seqNo,
+	}
+	return csvRecord
 }
 
 /*

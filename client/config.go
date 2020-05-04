@@ -59,3 +59,14 @@ type DeployResult struct {
 	Progressed bool
 	Timeout    bool
 }
+
+/*
+CSVRecord contains fields in csv file
+*/
+type CSVRecord struct {
+	FileName  string
+	Date      string
+	TimePoint string
+	Epoch     string
+	SeqNo     string
+}
