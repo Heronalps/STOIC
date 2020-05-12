@@ -112,7 +112,10 @@ func DecodeImageRegistry(path string) {
 	}
 	// 2. Initialize the writer
 	writer := csv.NewWriter(csvFile)
-
+	header := []string{"filename", "date", "time", "epoch", "seqNo"}
+	if err := writer.Write(header); err != nil {
+		fmt.Println("Failed writing header to CSV : ", err.Error())
+	}
 	for idx := 1; idx < len(registryMap); idx++ {
 		// fmt.Printf("FileName : %s \n", registryMap[idx])
 		csvRecord := ParseImageFileName(registryMap[idx])
