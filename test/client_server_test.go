@@ -158,3 +158,7 @@ func TestParseImageFileName(t *testing.T) {
 func TestDecodeImageRegistry(t *testing.T) {
 	client.DecodeImageRegistry("/Users/michaelzhang/Downloads/WTB_samples/registryMap.gob")
 }
+
+func TestBatchSizeECDF(t *testing.T) {
+	fmt.Println(client.BatchSizeECDF())
+}

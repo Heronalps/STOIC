@@ -20,6 +20,7 @@ import (
 	"time"
 
 	retrygo "github.com/avast/retry-go"
+	"gonum.org/v1/gonum/stat"
 )
 
 /*
@@ -38,6 +39,18 @@ func BatchSize() int {
 	mean := 42.75
 	stdev := 39.5
 	return int(math.Ceil(math.Abs(RandNum(mean, stdev))))
+}
+
+/*
+BatchSizeECDF outputs a random number of images based on empirical CDF from WTB dataset
+*/
+func BatchSizeECDF() int {
+	// Generate random number based on epoch second
+	rand.Seed(time.Now().UnixNano())
+	prob := rand.Float64()
+	// fmt.Println(prob)
+	cdf := stat.Quantile(prob, stat.CumulantKind(1), hourlyDistribution, nil)
+	return int(cdf)
 }
 
 /*
@@ -237,7 +250,7 @@ func GenerateBatch(imageNum int, batchNo int) (string, int) {
 
 	// Override batchSize if image number is set
 	if imageNum == 0 {
-		batchSize = BatchSize()
+		batchSize = BatchSizeECDF()
 	} else {
 		batchSize = imageNum
 	}
