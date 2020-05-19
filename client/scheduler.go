@@ -44,7 +44,8 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 			}
 		}
 	}
-	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
+	// fmt.Printf("SelectedRuntimes : %v\n", selectedRuntimes)
+	// selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
 	for _, runtime := range selectedRuntimes {
 		_, predTimeLog = SelectRunTime(imageNum, zipPath, app, version, runtime)
@@ -69,10 +70,10 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 			//For setup regressions, the prediction is based on preset coef & intercept
 			LogTimes(imageNum, app, version, runtime, predTimeLog, actTimeLog)
 		}
-		err := os.Remove(zipPath)
-		if err != nil {
-			fmt.Println("Image batch zip file was not deleted...")
-		}
+	}
+	err := os.Remove(zipPath)
+	if err != nil {
+		fmt.Println("Image batch zip file was not deleted...")
 	}
 
 	return output
