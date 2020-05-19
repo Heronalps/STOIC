@@ -127,10 +127,10 @@ def handler(event, context):
         
     end = time.time()
 
-    # Clean up temp image folder
+    # Clean up temp image folder - Deletion is in scheduler.go
     shutil.rmtree(TEMP_DIR)
-    if (zip_flag):
-        os.remove(ZIP_PATH)
+    # if (zip_flag):
+    #     os.remove(ZIP_PATH)
 
     print ("Time with model loading {0} for {1} images.".format(end - start, num_image))
     return ("Time with model loading {0} for {1} images.".format(end - start, num_image))
