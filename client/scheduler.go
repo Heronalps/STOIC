@@ -33,7 +33,7 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 	selectedRuntimes := []string{}
 	selectedRuntime, predTimeLog := SelectRunTime(imageNum, zipPath, app, version, runtime)
 	fmt.Printf("The task is scheduled at %s \n", selectedRuntime)
-	fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
+	// fmt.Printf("The bandwidth is %f megabits \n", GetBandWidth())
 	fmt.Printf("The batch of %d images needs %f seconds to transfer to runtime %s\n",
 		imageNum, transferTimes[selectedRuntime], selectedRuntime)
 
