@@ -102,7 +102,7 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 		err       error
 		cmd       *exec.Cmd
 	)
-	repoPATH := HomeDir() + "/go/src/github.com/heronalps/STOIC"
+	repoPATH := HomeDir() + "/STOIC"
 	X, Y := QueryDataSet(runtime, app, version, numDP)
 
 	if X == nil && Y == nil {

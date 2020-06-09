@@ -45,7 +45,7 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 		}
 	}
 	// fmt.Printf("SelectedRuntimes : %v\n", selectedRuntimes)
-	// selectedRuntimes = append(selectedRuntimes, selectedRuntime)
+	selectedRuntimes = append(selectedRuntimes, selectedRuntime)
 
 	for _, runtime := range selectedRuntimes {
 		_, predTimeLog = SelectRunTime(imageNum, zipPath, app, version, runtime)
@@ -174,7 +174,7 @@ func RunOnEdge(zipPath string, imageNum int, app string, version string) ([]byte
 	FILE := "./apps/image-clf-inf-local.py "
 	//cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
 	cmdRun := "source venv/bin/activate && python " + FILE + zipPath
-
+	// fmt.Printf("cmd : %v \n", cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
 	// fmt.Printf("cmd : %s \n", cmd)
 

@@ -100,7 +100,7 @@ func TestRegisterImages(t *testing.T) {
 	// paths[1] = "/opt2"
 	// paths[2] = "/opt3"
 	var paths [1]string
-	paths[0] = "/Users/michaelzhang/Downloads/WTB_samples/2015-11-01"
+	paths[0] = "/home/ubuntu/WTB_samples/2015-11-01"
 	for _, path := range paths {
 		client.RegisterImages(path)
 		decodeFile, err := os.Open(path + "/registryMap.gob")
