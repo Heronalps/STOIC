@@ -102,7 +102,6 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 		err       error
 		cmd       *exec.Cmd
 	)
-	repoPATH := HomeDir() + "/STOIC"
 	X, Y := QueryDataSet(runtime, app, version, numDP)
 
 	if X == nil && Y == nil {
@@ -119,7 +118,7 @@ func Regress(runtime string, app string, version string, numDP int) (float64, fl
 	cmdRun := fmt.Sprintf("source venv/bin/activate && python %s %s %s %s %d", FILE, runtime, app, version, numDP)
 	// fmt.Printf("Regression cmd : %s \n", cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
-	cmd.Dir = repoPATH
+	// cmd.Dir = HomeDir() + "/STOIC"
 	output, err = cmd.Output()
 	if err != nil {
 		fmt.Printf("Error running regression. msg: %s \n", err.Error())
