@@ -13,7 +13,7 @@ import (
 SetupRegression set up multiple data points in each runtime processing time table for regression
 when the app / version is updated
 */
-func SetupRegression(app string, version string) {
+func SetupRegression(app string, version string, numThread int) {
 	dbVersion := QueryAppVersion(app)
 	fmt.Println("DB version : " + dbVersion)
 	fmt.Println("current version : " + version)
@@ -28,7 +28,7 @@ func SetupRegression(app string, version string) {
 		for runtime := range runtimes {
 			for idx, imageNum := range setupImageNums {
 				zipPath, batchSize := GenerateBatch(imageNum, idx)
-				ScheduleNoPred(runtime, batchSize, zipPath, app, version)
+				ScheduleNoPred(runtime, batchSize, zipPath, app, version, numThread)
 			}
 		}
 		UpdateAppVersion(app, version)
@@ -48,7 +48,7 @@ func SetupRegression(app string, version string) {
 			if rows < 2 {
 				for idx, imageNum := range setupImageNums {
 					zipPath, batchSize := GenerateBatch(imageNum, idx)
-					ScheduleNoPred(runtime, batchSize, zipPath, app, version)
+					ScheduleNoPred(runtime, batchSize, zipPath, app, version, numThread)
 				}
 			}
 		}

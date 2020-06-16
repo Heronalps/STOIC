@@ -229,7 +229,7 @@ func GenerateBatch(imageNum int, batchNo int) (string, int) {
 	case 2:
 		rootPath = "/opt3"
 	}
-	rootPath = "/home/ubuntu/WTB_samples"
+	rootPath = "/Users/michaelzhang/Downloads/WTB_samples"
 	registryPath := rootPath + "/registryMap.gob"
 
 	// Decode registry map

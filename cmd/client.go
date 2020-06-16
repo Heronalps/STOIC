@@ -13,14 +13,15 @@ var (
 	allRuntime bool
 	imageNum   int
 	batches    int
+	numThread  int
 	clientCmd  = &cobra.Command{
 		Use:   "client",
 		Short: "Run STOIC client",
 		Long:  `Run STOIC socket client`,
 		Run: func(cmd *cobra.Command, args []string) {
 			// go client.StartInquisitor(winSizeInterval, inqApp, interval)
-			client.SetupRegression(app, version)
-			client.SocketClient(port, runtime, app, version, allRuntime, imageNum, batches)
+			client.SetupRegression(app, version, numThread)
+			client.SocketClient(port, runtime, app, version, allRuntime, imageNum, batches, numThread)
 		},
 	}
 )
@@ -33,4 +34,5 @@ func init() {
 	clientCmd.Flags().BoolVar(&allRuntime, "all", false, "Send request to all runtime for experiment")
 	clientCmd.Flags().IntVarP(&imageNum, "image", "i", 0, "Preset image num")
 	clientCmd.Flags().IntVarP(&batches, "batches", "b", 0, "Preset batch number")
+	clientCmd.Flags().IntVarP(&numThread, "numthread", "n", 1, "Num of threads")
 }

@@ -12,13 +12,13 @@ const BUFFERSIZE = 1024
 /*
 SocketClient listens to the task request from the server
 */
-func SocketClient(port int, runtime string, app string, version string, all bool, presetImageNum int, batches int) {
+func SocketClient(port int, runtime string, app string, version string, all bool, presetImageNum int, batches int, numThread int) {
 	var (
 		batch int = 1
 	)
 	for {
 		zipPath, imageNum := GenerateBatch(presetImageNum, batch)
-		output := Schedule(runtime, imageNum, zipPath, app, version, all)
+		output := Schedule(runtime, imageNum, zipPath, app, version, all, numThread)
 
 		fmt.Printf("Batch %d has been processed...\n", batch)
 		fmt.Printf("Output: %v \n", string(output))

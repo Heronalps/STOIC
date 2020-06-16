@@ -12,7 +12,7 @@ var (
 		Short: "setup 3 datapoints in Processing Time tables for regression",
 		Long:  `setup 3 datapoints in Processing Time tables for regression`,
 		Run: func(cmd *cobra.Command, args []string) {
-			client.SetupRegression(app, version)
+			client.SetupRegression(app, version, 8)
 		},
 	}
 )

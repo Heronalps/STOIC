@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"regexp"
 	"sort"
+	"strconv"
 
 	retrygo "github.com/avast/retry-go"
 )
@@ -21,7 +22,7 @@ Schedule is the entry point of Scheduler.
 Parameter: runtime is the preset runtime. If it's empty string, SelectRunTime will select one.
 Return: runtime for appending processing time to corresponding table
 */
-func Schedule(runtime string, imageNum int, zipPath string, app string, version string, all bool) []byte {
+func Schedule(runtime string, imageNum int, zipPath string, app string, version string, all bool, numThread int) []byte {
 	var (
 		output     []byte
 		actTimeLog *TimeLog
@@ -51,7 +52,7 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 		_, predTimeLog = SelectRunTime(imageNum, zipPath, app, version, runtime)
 		retryErr := retrygo.Do(
 			func() error {
-				output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime])
+				output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime], numThread)
 				runtimes[runtime] = isDeployed
 				if !isDeployed {
 					return errors.New("request was not deployed")
@@ -82,7 +83,7 @@ func Schedule(runtime string, imageNum int, zipPath string, app string, version 
 /*
 ScheduleNoPred schedule task without predictions
 */
-func ScheduleNoPred(runtime string, imageNum int, zipPath string, app string, version string) []byte {
+func ScheduleNoPred(runtime string, imageNum int, zipPath string, app string, version string, numThread int) []byte {
 	var (
 		actTimeLog *TimeLog
 		output     []byte
@@ -92,7 +93,7 @@ func ScheduleNoPred(runtime string, imageNum int, zipPath string, app string, ve
 	transferTimes := GetTransferTime(zipPath)
 	retryErr = retrygo.Do(
 		func() error {
-			output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime])
+			output, isDeployed, actTimeLog = Request(runtime, zipPath, imageNum, app, version, transferTimes[runtime], numThread)
 			runtimes[runtime] = isDeployed
 			if !isDeployed {
 				return errors.New("request was not deployed")
@@ -116,7 +117,7 @@ func ScheduleNoPred(runtime string, imageNum int, zipPath string, app string, ve
 /*
 Request is a wrap function both for executing jobs and setting up processing time table for regression
 */
-func Request(runtime string, zipPath string, imageNum int, app string, version string, transferTime float64) ([]byte, bool, *TimeLog) {
+func Request(runtime string, zipPath string, imageNum int, app string, version string, transferTime float64, numThread int) ([]byte, bool, *TimeLog) {
 	var (
 		output     []byte
 		isDeployed bool
@@ -125,7 +126,7 @@ func Request(runtime string, zipPath string, imageNum int, app string, version s
 	switch runtime {
 	case "edge":
 		fmt.Println("Running on edge...")
-		output, isDeployed, actTimeLog = RunOnEdge(zipPath, imageNum, app, version)
+		output, isDeployed, actTimeLog = RunOnEdge(zipPath, imageNum, app, version, numThread)
 	default:
 		fmt.Printf("Running on Nautilus...%s\n", runtime)
 		output, isDeployed, actTimeLog = RunOnNautilus(runtime, zipPath, imageNum, app, version, transferTime)
@@ -162,7 +163,7 @@ func SelectRunTime(imageNum int, zipPath string, app string, version string, run
 /*
 RunOnEdge runs the task on mini edge cloud with AVX support
 */
-func RunOnEdge(zipPath string, imageNum int, app string, version string) ([]byte, bool, *TimeLog) {
+func RunOnEdge(zipPath string, imageNum int, app string, version string, numThread int) ([]byte, bool, *TimeLog) {
 	var (
 		output     []byte
 		err        error
@@ -173,7 +174,7 @@ func RunOnEdge(zipPath string, imageNum int, app string, version string) ([]byte
 	// Run WTB image classification task
 	FILE := "./apps/image-clf-inf-local.py "
 	//cmdRun := "source venv/bin/activate && python " + FILE + strconv.Itoa(int(imageNum))
-	cmdRun := "source venv/bin/activate && python " + FILE + zipPath
+	cmdRun := "source venv/bin/activate && python " + FILE + zipPath + " " + strconv.Itoa(int(numThread))
 	// fmt.Printf("cmd : %v \n", cmdRun)
 	cmd = exec.Command("bash", "-c", cmdRun)
 	// fmt.Printf("cmd : %s \n", cmd)
