@@ -99,14 +99,9 @@ def handler(event, context):
     else:
         pathlib.Path(TEMP_DIR).mkdir(parents=True, exist_ok=True)
         shutil.copyfile(PROBE_IMG, TEMP_DIR + TARGET_IMG)
-
-    # Get GPU counts
-    NUM_GPU = 0
-    available_devices = GPUInfo.check_empty()
-    if available_devices != None:
-        NUM_GPU = len(available_devices)
-    print ("Current GPU num is {0}".format(NUM_GPU))
     
+    NUM_THREAD = event['data']['num_thread']
+
     # Get image number
     num_image = 0
     image_list = list()
@@ -117,13 +112,10 @@ def handler(event, context):
         
     start = time.time()
 
-    if NUM_GPU == 0:
-        run_sequential(image_list)
-    else:
-        # initialize Scheduler
-        scheduler = Scheduler(NUM_GPU)
-        # start multiprocessing
-        scheduler.start(image_list)
+    # initialize Scheduler
+    scheduler = Scheduler(int(NUM_THREAD))
+    # start multiprocessing
+    scheduler.start(image_list)
         
     end = time.time()
 
@@ -138,5 +130,6 @@ def handler(event, context):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('zip_path')
+    parser.add_argument('num_thread')
     args = parser.parse_args()
-    handler({"data" : {"zip_path" : args.zip_path}}, {})
+    handler({"data" : {"zip_path" : args.zip_path, "num_thread" : args.num_thread}}, {})
