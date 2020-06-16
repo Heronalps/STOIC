@@ -11,6 +11,10 @@ def f(x):
         r = pow(x, x)
 
 if __name__ == '__main__':
-    for i in range(1, 9):
-        with Pool(i) as p:
-            print(p.map(f, [1024]))
+    for t in range(1, 9):
+        with Pool(t) as p:
+            print ("num of threads : " + str(t))
+            arr = []
+            for i in range(t):
+                arr.append(1024)
+            print(p.map(f, arr))
