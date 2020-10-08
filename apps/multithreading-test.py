@@ -18,3 +18,4 @@ if __name__ == '__main__':
             for i in range(t):
                 arr.append(1024)
             print(p.map(f, arr))
+            time.sleep(60)
